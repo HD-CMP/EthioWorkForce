@@ -3,6 +3,7 @@ import 'package:file_picker/file_picker.dart';
 
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/network/dio_client.dart';
+import '../../../profile/presentation/pages/profile_page.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -284,6 +285,31 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                 ],
               ),
+            ),
+            _Section(
+              title: 'Account',
+              icon: Icons.person,
+              children: [
+                ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(Icons.account_circle, color: Colors.blue),
+                  ),
+                  title: const Text('My Profile'),
+                  subtitle: const Text('Update your personal information'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const ProfilePage()),
+                    );
+                  },
+                ),
+              ],
             ),
             _Section(
               title: localizations?.offlineMode ?? 'Offline Mode',
