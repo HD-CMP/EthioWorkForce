@@ -35,8 +35,8 @@ class DioClient {
       return savedUrl;
     }
     
-    // Default to localhost for development
-    return defaultDevelopmentUrl;
+    // Default to production URL for fresh installs
+    return defaultProductionUrl;
   }
   
   /// Set offline mode

@@ -1,3 +1,5 @@
+import 'package:dio/dio.dart';
+
 import '../../domain/repositories/auth_repository.dart';
 import '../datasources/auth_remote_datasource.dart';
 import '../datasources/auth_local_datasource.dart';
@@ -22,6 +24,13 @@ class AuthRepositoryImpl implements AuthRepository {
       
       return true;
     } catch (e) {
+      print('❌ Login error: $e');
+      if (e is DioException) {
+        print('❌ DioException type: ${e.type}');
+        print('❌ Response: ${e.response?.data}');
+        print('❌ Status code: ${e.response?.statusCode}');
+        print('❌ Request URL: ${e.requestOptions.uri}');
+      }
       return false;
     }
   }
