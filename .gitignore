@@ -56,9 +56,6 @@ frontend/build/
 # Keep platform folders but ignore build artifacts
 frontend/android/app/build/
 frontend/android/.gradle/
-frontend/android/gradle/
-frontend/android/gradlew
-frontend/android/gradlew.bat
 frontend/ios/Flutter/Generated.xcconfig
 frontend/ios/Flutter/flutter_export_environment.sh
 frontend/ios/Pods/
