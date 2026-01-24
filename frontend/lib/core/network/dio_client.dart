@@ -5,7 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 class DioClient {
   // Default backend URLs for different environments
   static const String defaultDevelopmentUrl = 'http://localhost:8000/api/v1';
-  static const String defaultProductionUrl = 'https://api.ethioworkforce.com/api/v1';
+  static const String defaultProductionUrl = 'https://ethioworkforce-api.onrender.com/api/v1';
   
   // Custom backend URL key for SharedPreferences
   static const String _backendUrlKey = 'backend_url';
