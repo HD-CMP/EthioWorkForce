@@ -40,6 +40,12 @@ jobs:
         working-directory: ./frontend
         run: flutter pub get
       
+      - name: Update Gradle Wrapper
+        working-directory: ./frontend/android
+        run: |
+          chmod +x gradlew
+          ./gradlew wrapper --gradle-version=8.11.1 --distribution-type=all
+      
       - name: Build APK (split per ABI)
         working-directory: ./frontend
         run: flutter build apk --release --split-per-abi --no-tree-shake-icons
