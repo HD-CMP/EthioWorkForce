@@ -1,0 +1,63 @@
+{
+  "app_name": "EthioWorkforce",
+  "home": "Home",
+  "workers": "Workers",
+  "attendance": "Attendance",
+  "payroll": "Payroll",
+  "reports": "Reports",
+  "settings": "Settings",
+  
+  "check_in": "Check In",
+  "check_out": "Check Out",
+  "present": "Present",
+  "absent": "Absent",
+  "late": "Late",
+  "excused": "Excused",
+  
+  "mark_attendance": "Mark Attendance",
+  "scan_qr_code": "Scan QR Code",
+  "manual_entry": "Manual Entry",
+  "verify_attendance": "Verify Attendance",
+  
+  "daily_worker": "Daily Worker",
+  "permanent_staff": "Permanent Staff",
+  "calculate_payroll": "Calculate Payroll",
+  "approve_payroll": "Approve Payroll",
+  "export_payroll": "Export Payroll",
+  
+  "full_name": "Full Name",
+  "employee_id": "Employee ID",
+  "phone_number": "Phone Number",
+  "site": "Site",
+  "work_type": "Work Type",
+  "status": "Status",
+  
+  "registered": "Registered",
+  "error": "Error",
+  "already_registered": "Already Registered",
+  "welcome": "Welcome",
+  
+  "save": "Save",
+  "cancel": "Cancel",
+  "delete": "Delete",
+  "edit": "Edit",
+  "add": "Add",
+  "search": "Search",
+  
+  "success": "Success",
+  "failed": "Failed",
+  "loading": "Loading",
+  
+  "export_to_cbe": "Export to CBE",
+  "export_to_dashen": "Export to Dashen",
+  "export_to_awash": "Export to Awash",
+  "export_to_telebirr": "Export to Telebirr",
+  "cash_payment_sheet": "Cash Payment Sheet",
+  "pension_declaration": "Pension Declaration",
+  
+  "offline_mode": "Offline Mode",
+  "sync_data": "Sync Data",
+  "last_sync": "Last Sync",
+  "export_to_usb": "Export to USB",
+  "import_from_usb": "Import from USB"
+}

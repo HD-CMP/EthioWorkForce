@@ -1,0 +1,63 @@
+{
+  "app_name": "ኢትዮ ዎርክፎርስ",
+  "home": "መነሻ",
+  "workers": "ሰራተኞች",
+  "attendance": "መገኘት",
+  "payroll": "ደመወዝ",
+  "reports": "ሪፖርቶች",
+  "settings": "ቅንብሮች",
+  
+  "check_in": "መግቢያ",
+  "check_out": "መውጫ",
+  "present": "ተገኝቷል",
+  "absent": "ቀርቷል",
+  "late": "ዘግይቷል",
+  "excused": "ተሰርዟል",
+  
+  "mark_attendance": "መገኘት ምልክት",
+  "scan_qr_code": "ኪውአር ኮድ ስካን",
+  "manual_entry": "በእጅ ማስገባት",
+  "verify_attendance": "መገኘት ማረጋገጥ",
+  
+  "daily_worker": "የቀን ሰራተኛ",
+  "permanent_staff": "ቋሚ ሰራተኛ",
+  "calculate_payroll": "ደመወዝ አስላ",
+  "approve_payroll": "ደመወዝ አጽድቅ",
+  "export_payroll": "ደመወዝ ላክ",
+  
+  "full_name": "ሙሉ ስም",
+  "employee_id": "የሰራተኛ መለያ",
+  "phone_number": "ስልክ ቁጥር",
+  "site": "ቦታ",
+  "work_type": "የስራ አይነት",
+  "status": "ሁኔታ",
+  
+  "registered": "ተመዝግቧል",
+  "error": "ስህተት",
+  "already_registered": "ቀደም ብሎ ተመዝግቧል",
+  "welcome": "እንኳን ደህና መጡ",
+  
+  "save": "አስቀምጥ",
+  "cancel": "ሰርዝ",
+  "delete": "ደምስስ",
+  "edit": "አርትዕ",
+  "add": "ጨምር",
+  "search": "ፈልግ",
+  
+  "success": "ተሳክቷል",
+  "failed": "አልተሳካም",
+  "loading": "በመጫን ላይ",
+  
+  "export_to_cbe": "ወደ ሲቢኢ ላክ",
+  "export_to_dashen": "ወደ ዳሽን ላክ",
+  "export_to_awash": "ወደ አዋሽ ላክ",
+  "export_to_telebirr": "ወደ ቴሌብር ላክ",
+  "cash_payment_sheet": "የጥሬ ገንዘብ ክፍያ ወረቀት",
+  "pension_declaration": "የጡረታ መግለጫ",
+  
+  "offline_mode": "ከመስመር ውጪ",
+  "sync_data": "መረጃ አመሳስል",
+  "last_sync": "የመጨረሻ ማመሳሰል",
+  "export_to_usb": "ወደ ዩኤስቢ ላክ",
+  "import_from_usb": "ከ ዩኤስቢ አስገባ"
+}
