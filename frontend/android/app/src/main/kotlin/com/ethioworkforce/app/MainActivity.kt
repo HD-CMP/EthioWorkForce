@@ -1,4 +1,4 @@
-package com.ethioworkforce.ethioworkforce
+package com.ethioworkforce.app
 
 import io.flutter.embedding.android.FlutterActivity
 
