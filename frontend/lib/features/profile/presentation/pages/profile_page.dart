@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/network/dio_client.dart';
-import '../../../../core/storage/token_storage.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -50,7 +50,8 @@ class _ProfilePageState extends State<ProfilePage> {
     
     try {
       final dio = await DioClient.createDio();
-      final token = await TokenStorage.getAccessToken();
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('auth_token');
       
       final response = await dio.get(
         '/users/me',
@@ -82,7 +83,8 @@ class _ProfilePageState extends State<ProfilePage> {
     
     try {
       final dio = await DioClient.createDio();
-      final token = await TokenStorage.getAccessToken();
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('auth_token');
       
       final updateData = {
         'username': _usernameController.text.trim(),
@@ -135,7 +137,8 @@ class _ProfilePageState extends State<ProfilePage> {
     
     try {
       final dio = await DioClient.createDio();
-      final token = await TokenStorage.getAccessToken();
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('auth_token');
       
       final passwordData = {
         'current_password': _currentPasswordController.text,
