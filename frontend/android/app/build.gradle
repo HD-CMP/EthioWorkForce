@@ -63,9 +63,12 @@ android {
         release {
             if (System.getenv("KEYSTORE_PATH")) {
                 signingConfig signingConfigs.release
+            } else {
+                // Use debug signing for CI/CD builds without keystore
+                signingConfig signingConfigs.debug
             }
-            minifyEnabled true
-            shrinkResources true
+            minifyEnabled false
+            shrinkResources false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
         debug {
