@@ -24,12 +24,23 @@ class AuthRepositoryImpl implements AuthRepository {
       
       return true;
     } catch (e) {
-      print('❌ Login error: $e');
+      // Detailed error logging for debugging
       if (e is DioException) {
-        print('❌ DioException type: ${e.type}');
-        print('❌ Response: ${e.response?.data}');
-        print('❌ Status code: ${e.response?.statusCode}');
-        print('❌ Request URL: ${e.requestOptions.uri}');
+        print('❌ Login Failed - Type: ${e.type}');
+        print('❌ Request: ${e.requestOptions.method} ${e.requestOptions.uri}');
+        print('❌ Status: ${e.response?.statusCode ?? "No response"}');
+        print('❌ Message: ${e.response?.data ?? e.message}');
+        
+        // Network errors
+        if (e.type == DioExceptionType.connectionTimeout ||
+            e.type == DioExceptionType.sendTimeout ||
+            e.type == DioExceptionType.receiveTimeout) {
+          print('❌ Network timeout - Check internet connection');
+        } else if (e.type == DioExceptionType.connectionError) {
+          print('❌ Connection error - Cannot reach server at ${e.requestOptions.uri.host}');
+        }
+      } else {
+        print('❌ Unexpected error: $e');
       }
       return false;
     }

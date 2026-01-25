@@ -31,6 +31,13 @@ class DioClient {
     final savedUrl = prefs.getString(_backendUrlKey);
     
     if (savedUrl != null && savedUrl.isNotEmpty) {
+      // Migrate old localhost URLs to production
+      if (savedUrl.contains('localhost') || savedUrl.contains('127.0.0.1') || savedUrl.contains('10.0.2.2')) {
+        _customBaseUrl = defaultProductionUrl;
+        await prefs.setString(_backendUrlKey, defaultProductionUrl);
+        return defaultProductionUrl;
+      }
+      
       _customBaseUrl = savedUrl;
       return savedUrl;
     }
@@ -60,6 +67,8 @@ class DioClient {
         baseUrl: baseUrl,
         connectTimeout: const Duration(seconds: 30),
         receiveTimeout: const Duration(seconds: 30),
+        sendTimeout: const Duration(seconds: 30),
+        validateStatus: (status) => status != null && status < 500,
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',

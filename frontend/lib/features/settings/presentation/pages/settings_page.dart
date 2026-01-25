@@ -367,17 +367,17 @@ class _SettingsPageState extends State<SettingsPage> {
                     ),
                     child: const Icon(Icons.refresh, color: Colors.orange),
                   ),
-                  title: const Text('Reset to Default'),
-                  subtitle: const Text('Use localhost:8000'),
+                  title: const Text('Reset to Production'),
+                  subtitle: const Text('Use production server'),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () async {
-                    await DioClient.setBackendUrl(DioClient.defaultDevelopmentUrl);
-                    setState(() => _backendUrl = DioClient.defaultDevelopmentUrl);
+                    await DioClient.setBackendUrl(DioClient.defaultProductionUrl);
+                    setState(() => _backendUrl = DioClient.defaultProductionUrl);
                     
                     if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content: Text('Backend URL reset to default'),
+                          content: Text('Backend URL reset to production'),
                           backgroundColor: Colors.green,
                         ),
                       );
