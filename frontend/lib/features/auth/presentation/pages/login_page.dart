@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/router/app_router.dart';
+import '../../../../core/network/dio_client.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
@@ -36,6 +37,76 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
+  Future<void> _showBackendConfig() async {
+    final currentUrl = await DioClient.getBackendUrl();
+    final controller = TextEditingController(text: currentUrl);
+    
+    if (!mounted) return;
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Backend Configuration'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: controller,
+              decoration: const InputDecoration(
+                labelText: 'API URL',
+                hintText: 'https://api.example.com/api/v1',
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: TextButton(
+                    onPressed: () async {
+                      await DioClient.setBackendUrl(DioClient.defaultProductionUrl);
+                      controller.text = DioClient.defaultProductionUrl;
+                    },
+                    child: const Text('Production'),
+                  ),
+                ),
+                Expanded(
+                  child: TextButton(
+                    onPressed: () async {
+                      await DioClient.setBackendUrl(DioClient.defaultDevelopmentUrl);
+                      controller.text = DioClient.defaultDevelopmentUrl;
+                    },
+                    child: const Text('Development'),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              await DioClient.setBackendUrl(controller.text.trim());
+              if (mounted) {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Backend URL updated'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              }
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -54,20 +125,22 @@ class _LoginPageState extends State<LoginPage> {
         },
         builder: (context, state) {
           return SafeArea(
-            child: Center(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24.0),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Icon(
-                        Icons.work,
-                        size: 80,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
+            child: Stack(
+              children: [
+                Center(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(24.0),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Icon(
+                            Icons.work,
+                            size: 80,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
                       const SizedBox(height: 24),
                       Text(
                         'EthioWorkforce',
@@ -126,10 +199,21 @@ class _LoginPageState extends State<LoginPage> {
                               )
                             : const Text('Sign In'),
                       ),
-                    ],
+                        ],
+                      ),
+                    ),
                   ),
                 ),
-              ),
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: IconButton(
+                    icon: const Icon(Icons.settings),
+                    tooltip: 'Backend Configuration',
+                    onPressed: _showBackendConfig,
+                  ),
+                ),
+              ],
             ),
           );
         },
