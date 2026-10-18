@@ -4,10 +4,10 @@ echo EthioWorkForce - Starting Backend Server
 echo ========================================
 echo.
 
-cd backend
+cd /d "%~dp0\..\..\backend"
 
 if not exist "venv" (
-    echo ERROR: Virtual environment not found!
+    echo ERROR: Virtual environment not found in backend directory!
     echo Please run setup_local_postgres.sh first
     pause
     exit /b 1
