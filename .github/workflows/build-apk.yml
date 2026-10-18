@@ -17,9 +17,9 @@ jobs:
         uses: actions/checkout@v4
       
       - name: Setup Java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
-          distribution: 'zulu'
+          distribution: 'temurin'
           java-version: '17'
       
       - name: Setup Flutter
@@ -53,7 +53,7 @@ jobs:
       
       - name: Build Universal APK
         working-directory: ./frontend
-        run: flutter build apk --release --no-tree-shake-icons
+        run: flutter build apk --release --no-tree-shake-icons --verbose
       
       - name: Upload APK artifacts
         uses: actions/upload-artifact@v4
