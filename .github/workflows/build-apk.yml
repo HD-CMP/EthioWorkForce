@@ -30,6 +30,10 @@ jobs:
 
       - name: Accept Android licenses
         run: yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
+
+      - name: Install Android SDK Platform 36
+        run: |
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-36" || true
       
       - name: Create assets directories
         working-directory: ./frontend
