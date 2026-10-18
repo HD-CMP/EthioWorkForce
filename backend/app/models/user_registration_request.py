@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, Enum as SQLEnum, ForeignKey, Text, DateTime
+from sqlalchemy import Column, Integer, String, Boolean, Enum as SQLEnum, ForeignKey, Text, DateTime, JSON
 from sqlalchemy.orm import relationship
 import enum
 from datetime import datetime
@@ -19,7 +19,7 @@ class UserRegistrationRequest(BaseModel):
     id = Column(Integer, primary_key=True, index=True)
     
     username = Column(String(100), nullable=False)
-    email = Column(String(255), nullable=False)
+    email = Column(String(255), nullable=True)
     full_name = Column(String(255), nullable=False)
     phone_number = Column(String(20), nullable=True)
     role = Column(String(50), nullable=False)
@@ -34,6 +34,9 @@ class UserRegistrationRequest(BaseModel):
     
     request_reason = Column(Text, nullable=True)
     approval_notes = Column(Text, nullable=True)
+    
+    site_ids = Column(JSON, nullable=True)
+    work_place_ids = Column(JSON, nullable=True)
     
     reviewed_at = Column(DateTime, nullable=True)
     

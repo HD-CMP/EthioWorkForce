@@ -8,12 +8,12 @@ class WorkerRepositoryImpl implements WorkerRepository {
   WorkerRepositoryImpl({required this.remoteDataSource});
 
   @override
-  Future<List<Worker>> getWorkers({String? siteId, String? workType, bool? isActive}) async {
+  Future<List<Worker>> getWorkers({int? siteId, int? workTypeId, String? status}) async {
     try {
       return await remoteDataSource.getWorkers(
         siteId: siteId,
-        workType: workType,
-        isActive: isActive,
+        workTypeId: workTypeId,
+        status: status,
       );
     } catch (e) {
       throw Exception('Failed to fetch workers: $e');

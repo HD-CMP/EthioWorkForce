@@ -8,4 +8,8 @@ class LoginUseCase {
   Future<bool> call(String username, String password) async {
     return await repository.login(username, password);
   }
+
+  Future<bool> isLoggedIn() async {
+    return await repository.isLoggedIn();
+  }
 }

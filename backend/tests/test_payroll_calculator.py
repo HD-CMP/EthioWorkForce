@@ -34,7 +34,7 @@ class TestPayrollCalculator:
             days_worked=20,
             regular_hours=160,
             overtime_hours=0,
-            overtime_multiplier=1.5,
+            overtime_rate_per_hour=Decimal("56.25"),
             pension_eligible=False,
             employee_pension_rate=0.07,
             employer_pension_rate=0.11,
@@ -54,7 +54,7 @@ class TestPayrollCalculator:
             days_worked=22,
             regular_hours=176,
             overtime_hours=0,
-            overtime_multiplier=1.5,
+            overtime_rate_per_hour=Decimal("85.23"),
             pension_eligible=True,
             employee_pension_rate=0.07,
             employer_pension_rate=0.11,
@@ -74,11 +74,11 @@ class TestPayrollCalculator:
             days_worked=20,
             regular_hours=160,
             overtime_hours=10,
-            overtime_multiplier=1.5,
+            overtime_rate_per_hour=Decimal("56.25"),
             pension_eligible=False,
             employee_pension_rate=0.07,
             employer_pension_rate=0.11,
         )
         
-        assert result["overtime_pay"] > Decimal("0")
-        assert result["gross_salary"] > Decimal("6000")
+        assert result["overtime_pay"] == Decimal("562.50")
+        assert result["gross_salary"] == Decimal("6562.50")

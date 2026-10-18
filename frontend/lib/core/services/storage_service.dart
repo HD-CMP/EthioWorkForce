@@ -14,6 +14,9 @@ class StorageService {
   static const String _maxLocalStorageKey = 'max_local_storage_mb';
   static const String _enableBackupKey = 'enable_backup';
   static const String _lastBackupKey = 'last_backup';
+  static const String _selectedSiteIdKey = 'selected_site_id';
+  static const String _currentUserKey = 'current_user';
+  static const String _userRoleKey = 'user_role';
   
   final Logger _logger = Logger();
   
@@ -132,5 +135,39 @@ class StorageService {
     await setSyncIntervalMinutes(120);
     await setBackupEnabled(true);
     _logger.i('Configured for hybrid sync mode');
+  }
+
+  Future<int?> getSelectedSiteId() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_selectedSiteIdKey);
+  }
+
+  Future<void> setSelectedSiteId(int siteId) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_selectedSiteIdKey, siteId);
+    _logger.i('Selected site ID set to: $siteId');
+  }
+
+  Future<void> clearSelectedSiteId() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_selectedSiteIdKey);
+    _logger.i('Selected site ID cleared');
+  }
+
+  Future<String?> getUserRole() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_userRoleKey);
+  }
+
+  Future<void> setUserRole(String role) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_userRoleKey, role);
+    _logger.i('User role set to: $role');
+  }
+
+  Future<void> clearUserRole() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_userRoleKey);
+    _logger.i('User role cleared');
   }
 }

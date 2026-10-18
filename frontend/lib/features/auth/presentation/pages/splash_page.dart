@@ -13,11 +13,27 @@ class SplashPage extends StatefulWidget {
   State<SplashPage> createState() => _SplashPageState();
 }
 
-class _SplashPageState extends State<SplashPage> {
+class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateMixin {
+  late AnimationController _ctrl;
+  late Animation<double> _scaleAnim;
+  late Animation<double> _fadeAnim;
+
   @override
   void initState() {
     super.initState();
+    _ctrl = AnimationController(duration: const Duration(milliseconds: 1200), vsync: this);
+    _scaleAnim = Tween<double>(begin: 0.7, end: 1.0)
+        .animate(CurvedAnimation(parent: _ctrl, curve: Curves.elasticOut));
+    _fadeAnim = Tween<double>(begin: 0.0, end: 1.0)
+        .animate(CurvedAnimation(parent: _ctrl, curve: const Interval(0.0, 0.6, curve: Curves.easeOut)));
+    _ctrl.forward();
     context.read<AuthBloc>().add(CheckAuthStatus());
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
   }
 
   @override
@@ -31,36 +47,84 @@ class _SplashPageState extends State<SplashPage> {
         }
       },
       child: Scaffold(
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+        body: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF1B5E20), Color(0xFF2E7D32), Color(0xFF1B5E20)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+          child: Stack(
             children: [
-              Icon(
-                Icons.work,
-                size: 100,
-                color: Colors.white,
-              ),
-              const SizedBox(height: 24),
-              const Text(
-                'EthioWorkforce',
-                style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
+              // Decorative circles
+              Positioned(top: -80, right: -60,
+                child: Container(width: 280, height: 280,
+                  decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.white.withOpacity(0.06)))),
+              Positioned(bottom: -80, left: -60,
+                child: Container(width: 240, height: 240,
+                  decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.white.withOpacity(0.05)))),
+              Positioned(top: 120, left: -40,
+                child: Container(width: 120, height: 120,
+                  decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.white.withOpacity(0.04)))),
+              // Center content
+              Center(
+                child: FadeTransition(
+                  opacity: _fadeAnim,
+                  child: ScaleTransition(
+                    scale: _scaleAnim,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          width: 110, height: 110,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.15),
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white.withOpacity(0.3), width: 2.5),
+                            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 32, offset: const Offset(0, 12))],
+                          ),
+                          child: const Icon(Icons.business_center_rounded, color: Colors.white, size: 52),
+                        ),
+                        const SizedBox(height: 28),
+                        const Text(
+                          'EthioWorkforce',
+                          style: TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold, letterSpacing: -0.5),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Workforce Management Platform',
+                          style: TextStyle(color: Colors.white.withOpacity(0.75), fontSize: 14, letterSpacing: 0.3),
+                        ),
+                        const SizedBox(height: 64),
+                        SizedBox(
+                          width: 28, height: 28,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.5,
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white.withOpacity(0.85)),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Loading…',
+                          style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 12),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
-              const SizedBox(height: 8),
-              const Text(
-                'Offline-First Workforce Management',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.white70,
+              // Bottom version text
+              Positioned(
+                bottom: 32, left: 0, right: 0,
+                child: FadeTransition(
+                  opacity: _fadeAnim,
+                  child: Text(
+                    '© 2025 EthioWorkforce',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 11),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 48),
-              const CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
               ),
             ],
           ),

@@ -45,7 +45,7 @@ class _QRScannerPageState extends State<QRScannerPage> {
         await _audioService.playAttendanceSuccess('Worker $employeeId');
         
         if (mounted) {
-          VisualFeedbackOverlay.showFlashFeedback(
+          VisualFeedbackOverlay.showAccessibleFeedback(
             context,
             type: FeedbackType.success,
             message: AppLocalizations.of(context)?.registered ?? 'Registered',
@@ -64,7 +64,7 @@ class _QRScannerPageState extends State<QRScannerPage> {
       } else {
         await _audioService.playAttendanceError();
         if (mounted) {
-          VisualFeedbackOverlay.showFlashFeedback(
+          VisualFeedbackOverlay.showAccessibleFeedback(
             context,
             type: FeedbackType.error,
             message: AppLocalizations.of(context)?.error ?? 'Error',
@@ -75,7 +75,7 @@ class _QRScannerPageState extends State<QRScannerPage> {
     } catch (e) {
       await _audioService.playAttendanceError();
       if (mounted) {
-        VisualFeedbackOverlay.showFlashFeedback(
+        VisualFeedbackOverlay.showAccessibleFeedback(
           context,
           type: FeedbackType.error,
           message: AppLocalizations.of(context)?.error ?? 'Error',

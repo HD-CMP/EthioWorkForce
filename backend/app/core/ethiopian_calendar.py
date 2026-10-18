@@ -1,6 +1,5 @@
 from datetime import date, datetime, timedelta
 from typing import Tuple
-import convertdate
 
 
 class EthiopianCalendar:
@@ -16,16 +15,66 @@ class EthiopianCalendar:
     ]
 
     @staticmethod
+    def _gregorian_to_jdn(year: int, month: int, day: int) -> int:
+        """Convert Gregorian date to Julian Day Number"""
+        a = (14 - month) // 12
+        y = year + 4800 - a
+        m = month + 12 * a - 3
+        jdn = day + (153 * m + 2) // 5 + 365 * y + y // 4 - y // 100 + y // 400 - 32045
+        return jdn
+
+    @staticmethod
+    def _jdn_to_gregorian(jdn: int) -> Tuple[int, int, int]:
+        """Convert Julian Day Number to Gregorian date"""
+        a = jdn + 32044
+        b = (4 * a + 3) // 146097
+        c = a - (146097 * b) // 4
+        d = (4 * c + 3) // 1461
+        e = c - (1461 * d) // 4
+        m = (5 * e + 2) // 153
+        day = e - (153 * m + 2) // 5 + 1
+        month = m + 3 - 12 * (m // 10)
+        year = 100 * b + d - 4800 + m // 10
+        return (year, month, day)
+
+    @staticmethod
+    def _ethiopian_to_jdn(year: int, month: int, day: int) -> int:
+        """Convert Ethiopian date to Julian Day Number
+        Ethiopian calendar epoch: JDN 1724220 (Gregorian: August 29, 8 CE)
+        """
+        epoch = 1724220
+        jdn = (
+            epoch +
+            365 * (year - 1) +
+            (year // 4) +
+            30 * (month - 1) +
+            day - 1
+        )
+        return jdn
+
+    @staticmethod
+    def _jdn_to_ethiopian(jdn: int) -> Tuple[int, int, int]:
+        """Convert Julian Day Number to Ethiopian date"""
+        epoch = 1724220
+        r = (jdn - epoch) % 1461
+        n = (r % 365) + 365 * (r // 1460)
+        year = 4 * ((jdn - epoch) // 1461) + (r // 365) - (r // 1460) + 1
+        month = (n // 30) + 1
+        day = (n % 30) + 1
+        return (year, month, day)
+
+    @staticmethod
     def gregorian_to_ethiopian(greg_date: date) -> Tuple[int, int, int]:
-        eth_date = convertdate.ethiopian.from_gregorian(
+        jdn = EthiopianCalendar._gregorian_to_jdn(
             greg_date.year, greg_date.month, greg_date.day
         )
-        return eth_date
+        return EthiopianCalendar._jdn_to_ethiopian(jdn)
 
     @staticmethod
     def ethiopian_to_gregorian(year: int, month: int, day: int) -> date:
-        greg_date = convertdate.ethiopian.to_gregorian(year, month, day)
-        return date(greg_date[0], greg_date[1], greg_date[2])
+        jdn = EthiopianCalendar._ethiopian_to_jdn(year, month, day)
+        greg_tuple = EthiopianCalendar._jdn_to_gregorian(jdn)
+        return date(greg_tuple[0], greg_tuple[1], greg_tuple[2])
 
     @staticmethod
     def format_ethiopian_date(year: int, month: int, day: int, language: str = "en") -> str:

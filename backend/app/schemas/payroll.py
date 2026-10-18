@@ -10,7 +10,7 @@ class PayrollItemData(BaseModel):
     worker_id: int
     days_worked: int
     regular_hours: int
-    overtime_hours: int
+    overtime_hours: float
     allowances: Decimal = Decimal("0")
     other_deductions: Decimal = Decimal("0")
 
@@ -22,6 +22,8 @@ class PayrollCreate(BaseModel):
     period_end: date
     ethiopian_month: Optional[str] = None
     ethiopian_year: Optional[int] = None
+    work_type_id: Optional[int] = None
+    work_place_id: Optional[int] = None
 
 
 class PayrollCalculate(BaseModel):
@@ -37,11 +39,25 @@ class PayrollItemResponse(BaseModel):
     id: int
     payroll_id: int
     worker_id: int
+    worker_name: Optional[str] = None
+    employee_id: Optional[str] = None
+    work_type_id: Optional[int] = None
+    work_type_name: Optional[str] = None
+    
+    # Payment period metadata
+    payment_period_start: Optional[date] = None
+    payment_period_end: Optional[date] = None
+    payment_period_days: Optional[int] = None
+    is_prorated: bool = False
+    payment_period_type: Optional[str] = None
+    payment_period_description: Optional[str] = None
+    
     days_worked: int
     regular_hours: int
-    overtime_hours: int
+    overtime_hours: float
     base_salary: Decimal
     overtime_pay: Decimal
+    allocated_overtime_pay: Decimal
     allowances: Decimal
     gross_salary: Decimal
     income_tax: Decimal
@@ -55,9 +71,17 @@ class PayrollItemResponse(BaseModel):
     notes: Optional[str] = None
     created_at: datetime
     updated_at: datetime
+    
+    # Payment status
+    is_paid: bool = False
+    payment_date: Optional[date] = None
+    payment_id: Optional[int] = None
 
     class Config:
         from_attributes = True
+        json_encoders = {
+            Decimal: lambda v: float(v)
+        }
 
 
 class PayrollResponse(BaseModel):
@@ -69,6 +93,8 @@ class PayrollResponse(BaseModel):
     period_end: date
     ethiopian_month: Optional[str] = None
     ethiopian_year: Optional[int] = None
+    work_type_id: Optional[int] = None
+    work_place_id: Optional[int] = None
     total_gross_amount: Decimal
     total_deductions: Decimal
     total_net_amount: Decimal
@@ -81,6 +107,11 @@ class PayrollResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
     payroll_items: Optional[List[PayrollItemResponse]] = None
+    has_multiple_periods: Optional[bool] = None
+    period_types_count: Optional[int] = None
 
     class Config:
         from_attributes = True
+        json_encoders = {
+            Decimal: lambda v: float(v)
+        }

@@ -19,7 +19,7 @@ class User(BaseModel):
 
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String(100), unique=True, nullable=False, index=True)
-    email = Column(String(255), unique=True, nullable=False, index=True)
+    email = Column(String(255), unique=True, nullable=True, index=True)
     full_name = Column(String(255), nullable=False)
     phone_number = Column(String(20), nullable=True)
     hashed_password = Column(String(255), nullable=False)
@@ -31,3 +31,4 @@ class User(BaseModel):
     
     audit_logs = relationship("AuditLog", back_populates="user")
     site_assignments = relationship("UserSiteAssignment", back_populates="user", cascade="all, delete-orphan")
+    work_place_assignments = relationship("UserWorkPlaceAssignment", back_populates="user", cascade="all, delete-orphan")

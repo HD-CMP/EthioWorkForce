@@ -1,9 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
+import 'package:dio/dio.dart';
 
+import '../../../../core/di/injection.dart';
 import '../../../../core/localization/app_localizations.dart';
+import '../../../../core/network/dio_client.dart';
+import '../../../../core/utils/file_saver.dart';
+import '../../data/datasources/payroll_remote_datasource.dart';
+import '../bloc/payroll_bloc.dart';
+import '../bloc/payroll_event.dart';
+import '../bloc/payroll_state.dart';
 import '../widgets/cash_payment_sheet.dart';
 
-class PayrollDetailPage extends StatelessWidget {
+class PayrollDetailPage extends StatefulWidget {
   final int payrollId;
   final String payrollCode;
   final String period;
@@ -16,20 +26,207 @@ class PayrollDetailPage extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    final localizations = AppLocalizations.of(context);
+  State<PayrollDetailPage> createState() => _PayrollDetailPageState();
+}
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Payroll $payrollCode'),
+class _PayrollDetailPageState extends State<PayrollDetailPage> {
+  Map<String, dynamic>? _periodBreakdown;
+  bool _isLoadingBreakdown = true;
+  final _dataSource = PayrollRemoteDataSource();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPeriodBreakdown();
+  }
+
+  Future<void> _loadPeriodBreakdown() async {
+    try {
+      final breakdown = await _dataSource.getPayrollPeriodBreakdown(widget.payrollId);
+      if (mounted) {
+        setState(() {
+          _periodBreakdown = breakdown;
+          _isLoadingBreakdown = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoadingBreakdown = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _handleExport(BuildContext context, Future<String> Function() exportAction) async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => const Center(child: CircularProgressIndicator()),
+    );
+    try {
+      final filename = await exportAction();
+      if (context.mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle_outline, color: Colors.white),
+                const SizedBox(width: 12),
+                Expanded(child: Text('Downloaded $filename')),
+              ],
+            ),
+            backgroundColor: const Color(0xFF2E7D32),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Export failed: $e'),
+            backgroundColor: Colors.red[700],
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _handleApprove(BuildContext context, int payrollId) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Approve Payroll Run'),
+        content: const Text(
+          'Are you sure you want to formally approve this payroll run? '
+          'Once approved, statutory amounts and net payouts will be finalized.',
+        ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.share),
-            onPressed: () {},
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF2E7D32)),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Approve'),
           ),
         ],
       ),
-      body: SingleChildScrollView(
+    );
+    if (confirmed != true) return;
+
+    try {
+      await _dataSource.approvePayroll(payrollId);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Payroll run approved successfully!'),
+            backgroundColor: Color(0xFF2E7D32),
+          ),
+        );
+        context.read<PayrollBloc>().add(LoadPayrollWithItems(payrollId));
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Approval failed: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
+  Future<void> _handleLock(BuildContext context, int payrollId) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Lock & Archive Payroll'),
+        content: const Text(
+          'Locking this payroll will permanently seal all associated attendance '
+          'and overtime records in this period. This action cannot be undone.',
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFB71C1C)),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Lock & Archive'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    try {
+      await _dataSource.lockPayroll(payrollId);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Payroll locked and archived successfully! Records are sealed.'),
+            backgroundColor: Color(0xFF2E7D32),
+          ),
+        );
+        context.read<PayrollBloc>().add(LoadPayrollWithItems(payrollId));
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Lock failed: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
+
+    return BlocProvider(
+      create: (_) => getIt<PayrollBloc>()..add(LoadPayrollWithItems(widget.payrollId)),
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text('Payroll ${widget.payrollCode}'),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.share),
+              onPressed: () {},
+            ),
+          ],
+        ),
+        body: BlocBuilder<PayrollBloc, PayrollState>(
+          builder: (context, state) {
+            if (state is PayrollLoading) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            
+            if (state is PayrollError) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.error_outline, size: 64, color: Colors.red),
+                    const SizedBox(height: 16),
+                    Text(state.message),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: () => context.read<PayrollBloc>().add(LoadPayrollWithItems(widget.payrollId)),
+                      child: const Text('Retry'),
+                    ),
+                  ],
+                ),
+              );
+            }
+            
+            if (state is! PayrollWithItemsLoaded) {
+              return const Center(child: Text('No data available'));
+            }
+            
+            final payroll = state.payroll;
+            final items = state.items;
+            final currencyFormat = NumberFormat.currency(symbol: 'ETB ', decimalDigits: 2);
+            
+            return SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -48,7 +245,7 @@ class PayrollDetailPage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    payrollCode,
+                    payroll.payrollCode,
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 28,
@@ -57,7 +254,7 @@ class PayrollDetailPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    period,
+                    payroll.formattedPeriod,
                     style: const TextStyle(
                       color: Colors.white70,
                       fontSize: 16,
@@ -68,15 +265,56 @@ class PayrollDetailPage extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       _InfoChip(
-                        label: 'Total: 125,500 ETB',
+                        label: 'Total: ${currencyFormat.format(payroll.totalNetAmount)}',
                         icon: Icons.account_balance_wallet,
                       ),
                       _InfoChip(
-                        label: '50 Employees',
+                        label: '${items.length} Employees',
                         icon: Icons.people,
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.white24,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.white30),
+                        ),
+                        child: Text(
+                          payroll.status.toUpperCase(),
+                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+                        ),
                       ),
                     ],
                   ),
+                  if (payroll.status.toLowerCase() != 'paid') ...[
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        if (payroll.status.toLowerCase() == 'calculated' || payroll.status.toLowerCase() == 'draft')
+                          ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.white,
+                              foregroundColor: const Color(0xFF1B5E20),
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            ),
+                            icon: const Icon(Icons.check_circle_outline, size: 18),
+                            label: const Text('Approve Payroll', style: TextStyle(fontWeight: FontWeight.bold)),
+                            onPressed: () => _handleApprove(context, widget.payrollId),
+                          ),
+                        if (payroll.status.toLowerCase() == 'approved')
+                          ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFFFFD54F),
+                              foregroundColor: Colors.black87,
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            ),
+                            icon: const Icon(Icons.lock_outline, size: 18),
+                            label: const Text('Lock & Archive', style: TextStyle(fontWeight: FontWeight.bold)),
+                            onPressed: () => _handleLock(context, widget.payrollId),
+                          ),
+                      ],
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -85,6 +323,44 @@ class PayrollDetailPage extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  if (_periodBreakdown != null && _periodBreakdown!['period_types_count'] > 1) ...[
+                    Text(
+                      'Payment Period Breakdown',
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'This payroll includes workers with different payment cycles',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    _PeriodBreakdownCard(breakdown: _periodBreakdown!),
+                    const SizedBox(height: 24),
+                  ],
+                  Text(
+                    'Workers by Work Type',
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Workers are organized by their work type',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  _WorkTypeGroupsCard(items: items),
+                  const SizedBox(height: 24),
                   Text(
                     localizations?.exportPayroll ?? 'Export Options',
                     style: const TextStyle(
@@ -101,19 +377,19 @@ class PayrollDetailPage extends StatelessWidget {
                         label: localizations?.exportToCBE ?? 'Export to CBE',
                         icon: Icons.download,
                         color: Colors.blue,
-                        onTap: () {},
+                        onTap: () => _handleExport(context, () => _dataSource.exportPayrollCBE(widget.payrollId)),
                       ),
                       _ExportButton(
                         label: localizations?.exportToDashen ?? 'Export to Dashen Bank',
                         icon: Icons.download,
                         color: Colors.green,
-                        onTap: () {},
+                        onTap: () => _handleExport(context, () => _dataSource.exportPayrollDashen(widget.payrollId)),
                       ),
                       _ExportButton(
                         label: localizations?.exportToAwash ?? 'Export to Awash Bank',
                         icon: Icons.download,
                         color: Colors.orange,
-                        onTap: () {},
+                        onTap: () => _handleExport(context, () => _dataSource.exportPayrollAwash(widget.payrollId)),
                       ),
                     ],
                   ),
@@ -126,13 +402,22 @@ class PayrollDetailPage extends StatelessWidget {
                         label: localizations?.exportToTelebirr ?? 'Export to Telebirr',
                         icon: Icons.download,
                         color: Colors.purple,
-                        onTap: () {},
+                        onTap: () => _handleExport(context, () => _dataSource.exportPayrollTelebirr(widget.payrollId)),
                       ),
                       _ExportButton(
                         label: 'Export to M-Pesa',
                         icon: Icons.download,
                         color: Colors.red,
-                        onTap: () {},
+                        onTap: () => _handleExport(context, () async {
+                          final dio = await DioClient.createDio();
+                          final fn = 'MPesa_Payroll_${widget.payrollId}.csv';
+                          final resp = await dio.get(
+                            '/reports/payroll/${widget.payrollId}/export/mpesa',
+                            options: Options(responseType: ResponseType.bytes),
+                          );
+                          await FileSaver.saveAndOpenFile(List<int>.from(resp.data), fn);
+                          return fn;
+                        }),
                       ),
                     ],
                   ),
@@ -145,29 +430,47 @@ class PayrollDetailPage extends StatelessWidget {
                         label: localizations?.pensionDeclaration ?? 'Pension Declaration (Excel)',
                         icon: Icons.file_present,
                         color: Colors.teal,
-                        onTap: () {},
+                        onTap: () => _handleExport(context, () => _dataSource.exportPensionReport(widget.payrollId, 'excel')),
                       ),
                       _ExportButton(
                         label: 'Pension Declaration (PDF)',
                         icon: Icons.picture_as_pdf,
                         color: Colors.red,
-                        onTap: () {},
+                        onTap: () => _handleExport(context, () => _dataSource.exportPensionReport(widget.payrollId, 'pdf')),
                       ),
                       _ExportButton(
                         label: localizations?.cashPaymentSheet ?? 'Cash Payment Sheet',
                         icon: Icons.attach_money,
                         color: Colors.green,
-                        onTap: () {
-                          Navigator.push(
+                        onTap: () async {
+                          final paymentRecords = items.map((item) => PaymentRecord(
+                            itemId: item.id!,
+                            employeeId: item.employeeId ?? 'N/A',
+                            fullName: item.workerName ?? 'Unknown',
+                            netAmount: item.netSalary,
+                            paymentPeriodDescription: item.paymentPeriodDescription,
+                            workTypeName: item.workTypeName,
+                            isPaid: item.isPaid,
+                            paidAt: item.paymentDate != null ? DateTime.tryParse(item.paymentDate!) : null,
+                          )).toList();
+                          
+                          await Navigator.push(
                             context,
                             MaterialPageRoute(
                               builder: (_) => CashPaymentSheet(
-                                payrollCode: payrollCode,
-                                period: period,
-                                records: [],
+                                payrollId: widget.payrollId,
+                                payrollCode: widget.payrollCode,
+                                period: widget.period,
+                                records: paymentRecords,
+                                isPayrollLocked: payroll.status.toLowerCase() == 'paid',
                               ),
                             ),
                           );
+                          
+                          // Reload payroll data when returning from cash payment sheet
+                          if (context.mounted) {
+                            context.read<PayrollBloc>().add(LoadPayrollWithItems(widget.payrollId));
+                          }
                         },
                       ),
                     ],
@@ -176,6 +479,9 @@ class PayrollDetailPage extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      );
+          },
         ),
       ),
     );
@@ -308,6 +614,417 @@ class _ExportButton extends StatelessWidget {
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _PeriodBreakdownCard extends StatelessWidget {
+  final Map<String, dynamic> breakdown;
+
+  const _PeriodBreakdownCard({required this.breakdown});
+
+  @override
+  Widget build(BuildContext context) {
+    final currencyFormat = NumberFormat.currency(symbol: 'ETB ', decimalDigits: 2);
+    final breakdownList = breakdown['breakdown'] as List<dynamic>;
+
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.group_work, color: Theme.of(context).primaryColor),
+                const SizedBox(width: 8),
+                Text(
+                  '${breakdown['period_types_count']} Different Payment Cycles',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            ...breakdownList.map((periodData) {
+              final periodType = periodData['period_type'] as String;
+              final workerCount = periodData['worker_count'] as int;
+              final totalNet = (periodData['total_net'] as num).toDouble();
+              final proratedCount = periodData['prorated_count'] as int;
+
+              final periodColor = _getPeriodColor(periodType);
+              final periodIcon = _getPeriodIcon(periodType);
+
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: periodColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border(
+                      left: BorderSide(color: periodColor, width: 4),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: periodColor.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Icon(periodIcon, color: periodColor, size: 20),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  periodType,
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.bold,
+                                    color: periodColor,
+                                  ),
+                                ),
+                                Text(
+                                  currencyFormat.format(totalNet),
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                    color: periodColor,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  '$workerCount workers',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey[700],
+                                  ),
+                                ),
+                                if (proratedCount > 0)
+                                  Text(
+                                    '$proratedCount prorated',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.orange[700],
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }).toList(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Color _getPeriodColor(String periodType) {
+    switch (periodType.toLowerCase()) {
+      case 'daily':
+        return Colors.blue;
+      case 'hourly':
+        return Colors.cyan;
+      case 'weekly':
+        return Colors.green;
+      case 'bi-weekly':
+        return Colors.teal;
+      case 'monthly':
+        return Colors.purple;
+      default:
+        return Colors.orange;
+    }
+  }
+
+  IconData _getPeriodIcon(String periodType) {
+    switch (periodType.toLowerCase()) {
+      case 'daily':
+        return Icons.today;
+      case 'hourly':
+        return Icons.access_time;
+      case 'weekly':
+        return Icons.date_range;
+      case 'bi-weekly':
+        return Icons.calendar_view_week;
+      case 'monthly':
+        return Icons.calendar_month;
+      default:
+        return Icons.event;
+    }
+  }
+}
+
+class _WorkTypeGroupsCard extends StatelessWidget {
+  final List items;
+
+  const _WorkTypeGroupsCard({required this.items});
+
+  @override
+  Widget build(BuildContext context) {
+    final currencyFormat = NumberFormat.currency(symbol: 'ETB ', decimalDigits: 2);
+    
+    // Group items by work type
+    final Map<String, List> groupedItems = {};
+    for (var item in items) {
+      final workType = item.workTypeName ?? 'Unknown';
+      if (!groupedItems.containsKey(workType)) {
+        groupedItems[workType] = [];
+      }
+      groupedItems[workType]!.add(item);
+    }
+    
+    // Sort work types by total net salary (highest first)
+    final sortedWorkTypes = groupedItems.keys.toList()
+      ..sort((a, b) {
+        final aTotal = groupedItems[a]!.fold(0.0, (sum, item) => sum + item.netSalary);
+        final bTotal = groupedItems[b]!.fold(0.0, (sum, item) => sum + item.netSalary);
+        return bTotal.compareTo(aTotal);
+      });
+    
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.work, color: Theme.of(context).primaryColor),
+                const SizedBox(width: 8),
+                Text(
+                  '${sortedWorkTypes.length} Work Types',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            ...sortedWorkTypes.map((workType) {
+              final workTypeItems = groupedItems[workType]!;
+              final totalNet = workTypeItems.fold(0.0, (sum, item) => sum + item.netSalary);
+              final totalGross = workTypeItems.fold(0.0, (sum, item) => sum + item.grossSalary);
+              
+              return _WorkTypeExpansionTile(
+                workType: workType,
+                items: workTypeItems,
+                totalNet: totalNet,
+                totalGross: totalGross,
+                currencyFormat: currencyFormat,
+              );
+            }).toList(),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _WorkTypeExpansionTile extends StatelessWidget {
+  final String workType;
+  final List items;
+  final double totalNet;
+  final double totalGross;
+  final NumberFormat currencyFormat;
+
+  const _WorkTypeExpansionTile({
+    required this.workType,
+    required this.items,
+    required this.totalNet,
+    required this.totalGross,
+    required this.currencyFormat,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    // Sort workers by net salary (highest first)
+    final sortedItems = List.from(items)
+      ..sort((a, b) => b.netSalary.compareTo(a.netSalary));
+    
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey.shade300),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          childrenPadding: const EdgeInsets.all(0),
+          title: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.green.shade100,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(Icons.work_outline, color: Colors.green.shade700, size: 20),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      workType,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '${sortedItems.length} workers',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    currencyFormat.format(totalNet),
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.green.shade700,
+                    ),
+                  ),
+                  Text(
+                    'Net Total',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          children: [
+            const Divider(height: 1),
+            ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: sortedItems.length,
+              separatorBuilder: (context, index) => const Divider(height: 1),
+              itemBuilder: (context, index) {
+                final item = sortedItems[index];
+                return ListTile(
+                  dense: true,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                  leading: CircleAvatar(
+                    radius: 18,
+                    backgroundColor: Colors.grey.shade300,
+                    child: Text(
+                      '${index + 1}',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  title: Text(
+                    item.workerName ?? 'Unknown',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  subtitle: Text(
+                    item.employeeId ?? 'N/A',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                  trailing: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        currencyFormat.format(item.netSalary),
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.green.shade700,
+                        ),
+                      ),
+                      Text(
+                        'Net',
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.green.shade50,
+                border: Border(top: BorderSide(color: Colors.grey.shade300)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Gross Total:',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey[700],
+                    ),
+                  ),
+                  Text(
+                    currencyFormat.format(totalGross),
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey[800],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );

@@ -14,7 +14,7 @@ class WorkTypesTable extends Table {
   TextColumn get taxRule => text().withLength(min: 1, max: 50)();
   
   BoolColumn get overtimeEligible => boolean().withDefault(const Constant(false))();
-  RealColumn get overtimeMultiplier => real().withDefault(const Constant(1.5))();
+  RealColumn get overtimeRatePerHour => real().nullable()();
   
   BoolColumn get pensionEligible => boolean().withDefault(const Constant(true))();
   RealColumn get employeePensionRate => real().withDefault(const Constant(0.07))();

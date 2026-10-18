@@ -19,5 +19,7 @@ class Site(BaseModel):
     
     workers = relationship("Worker", back_populates="site", cascade="all, delete-orphan")
     attendances = relationship("Attendance", back_populates="site")
+    overtimes = relationship("Overtime", back_populates="site")
     payrolls = relationship("Payroll", back_populates="site")
     user_assignments = relationship("UserSiteAssignment", back_populates="site", cascade="all, delete-orphan")
+    payment_periods = relationship("PaymentPeriod", back_populates="site", cascade="all, delete-orphan")

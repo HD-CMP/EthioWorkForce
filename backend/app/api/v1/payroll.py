@@ -1,16 +1,19 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
-from typing import List
-from datetime import datetime
+from typing import List, Optional, Dict, Any
+from datetime import datetime, date
 from decimal import Decimal
 
 from app.core.database import get_db
 from app.api.deps import get_current_user, get_user_accessible_sites, verify_site_access
-from app.models.user import User
+from app.models.user import User, UserRole
 from app.models.payroll import Payroll, PayrollItem, PayrollStatus
 from app.models.worker import Worker
 from app.models.attendance import Attendance
-from app.schemas.payroll import PayrollCreate, PayrollCalculate, PayrollApprove, PayrollResponse
+from app.models.overtime import Overtime
+from app.models.work_type import PaymentMode
+from app.schemas.payroll import PayrollCreate, PayrollCalculate, PayrollApprove, PayrollResponse, PayrollItemResponse
+from app.services.payment_period_service import PaymentPeriodService
 from app.services.payroll_calculator import PayrollCalculator
 
 router = APIRouter()
@@ -39,6 +42,8 @@ def create_payroll(
         period_end=payroll_data.period_end,
         ethiopian_month=payroll_data.ethiopian_month,
         ethiopian_year=payroll_data.ethiopian_year,
+        work_type_id=payroll_data.work_type_id,
+        work_place_id=payroll_data.work_place_id,
         calculated_by_id=current_user.id,
     )
     
@@ -64,45 +69,143 @@ def calculate_payroll(
             detail="Can only calculate payroll in DRAFT status"
         )
     
-    attendances = db.query(Attendance).filter(
+    attendances_query = db.query(Attendance).filter(
         Attendance.site_id == payroll.site_id,
         Attendance.attendance_date >= payroll.period_start,
         Attendance.attendance_date <= payroll.period_end,
         Attendance.is_verified == True
-    ).all()
+    )
     
-    worker_attendance_summary = {}
+    overtime_query = db.query(Overtime).filter(
+        Overtime.site_id == payroll.site_id,
+        Overtime.overtime_date >= payroll.period_start,
+        Overtime.overtime_date <= payroll.period_end,
+        Overtime.is_verified == True
+    )
+
+    if payroll.work_type_id or payroll.work_place_id:
+        attendances_query = attendances_query.join(Worker, Attendance.worker_id == Worker.id)
+        overtime_query = overtime_query.join(Worker, Overtime.worker_id == Worker.id)
+        
+        if payroll.work_type_id:
+            attendances_query = attendances_query.filter(Worker.work_type_id == payroll.work_type_id)
+            overtime_query = overtime_query.filter(Worker.work_type_id == payroll.work_type_id)
+            
+        if payroll.work_place_id:
+            attendances_query = attendances_query.filter(Worker.work_place_id == payroll.work_place_id)
+            overtime_query = overtime_query.filter(Worker.work_place_id == payroll.work_place_id)
+
+    attendances = attendances_query.all()
+    overtime_records = overtime_query.all()
+    
+    worker_overtime_lookup: dict = {}
+    for ot in overtime_records:
+        worker_overtime_lookup[ot.worker_id] = (
+            worker_overtime_lookup.get(ot.worker_id, 0.0) + ot.hours
+        )
+    
+    workers_query = db.query(Worker).filter(
+        Worker.site_id == payroll.site_id,
+        Worker.status == 'active'
+    )
+    if payroll.work_type_id:
+        workers_query = workers_query.filter(Worker.work_type_id == payroll.work_type_id)
+    if payroll.work_place_id:
+        workers_query = workers_query.filter(Worker.work_place_id == payroll.work_place_id)
+    active_workers = workers_query.all()
+    
+    worker_attendance_summary = {
+        w.id: {
+            "days_worked": 0,
+            "regular_hours": 0,
+            "overtime_hours": worker_overtime_lookup.get(w.id, 0.0)
+        } for w in active_workers
+    }
+    
     for att in attendances:
         if att.worker_id not in worker_attendance_summary:
             worker_attendance_summary[att.worker_id] = {
                 "days_worked": 0,
                 "regular_hours": 0,
-                "overtime_hours": 0
+                "overtime_hours": worker_overtime_lookup.get(att.worker_id, 0.0)
             }
-        worker_attendance_summary[att.worker_id]["days_worked"] += 1
-        worker_attendance_summary[att.worker_id]["regular_hours"] += att.regular_hours
-        worker_attendance_summary[att.worker_id]["overtime_hours"] += att.overtime_hours
+        
+        if att.status in ['present', 'late', 'excused', 'leave']:
+            worker_attendance_summary[att.worker_id]["days_worked"] += 1
+            worker_attendance_summary[att.worker_id]["regular_hours"] += att.regular_hours
+        elif att.status == 'half_day':
+            worker_attendance_summary[att.worker_id]["days_worked"] += 0.5
+            worker_attendance_summary[att.worker_id]["regular_hours"] += (att.regular_hours or 8) / 2
+            
+        if getattr(att, "is_overtime_verified", False) and att.overtime_hours:
+            worker_attendance_summary[att.worker_id]["overtime_hours"] += float(att.overtime_hours)
     
-    worker_payroll_data = []
+    workers_by_work_type = {}
     for worker_id, summary in worker_attendance_summary.items():
+        if summary["days_worked"] == 0 and summary["overtime_hours"] == 0:
+            continue
+            
         worker = db.query(Worker).filter(Worker.id == worker_id).first()
         if not worker or not worker.work_type:
             continue
         
         wt = worker.work_type
-        worker_payroll_data.append({
+        work_type_key = (wt.id, wt.name)
+        
+        if work_type_key not in workers_by_work_type:
+            workers_by_work_type[work_type_key] = []
+        
+        is_high_hierarchy = wt.hierarchy_level is not None and wt.hierarchy_level <= 4
+        has_individual_salary = worker.base_salary is not None and worker.base_salary > 0
+        effective_base_rate = (
+            worker.base_salary
+            if (is_high_hierarchy and has_individual_salary)
+            else wt.base_rate
+        )
+        
+        from datetime import timedelta as _td
+        
+        cycle_start, cycle_end, _, _ = PaymentPeriodService.calculate_worker_period(
+            payroll.period_start,
+            payroll.period_end,
+            wt.payment_period_days,
+            wt.payment_period_start_date,
+            wt.payment_mode,
+        )
+        
+        total_working_days = sum(
+            1 for i in range((cycle_end - cycle_start).days + 1)
+            if (cycle_start + _td(days=i)).weekday() < 6  # Mon-Sat
+        )
+        
+        workers_by_work_type[work_type_key].append({
             "worker_id": worker_id,
-            "base_rate": wt.base_rate,
+            "base_rate": effective_base_rate,
             "payment_mode": wt.payment_mode,
             "tax_rule": wt.tax_rule,
             "days_worked": summary["days_worked"],
             "regular_hours": summary["regular_hours"],
             "overtime_hours": summary["overtime_hours"],
-            "overtime_multiplier": wt.overtime_multiplier or 1.5,
+            "overtime_rate_per_hour": wt.overtime_rate_per_hour or Decimal("0"),
             "pension_eligible": wt.pension_eligible,
-            "employee_pension_rate": wt.employee_pension_rate or 0.07,
-            "employer_pension_rate": wt.employer_pension_rate or 0.11,
+            # IMPORTANT: Only use rates explicitly configured in the work type.
+            # If not set, default to 0 so no deduction is ever made silently.
+            "employee_pension_rate": wt.employee_pension_rate if wt.employee_pension_rate is not None else 0.0,
+            "employer_pension_rate": wt.employer_pension_rate if wt.employer_pension_rate is not None else 0.0,
+            "allocated_overtime_hours": worker.overtime_hours if worker.overtime_hours is not None else Decimal("0"),
+            "allocated_overtime_rate": worker.overtime_rate_per_hour if worker.overtime_rate_per_hour is not None else Decimal("0"),
+            "payroll_period_start": payroll.period_start,
+            "payroll_period_end": payroll.period_end,
+            "payment_period_days": wt.payment_period_days,
+            "payment_period_start_date": wt.payment_period_start_date,
+            "period_total_calendar_days": total_working_days,
         })
+    
+    sorted_work_types = sorted(workers_by_work_type.keys(), key=lambda x: x[1])
+    
+    worker_payroll_data = []
+    for work_type_key in sorted_work_types:
+        worker_payroll_data.extend(workers_by_work_type[work_type_key])
     
     payroll_items, totals = payroll_calc.calculate_bulk_payroll(worker_payroll_data)
     
@@ -110,11 +213,17 @@ def calculate_payroll(
         db_item = PayrollItem(
             payroll_id=payroll.id,
             worker_id=item_data["worker_id"],
+            payment_period_start=item_data.get("payment_period_start"),
+            payment_period_end=item_data.get("payment_period_end"),
+            payment_period_days=item_data.get("payment_period_days"),
+            is_prorated=item_data.get("is_prorated", False),
+            payment_period_type=item_data.get("payment_period_type"),
             days_worked=item_data["days_worked"],
             regular_hours=item_data["regular_hours"],
             overtime_hours=item_data["overtime_hours"],
             base_salary=item_data["base_salary"],
             overtime_pay=item_data["overtime_pay"],
+            allocated_overtime_pay=item_data.get("allocated_overtime_pay", Decimal("0")),
             allowances=item_data["allowances"],
             gross_salary=item_data["gross_salary"],
             income_tax=item_data["income_tax"],
@@ -124,7 +233,7 @@ def calculate_payroll(
             other_deductions=item_data["other_deductions"],
             total_deductions=item_data["total_deductions"],
             net_salary=item_data["net_salary"],
-            tax_rule_applied=item_data["tax_rule_applied"],
+            tax_rule_applied=item_data.get("tax_rule_applied"),
         )
         db.add(db_item)
     
@@ -136,63 +245,28 @@ def calculate_payroll(
     
     db.commit()
     db.refresh(payroll)
-    return payroll
-
-
-@router.post("/approve", response_model=PayrollResponse)
-def approve_payroll(
-    approve_data: PayrollApprove,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    payroll = db.query(Payroll).filter(Payroll.id == approve_data.payroll_id).first()
-    if not payroll:
-        raise HTTPException(status_code=404, detail="Payroll not found")
     
-    if payroll.status != PayrollStatus.CALCULATED:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Can only approve payroll in CALCULATED status"
-        )
-    
-    payroll.status = PayrollStatus.APPROVED
-    payroll.approved_by_id = current_user.id
-    payroll.approved_at = datetime.utcnow().date()
-    if approve_data.notes:
-        payroll.notes = approve_data.notes
-    
-    db.commit()
-    db.refresh(payroll)
     return payroll
 
 
 @router.get("/", response_model=List[PayrollResponse])
-def list_payrolls(
+def get_payrolls(
+    site_id: int,
     skip: int = 0,
     limit: int = 100,
-    site_id: int = None,
-    status: PayrollStatus = None,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    query = db.query(Payroll)
+    if not verify_site_access(current_user, site_id, db):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You don't have access to this site"
+        )
     
-    accessible_sites = get_user_accessible_sites(current_user, db)
-    if accessible_sites is not None:
-        query = query.filter(Payroll.site_id.in_(accessible_sites))
+    payrolls = db.query(Payroll).filter(
+        Payroll.site_id == site_id
+    ).order_by(Payroll.period_start.desc()).offset(skip).limit(limit).all()
     
-    if site_id:
-        if accessible_sites is not None and site_id not in accessible_sites:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You don't have access to this site"
-            )
-        query = query.filter(Payroll.site_id == site_id)
-    
-    if status:
-        query = query.filter(Payroll.status == status)
-    
-    payrolls = query.order_by(Payroll.created_at.desc()).offset(skip).limit(limit).all()
     return payrolls
 
 
@@ -205,11 +279,18 @@ def get_payroll(
     payroll = db.query(Payroll).filter(Payroll.id == payroll_id).first()
     if not payroll:
         raise HTTPException(status_code=404, detail="Payroll not found")
+        
+    if not verify_site_access(current_user, payroll.site_id, db):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You don't have access to this site"
+        )
+        
     return payroll
 
 
-@router.delete("/{payroll_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_payroll(
+@router.get("/{payroll_id}/items", response_model=List[PayrollItemResponse])
+def get_payroll_items(
     payroll_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
@@ -217,13 +298,193 @@ def delete_payroll(
     payroll = db.query(Payroll).filter(Payroll.id == payroll_id).first()
     if not payroll:
         raise HTTPException(status_code=404, detail="Payroll not found")
+        
+    if not verify_site_access(current_user, payroll.site_id, db):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You don't have access to this site"
+        )
+        
+    items = db.query(PayrollItem).filter(
+        PayrollItem.payroll_id == payroll_id
+    ).join(Worker).order_by(Worker.full_name).all()
     
-    if payroll.status in [PayrollStatus.APPROVED, PayrollStatus.PAID]:
+    return items
+
+
+@router.post("/approve", response_model=PayrollResponse)
+def approve_payroll(
+    approve_data: PayrollApprove,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Formally approve calculated payroll run. Transitions status to APPROVED.
+    """
+    payroll = db.query(Payroll).filter(Payroll.id == approve_data.payroll_id).first()
+    if not payroll:
+        raise HTTPException(status_code=404, detail="Payroll not found")
+        
+    if not verify_site_access(current_user, payroll.site_id, db):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You don't have access to this site"
+        )
+        
+    if current_user.role not in [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.SITE_ADMIN]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only administrators can formally approve payroll"
+        )
+        
+    if payroll.status not in [PayrollStatus.DRAFT, PayrollStatus.CALCULATED]:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Cannot delete approved or paid payroll"
+            detail=f"Cannot approve payroll in {payroll.status} status. Must be CALCULATED."
         )
-    
-    db.delete(payroll)
+        
+    payroll.status = PayrollStatus.APPROVED
+    payroll.approved_by_id = current_user.id
+    payroll.approved_at = date.today()
+    if approve_data.notes:
+        payroll.notes = (payroll.notes or "") + f" | Approved: {approve_data.notes}"
+        
     db.commit()
-    return None
+    db.refresh(payroll)
+    return payroll
+
+
+@router.post("/{payroll_id}/lock")
+def lock_payroll(
+    payroll_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Lock payroll permanently. Transitions status to PAID/LOCKED and locks attendance records.
+    """
+    payroll = db.query(Payroll).filter(Payroll.id == payroll_id).first()
+    if not payroll:
+        raise HTTPException(status_code=404, detail="Payroll not found")
+        
+    if not verify_site_access(current_user, payroll.site_id, db):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You don't have access to this site"
+        )
+        
+    if current_user.role not in [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.SITE_ADMIN]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only administrators can lock payroll"
+        )
+        
+    payroll.status = PayrollStatus.PAID
+    
+    # Lock all attendance and overtime in this period so they cannot be altered or double-paid
+    db.query(Attendance).filter(
+        Attendance.site_id == payroll.site_id,
+        Attendance.attendance_date >= payroll.period_start,
+        Attendance.attendance_date <= payroll.period_end
+    ).update({"is_locked": True, "is_overtime_locked": True}, synchronize_session=False)
+    
+    db.commit()
+    db.refresh(payroll)
+    return {
+        "message": "Payroll locked and archived successfully. Associated attendances are sealed.",
+        "payroll_id": payroll.id,
+        "status": payroll.status
+    }
+
+
+@router.post("/{payroll_id}/items/{item_id}/mark-paid")
+def mark_payroll_item_paid(
+    payroll_id: int,
+    item_id: int,
+    is_paid: bool = Query(True),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Mark an individual worker's payroll item as paid or pending.
+    """
+    payroll = db.query(Payroll).filter(Payroll.id == payroll_id).first()
+    if not payroll:
+        raise HTTPException(status_code=404, detail="Payroll not found")
+        
+    if not verify_site_access(current_user, payroll.site_id, db):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You don't have access to this site"
+        )
+        
+    item = db.query(PayrollItem).filter(
+        PayrollItem.id == item_id,
+        PayrollItem.payroll_id == payroll_id
+    ).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="Payroll item not found")
+        
+    item.notes = (item.notes or "") + f" | Payment status: {'PAID' if is_paid else 'UNPAID'} by {current_user.username}"
+    db.commit()
+    return {
+        "message": "Payment status updated",
+        "payroll_id": payroll_id,
+        "item_id": item.id,
+        "is_paid": is_paid
+    }
+
+
+@router.get("/{payroll_id}/period-breakdown")
+def get_payroll_period_breakdown(
+    payroll_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+) -> Dict[str, Any]:
+    """
+    Statistical and category breakdown of a payroll run.
+    """
+    payroll = db.query(Payroll).filter(Payroll.id == payroll_id).first()
+    if not payroll:
+        raise HTTPException(status_code=404, detail="Payroll not found")
+        
+    if not verify_site_access(current_user, payroll.site_id, db):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You don't have access to this site"
+        )
+        
+    items = db.query(PayrollItem).filter(PayrollItem.payroll_id == payroll_id).all()
+    
+    by_work_type: Dict[str, Dict[str, Any]] = {}
+    for item in items:
+        wt_name = item.worker.work_type.name if (item.worker and item.worker.work_type) else "General"
+        if wt_name not in by_work_type:
+            by_work_type[wt_name] = {
+                "name": wt_name,
+                "worker_count": 0,
+                "total_gross": 0.0,
+                "total_net": 0.0,
+                "total_tax": 0.0,
+                "total_pension": 0.0
+            }
+        b = by_work_type[wt_name]
+        b["worker_count"] += 1
+        b["total_gross"] += float(item.gross_salary or 0)
+        b["total_net"] += float(item.net_salary or 0)
+        b["total_tax"] += float(item.income_tax or 0)
+        b["total_pension"] += float(item.employee_pension or 0)
+        
+    return {
+        "payroll_id": payroll.id,
+        "payroll_code": payroll.payroll_code,
+        "period_start": str(payroll.period_start),
+        "period_end": str(payroll.period_end),
+        "total_workers": len(items),
+        "total_gross": float(payroll.total_gross_amount or 0),
+        "total_net": float(payroll.total_net_amount or 0),
+        "total_deductions": float(payroll.total_deductions or 0),
+        "total_employer_pension": float(payroll.total_employer_pension or 0),
+        "breakdown_by_work_type": list(by_work_type.values())
+    }
+

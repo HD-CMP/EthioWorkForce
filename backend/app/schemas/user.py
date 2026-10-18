@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr, Field
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
 
 from app.models.user import UserRole
@@ -7,7 +7,7 @@ from app.models.user import UserRole
 
 class UserBase(BaseModel):
     username: str = Field(..., min_length=3, max_length=100)
-    email: EmailStr
+    email: Optional[EmailStr] = None
     full_name: str = Field(..., min_length=1, max_length=255)
     phone_number: Optional[str] = None
     role: UserRole = UserRole.VIEWER
@@ -40,6 +40,35 @@ class PasswordChange(BaseModel):
     confirm_password: str = Field(..., min_length=8)
 
 
+class SiteAssignmentInUser(BaseModel):
+    id: int
+    site_id: int
+    is_primary: bool
+    
+    class Config:
+        from_attributes = True
+
+
+class WorkPlaceInAssignment(BaseModel):
+    id: int
+    name: str
+    site_id: int = Field(..., validation_alias='parent_site_id')
+    
+    class Config:
+        from_attributes = True
+        populate_by_name = True
+
+
+class WorkPlaceAssignmentInUser(BaseModel):
+    id: int
+    work_place_id: int
+    is_primary: bool
+    work_place: Optional[WorkPlaceInAssignment] = None
+    
+    class Config:
+        from_attributes = True
+
+
 class UserResponse(UserBase):
     id: int
     is_active: bool
@@ -47,6 +76,8 @@ class UserResponse(UserBase):
     profile_photo: Optional[str] = None
     created_at: datetime
     updated_at: datetime
+    site_assignments: List[SiteAssignmentInUser] = []
+    work_place_assignments: List[WorkPlaceAssignmentInUser] = []
 
     class Config:
         from_attributes = True

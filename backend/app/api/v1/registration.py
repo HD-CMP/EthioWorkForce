@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
-from datetime import datetime
+from datetime import datetime, timezone
 
 from app.core.database import get_db
 from app.api.deps import get_current_user, require_user_management, require_super_admin, can_approve_users
@@ -9,6 +9,8 @@ from app.core.security import get_password_hash
 from app.models.user import User, UserRole
 from app.models.user_registration_request import UserRegistrationRequest, RequestStatus
 from app.models.user_site_assignment import UserSiteAssignment
+from app.models.user_work_place_assignment import UserWorkPlaceAssignment
+from app.models.site import Site
 from app.schemas.registration_request import (
     RegistrationRequestCreate,
     RegistrationRequestResponse,
@@ -24,41 +26,80 @@ def request_user_registration(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_user_management())
 ):
-    existing_user = db.query(User).filter(
-        (User.username == request_data.username) | (User.email == request_data.email)
-    ).first()
+    keep_existing_password = request_data.password.startswith("KEEP_EXISTING_PASSWORD_")
     
-    if existing_user:
+    # Check for existing username
+    existing_user = db.query(User).filter(User.username == request_data.username).first()
+    is_upgrade_request = existing_user is not None
+    
+    if not is_upgrade_request and keep_existing_password:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Username or email already exists"
+            detail={
+                "error_code": "PASSWORD_REQUIRED",
+                "message": f"Password is required for new user registration",
+                "username": request_data.username
+            }
         )
     
+    # Check for existing email only if email is provided and it's a new registration
+    if request_data.email and not is_upgrade_request:
+        existing_email = db.query(User).filter(User.email == request_data.email).first()
+        if existing_email:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={
+                    "error_code": "EMAIL_EXISTS",
+                    "message": "Email already exists",
+                    "email": request_data.email
+                }
+            )
+    
+    # Check for pending requests
+    pending_filters = [UserRegistrationRequest.username == request_data.username]
+    if request_data.email:
+        pending_filters.append(UserRegistrationRequest.email == request_data.email)
+    
     existing_request = db.query(UserRegistrationRequest).filter(
-        (UserRegistrationRequest.username == request_data.username) | 
-        (UserRegistrationRequest.email == request_data.email),
+        *pending_filters,
         UserRegistrationRequest.status == RequestStatus.PENDING
     ).first()
     
     if existing_request:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="A pending registration request already exists for this username or email"
+            status_code=status.HTTP_409_CONFLICT,
+            detail={
+                "error_code": "DUPLICATE_REQUEST",
+                "message": "A pending registration request already exists for this username or email",
+                "request_id": existing_request.id,
+                "username": existing_request.username,
+                "created_at": existing_request.created_at.isoformat() if existing_request.created_at else None
+            }
         )
     
     if current_user.role == UserRole.SITE_ADMIN and request_data.role in [UserRole.SUPER_ADMIN, UserRole.ADMIN]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="SITE_ADMIN cannot request SUPER_ADMIN or ADMIN roles"
+            detail={
+                "error_code": "PERMISSION_DENIED",
+                "message": "SITE_ADMIN cannot request SUPER_ADMIN or ADMIN roles",
+                "current_role": current_user.role.value,
+                "requested_role": request_data.role.value
+            }
         )
     
     if current_user.role == UserRole.ADMIN and request_data.role == UserRole.SUPER_ADMIN:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="ADMIN cannot request SUPER_ADMIN role"
+            detail={
+                "error_code": "PERMISSION_DENIED",
+                "message": "ADMIN cannot request SUPER_ADMIN role",
+                "current_role": current_user.role.value,
+                "requested_role": request_data.role.value
+            }
         )
     
-    hashed_password = get_password_hash(request_data.password)
+    hashed_password = request_data.password if keep_existing_password else get_password_hash(request_data.password)
     
     db_request = UserRegistrationRequest(
         username=request_data.username,
@@ -70,6 +111,8 @@ def request_user_registration(
         hashed_password=hashed_password,
         requested_by_id=current_user.id,
         request_reason=request_data.request_reason,
+        site_ids=request_data.site_ids,
+        work_place_ids=request_data.work_place_ids,
         status=RequestStatus.PENDING
     )
     
@@ -97,6 +140,15 @@ def list_registration_requests(
         query = query.filter(UserRegistrationRequest.status == status_filter)
     
     requests = query.order_by(UserRegistrationRequest.created_at.desc()).offset(skip).limit(limit).all()
+    
+    # Enrich requests with site names
+    for request in requests:
+        if request.site_ids and len(request.site_ids) > 0:
+            sites = db.query(Site).filter(Site.id.in_(request.site_ids)).all()
+            request.site_names = [site.name for site in sites]
+        else:
+            request.site_names = []
+    
     return requests
 
 
@@ -110,6 +162,14 @@ def list_pending_requests(
     requests = db.query(UserRegistrationRequest).filter(
         UserRegistrationRequest.status == RequestStatus.PENDING
     ).order_by(UserRegistrationRequest.created_at.asc()).offset(skip).limit(limit).all()
+    
+    # Enrich requests with site names
+    for request in requests:
+        if request.site_ids and len(request.site_ids) > 0:
+            sites = db.query(Site).filter(Site.id.in_(request.site_ids)).all()
+            request.site_names = [site.name for site in sites]
+        else:
+            request.site_names = []
     
     return requests
 
@@ -134,62 +194,120 @@ def approve_registration_request(
         )
     
     if approval_data.approved:
-        existing_user = db.query(User).filter(
-            (User.username == request.username) | (User.email == request.email)
-        ).first()
+        existing_user = db.query(User).filter(User.username == request.username).first()
         
         if existing_user:
-            request.status = RequestStatus.REJECTED
-            request.approval_notes = "Username or email already exists"
-            request.reviewed_at = datetime.utcnow()
+            # This is an upgrade request - update existing user
+            existing_user.role = UserRole(request.role)
+            existing_user.full_name = request.full_name
+            if request.email:
+                existing_user.email = request.email
+            if request.phone_number:
+                existing_user.phone_number = request.phone_number
+            existing_user.preferred_language = request.preferred_language
+            # Update password if it was changed (not the placeholder)
+            if not request.hashed_password.startswith('KEEP_EXISTING_PASSWORD_'):
+                existing_user.hashed_password = request.hashed_password
+            
+            # Clear existing assignments
+            db.query(UserSiteAssignment).filter(
+                UserSiteAssignment.user_id == existing_user.id
+            ).delete()
+            db.query(UserWorkPlaceAssignment).filter(
+                UserWorkPlaceAssignment.user_id == existing_user.id
+            ).delete()
+            
+            # Add new assignments (use approval_data if provided, otherwise use request data)
+            final_site_ids = approval_data.site_ids if approval_data.site_ids else request.site_ids
+            final_work_place_ids = approval_data.work_place_ids if approval_data.work_place_ids else request.work_place_ids
+            
+            if final_site_ids and len(final_site_ids) > 0:
+                for idx, site_id in enumerate(final_site_ids):
+                    site_assignment = UserSiteAssignment(
+                        user_id=existing_user.id,
+                        site_id=site_id,
+                        is_primary=(idx == 0)
+                    )
+                    db.add(site_assignment)
+            
+            if final_work_place_ids and len(final_work_place_ids) > 0:
+                for idx, work_place_id in enumerate(final_work_place_ids):
+                    work_place_assignment = UserWorkPlaceAssignment(
+                        user_id=existing_user.id,
+                        work_place_id=work_place_id,
+                        is_primary=(idx == 0)
+                    )
+                    db.add(work_place_assignment)
+            
+            request.status = RequestStatus.APPROVED
+            request.approval_notes = approval_data.approval_notes or "User upgraded successfully"
+            request.reviewed_at = datetime.now(timezone.utc)
             request.approved_by_id = current_user.id
+            
             db.commit()
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Username or email already exists"
+            db.refresh(existing_user)
+            
+            return {
+                "message": "User upgraded successfully",
+                "user_id": existing_user.id,
+                "username": existing_user.username
+            }
+        else:
+            # This is a new user registration
+            new_user = User(
+                username=request.username,
+                email=request.email,
+                full_name=request.full_name,
+                phone_number=request.phone_number,
+                hashed_password=request.hashed_password,
+                role=UserRole(request.role),
+                preferred_language=request.preferred_language,
+                is_active=True,
+                is_verified=True
             )
-        
-        new_user = User(
-            username=request.username,
-            email=request.email,
-            full_name=request.full_name,
-            phone_number=request.phone_number,
-            hashed_password=request.hashed_password,
-            role=UserRole(request.role),
-            preferred_language=request.preferred_language,
-            is_active=True,
-            is_verified=True
-        )
-        
-        db.add(new_user)
-        db.flush()
-        
-        if approval_data.site_ids and len(approval_data.site_ids) > 0:
-            for idx, site_id in enumerate(approval_data.site_ids):
-                site_assignment = UserSiteAssignment(
-                    user_id=new_user.id,
-                    site_id=site_id,
-                    is_primary=(idx == 0)
-                )
-                db.add(site_assignment)
-        
-        request.status = RequestStatus.APPROVED
-        request.approval_notes = approval_data.approval_notes
-        request.reviewed_at = datetime.utcnow()
-        request.approved_by_id = current_user.id
-        
-        db.commit()
-        db.refresh(new_user)
-        
-        return {
-            "message": "Registration request approved successfully",
-            "user_id": new_user.id,
-            "username": new_user.username
-        }
+            
+            db.add(new_user)
+            db.flush()
+            
+            # Use approval_data if provided, otherwise use request data
+            final_site_ids = approval_data.site_ids if approval_data.site_ids else request.site_ids
+            final_work_place_ids = approval_data.work_place_ids if approval_data.work_place_ids else request.work_place_ids
+            
+            if final_site_ids and len(final_site_ids) > 0:
+                for idx, site_id in enumerate(final_site_ids):
+                    site_assignment = UserSiteAssignment(
+                        user_id=new_user.id,
+                        site_id=site_id,
+                        is_primary=(idx == 0)
+                    )
+                    db.add(site_assignment)
+            
+            if final_work_place_ids and len(final_work_place_ids) > 0:
+                for idx, work_place_id in enumerate(final_work_place_ids):
+                    work_place_assignment = UserWorkPlaceAssignment(
+                        user_id=new_user.id,
+                        work_place_id=work_place_id,
+                        is_primary=(idx == 0)
+                    )
+                    db.add(work_place_assignment)
+            
+            request.status = RequestStatus.APPROVED
+            request.approval_notes = approval_data.approval_notes
+            request.reviewed_at = datetime.now(timezone.utc)
+            request.approved_by_id = current_user.id
+            
+            db.commit()
+            db.refresh(new_user)
+            
+            return {
+                "message": "Registration request approved successfully",
+                "user_id": new_user.id,
+                "username": new_user.username
+            }
     else:
         request.status = RequestStatus.REJECTED
         request.approval_notes = approval_data.approval_notes or "Rejected by administrator"
-        request.reviewed_at = datetime.utcnow()
+        request.reviewed_at = datetime.now(timezone.utc)
         request.approved_by_id = current_user.id
         
         db.commit()
@@ -226,7 +344,7 @@ def cancel_registration_request(
         )
     
     request.status = RequestStatus.CANCELLED
-    request.reviewed_at = datetime.utcnow()
+    request.reviewed_at = datetime.now(timezone.utc)
     
     db.commit()
     return None

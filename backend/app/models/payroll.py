@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Date, ForeignKey, Enum as SQLEnum, Numeric, Boolean, Text
+from sqlalchemy import Column, Integer, String, Date, ForeignKey, Enum as SQLEnum, Numeric, Boolean, Text, Float
 from sqlalchemy.orm import relationship
 import enum
 
@@ -47,6 +47,8 @@ class Payroll(BaseModel):
     approved_at = Column(Date, nullable=True)
     
     notes = Column(Text, nullable=True)
+    work_type_id = Column(Integer, ForeignKey("work_types.id"), nullable=True)
+    work_place_id = Column(Integer, ForeignKey("work_places.id"), nullable=True)
     
     site = relationship("Site", back_populates="payrolls")
     payroll_items = relationship("PayrollItem", back_populates="payroll", cascade="all, delete-orphan")
@@ -60,12 +62,20 @@ class PayrollItem(BaseModel):
     payroll_id = Column(Integer, ForeignKey("payrolls.id"), nullable=False)
     worker_id = Column(Integer, ForeignKey("workers.id"), nullable=False)
     
+    # Payment period metadata
+    payment_period_start = Column(Date, nullable=True)
+    payment_period_end = Column(Date, nullable=True)
+    payment_period_days = Column(Integer, nullable=True)
+    is_prorated = Column(Boolean, default=False, nullable=False)
+    payment_period_type = Column(String(50), nullable=True)
+    
     days_worked = Column(Integer, default=0, nullable=False)
     regular_hours = Column(Integer, default=0, nullable=False)
-    overtime_hours = Column(Integer, default=0, nullable=False)
+    overtime_hours = Column(Float, default=0.0, nullable=False)
     
     base_salary = Column(Numeric(12, 2), default=0, nullable=False)
     overtime_pay = Column(Numeric(12, 2), default=0, nullable=False)
+    allocated_overtime_pay = Column(Numeric(12, 2), default=0, nullable=False)
     allowances = Column(Numeric(12, 2), default=0, nullable=False)
     
     gross_salary = Column(Numeric(12, 2), default=0, nullable=False)

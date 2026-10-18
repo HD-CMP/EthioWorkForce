@@ -1,9 +1,10 @@
 from decimal import Decimal
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Optional
 from datetime import date
 from loguru import logger
 
 from app.models.work_type import TaxRule, PaymentMode
+from app.services.payment_period_service import PaymentPeriodService
 
 
 class ERCATaxCalculator:
@@ -59,29 +60,37 @@ class PayrollCalculator:
         tax_rule: TaxRule,
         days_worked: int,
         regular_hours: int,
-        overtime_hours: int,
-        overtime_multiplier: float,
+        overtime_hours: float,
+        overtime_rate_per_hour: Decimal,
         pension_eligible: bool,
         employee_pension_rate: float,
         employer_pension_rate: float,
         allowances: Decimal = Decimal("0"),
         other_deductions: Decimal = Decimal("0"),
+        allocated_overtime_hours: Decimal = Decimal("0"),
+        allocated_overtime_rate: Decimal = Decimal("0"),
+        period_total_calendar_days: int = 0,  # 6-day work week days in payroll period
     ) -> Dict[str, Decimal]:
 
         base_salary = self._calculate_base_salary(
-            base_rate, payment_mode, days_worked, regular_hours
+            base_rate, payment_mode, days_worked, regular_hours, period_total_calendar_days
         )
 
         overtime_pay = self._calculate_overtime_pay(
-            base_rate, payment_mode, overtime_hours, overtime_multiplier
+            overtime_hours, overtime_rate_per_hour
         )
 
-        gross_salary = base_salary + overtime_pay + allowances
+        allocated_overtime_pay = self._calculate_allocated_overtime(
+            allocated_overtime_hours, allocated_overtime_rate
+        )
+
+        gross_salary = base_salary + overtime_pay + allocated_overtime_pay + allowances
 
         if tax_rule == TaxRule.DAILY_CASUAL:
             return {
                 "base_salary": base_salary,
                 "overtime_pay": overtime_pay,
+                "allocated_overtime_pay": allocated_overtime_pay,
                 "allowances": allowances,
                 "gross_salary": gross_salary,
                 "income_tax": Decimal("0"),
@@ -105,6 +114,9 @@ class PayrollCalculator:
             employer_pension = (gross_salary * Decimal(str(employer_pension_rate))).quantize(
                 Decimal("0.01")
             )
+            # ERCA: Income tax is computed on taxable income = gross - employee pension
+            taxable_income = gross_salary - employee_pension
+            income_tax = self.tax_calculator.calculate_income_tax(taxable_income)
 
         cost_sharing = Decimal("0")
 
@@ -114,6 +126,7 @@ class PayrollCalculator:
         return {
             "base_salary": base_salary,
             "overtime_pay": overtime_pay,
+            "allocated_overtime_pay": allocated_overtime_pay,
             "allowances": allowances,
             "gross_salary": gross_salary,
             "income_tax": income_tax,
@@ -127,9 +140,22 @@ class PayrollCalculator:
         }
 
     def _calculate_base_salary(
-        self, base_rate: Decimal, payment_mode: PaymentMode, days_worked: int, regular_hours: int
+        self, base_rate: Decimal, payment_mode: PaymentMode, days_worked: int,
+        regular_hours: int, total_working_days: int = 0
     ) -> Decimal:
         if payment_mode == PaymentMode.MONTHLY_SALARY:
+            # PRORATION: If we know total working days in the period and the
+            # worker didn't work all of them, prorate the monthly salary.
+            # This handles leave, absent days, and mid-month joiners/leavers.
+            if total_working_days > 0 and days_worked < total_working_days:
+                daily_rate = base_rate / Decimal(str(total_working_days))
+                prorated = (daily_rate * Decimal(str(days_worked))).quantize(Decimal("0.01"))
+                logger.debug(
+                    f"Monthly proration: {days_worked}/{total_working_days} days "
+                    f"@ {base_rate} => {prorated}"
+                )
+                return prorated
+            # Full month — return full salary
             return base_rate
 
         elif payment_mode == PaymentMode.DAILY_RATE:
@@ -145,27 +171,25 @@ class PayrollCalculator:
 
     def _calculate_overtime_pay(
         self,
-        base_rate: Decimal,
-        payment_mode: PaymentMode,
-        overtime_hours: int,
-        overtime_multiplier: float,
+        overtime_hours: float,
+        overtime_rate_per_hour: Decimal,
     ) -> Decimal:
-        if overtime_hours == 0:
+        if overtime_hours == 0 or overtime_rate_per_hour is None or overtime_rate_per_hour == 0:
             return Decimal("0")
 
-        if payment_mode == PaymentMode.MONTHLY_SALARY:
-            hourly_rate = base_rate / Decimal("176")
-        elif payment_mode == PaymentMode.DAILY_RATE:
-            hourly_rate = base_rate / Decimal("8")
-        elif payment_mode == PaymentMode.HOURLY_RATE:
-            hourly_rate = base_rate
-        else:
-            return Decimal("0")
-
-        overtime_rate = hourly_rate * Decimal(str(overtime_multiplier))
-        overtime_pay = overtime_rate * Decimal(str(overtime_hours))
-
+        overtime_pay = overtime_rate_per_hour * Decimal(str(overtime_hours))
         return overtime_pay.quantize(Decimal("0.01"))
+
+    def _calculate_allocated_overtime(
+        self,
+        allocated_hours: Decimal,
+        allocated_rate: Decimal,
+    ) -> Decimal:
+        if allocated_hours == 0 or allocated_rate == 0:
+            return Decimal("0")
+        
+        allocated_pay = allocated_hours * allocated_rate
+        return allocated_pay.quantize(Decimal("0.01"))
 
     def calculate_bulk_payroll(
         self, worker_payroll_data: List[Dict]
@@ -180,12 +204,51 @@ class PayrollCalculator:
         }
 
         for data in worker_payroll_data:
-            result = self.calculate_worker_payroll(**data)
+            worker_id = data.get("worker_id")
             
-            result["worker_id"] = data.get("worker_id")
+            payroll_period_start = data.get("payroll_period_start")
+            payroll_period_end = data.get("payroll_period_end")
+            payment_period_days = data.get("payment_period_days")
+            payment_period_start_date = data.get("payment_period_start_date")
+            payment_mode = data.get("payment_mode")
+            
+            # Build kwargs — strip fields that are metadata only (not calculator inputs)
+            # NOTE: period_total_calendar_days IS passed through to the calculator for proration
+            calc_keys = {
+                "payroll_period_start", "payroll_period_end", "payment_period_days",
+                "payment_period_start_date", "worker_id"
+            }
+            calc_data = {k: v for k, v in data.items() if k not in calc_keys}
+            
+            result = self.calculate_worker_payroll(**calc_data)
+            
+            result["worker_id"] = worker_id
             result["days_worked"] = data.get("days_worked")
             result["regular_hours"] = data.get("regular_hours")
             result["overtime_hours"] = data.get("overtime_hours")
+            
+            if payroll_period_start and payroll_period_end:
+                period_start, period_end, period_length, is_prorated = PaymentPeriodService.calculate_worker_period(
+                    payroll_period_start,
+                    payroll_period_end,
+                    payment_period_days,
+                    payment_period_start_date,
+                    payment_mode,
+                )
+                
+                result["payment_period_start"] = period_start
+                result["payment_period_end"] = period_end
+                result["payment_period_days"] = period_length
+                result["is_prorated"] = is_prorated
+                result["payment_period_type"] = PaymentPeriodService._get_period_type_name(
+                    period_length, payment_mode
+                )
+            else:
+                result["payment_period_start"] = None
+                result["payment_period_end"] = None
+                result["payment_period_days"] = None
+                result["is_prorated"] = False
+                result["payment_period_type"] = None
             
             payroll_items.append(result)
             

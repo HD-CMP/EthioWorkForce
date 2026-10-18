@@ -16,7 +16,12 @@ class VisualFeedbackOverlay {
     required String message,
     String? subtitle,
     Duration duration = const Duration(milliseconds: 2000),
+    bool showFullScreenFlash = false,
   }) {
+    if (showFullScreenFlash) {
+      FullScreenFlashAnimation.show(context, type);
+    }
+
     removeCurrentOverlay();
 
     final overlay = Overlay.of(context);
@@ -32,6 +37,23 @@ class VisualFeedbackOverlay {
 
     _currentOverlay = overlayEntry;
     overlay.insert(overlayEntry);
+  }
+
+  static void showAccessibleFeedback(
+    BuildContext context, {
+    required FeedbackType type,
+    required String message,
+    String? subtitle,
+    Duration duration = const Duration(milliseconds: 3000),
+  }) {
+    showFlashFeedback(
+      context,
+      type: type,
+      message: message,
+      subtitle: subtitle,
+      duration: duration,
+      showFullScreenFlash: true,
+    );
   }
 
   static void removeCurrentOverlay() {

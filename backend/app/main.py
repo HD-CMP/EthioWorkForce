@@ -29,12 +29,14 @@ def create_application() -> FastAPI:
             traces_sample_rate=0.1,
         )
 
+    show_docs = settings.ENABLE_DOCS or settings.ENVIRONMENT != "production"
+
     application = FastAPI(
         title="EthioWorkforce API",
         description="Offline-First Workforce Control, Attendance & Payroll System",
         version="1.0.0",
-        docs_url="/api/docs" if settings.ENVIRONMENT != "production" else None,
-        redoc_url="/api/redoc" if settings.ENVIRONMENT != "production" else None,
+        docs_url="/api/docs" if show_docs else None,
+        redoc_url="/api/redoc" if show_docs else None,
         lifespan=lifespan,
     )
 
@@ -50,6 +52,17 @@ def create_application() -> FastAPI:
     application.add_middleware(ErrorHandlerMiddleware)
 
     application.include_router(api_router, prefix="/api/v1")
+
+    @application.get("/")
+    async def root():
+        return {
+            "name": "EthioWorkforce API",
+            "version": "1.0.0",
+            "status": "operational",
+            "environment": settings.ENVIRONMENT,
+            "docs": "/api/docs" if show_docs else None,
+            "health": "/health",
+        }
 
     @application.get("/health")
     async def health_check():

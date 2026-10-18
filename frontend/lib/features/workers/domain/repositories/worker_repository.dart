@@ -1,7 +1,7 @@
 import '../entities/worker.dart';
 
 abstract class WorkerRepository {
-  Future<List<Worker>> getWorkers({String? siteId, String? workType, bool? isActive});
+  Future<List<Worker>> getWorkers({int? siteId, int? workTypeId, String? status});
   Future<Worker> getWorkerById(int id);
   Future<Worker> createWorker(Worker worker);
   Future<Worker> updateWorker(Worker worker);

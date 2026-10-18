@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, Date, DateTime, Time, ForeignKey, Enum as SQLEnum, Text
+from sqlalchemy import Column, Integer, String, Boolean, Date, DateTime, Time, ForeignKey, Enum as SQLEnum, Text, Float
 from sqlalchemy.orm import relationship
 import enum
 
@@ -37,11 +37,15 @@ class Attendance(BaseModel):
     method = Column(SQLEnum(AttendanceMethod), nullable=False)
     
     regular_hours = Column(Integer, default=8, nullable=False)
-    overtime_hours = Column(Integer, default=0, nullable=False)
+    overtime_hours = Column(Float, default=0.0, nullable=False)
     
     is_verified = Column(Boolean, default=False, nullable=False)
     verified_by_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     verified_at = Column(DateTime, nullable=True)
+    
+    is_overtime_verified = Column(Boolean, default=False, nullable=False)
+    overtime_verified_by_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    overtime_verified_at = Column(DateTime, nullable=True)
     
     override_reason = Column(Text, nullable=True)
     notes = Column(Text, nullable=True)
@@ -51,6 +55,7 @@ class Attendance(BaseModel):
     ethiopian_date_day = Column(Integer, nullable=True)
     
     is_locked = Column(Boolean, default=False, nullable=False)
+    is_overtime_locked = Column(Boolean, default=False, nullable=False)
     
     worker = relationship("Worker", back_populates="attendances")
     site = relationship("Site", back_populates="attendances")

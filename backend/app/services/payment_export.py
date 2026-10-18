@@ -307,3 +307,297 @@ class PaymentExportService:
         
         logger.info(f"Cash payment sheet exported for {len(payroll_items)} workers")
         return output.getvalue()
+
+    @staticmethod
+    def export_erca_tax_schedule_excel(
+        payroll_code: str,
+        period_str: str,
+        payroll_items: List[Dict],
+        org_name: str = "EthioWorkforce Enterprise",
+        tin_number: str = ""
+    ) -> bytes:
+        """
+        Ethiopian Ministry of Revenues / ERCA Income Tax Schedule & Statutory Remittance
+        Excel format required for tax declaration, internal auditing, and statutory filing.
+        """
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "ERCA Tax Schedule"
+
+        ws.merge_cells('A1:K1')
+        title_cell = ws['A1']
+        title_cell.value = "MINISTRY OF REVENUES (ERCA) - EMPLOYMENT INCOME TAX SCHEDULE"
+        title_cell.font = Font(bold=True, color="FFFFFF", size=13)
+        title_cell.alignment = Alignment(horizontal='center', vertical='center')
+        title_cell.fill = PatternFill(start_color="1E4620", end_color="1E4620", fill_type="solid")
+        ws.row_dimensions[1].height = 28
+
+        ws['A3'] = "Organization:"
+        ws['B3'] = org_name
+        ws['A4'] = "TIN Number:"
+        ws['B4'] = tin_number or "N/A"
+        ws['E3'] = "Payroll Code:"
+        ws['F3'] = payroll_code
+        ws['E4'] = "Tax Period:"
+        ws['F4'] = period_str
+
+        for r in (3, 4):
+            ws.cell(row=r, column=1).font = Font(bold=True)
+            ws.cell(row=r, column=5).font = Font(bold=True)
+
+        header_fill = PatternFill(start_color="2E7D32", end_color="2E7D32", fill_type="solid")
+        header_font = Font(bold=True, color="FFFFFF", size=10)
+        border = Border(
+            left=Side(style='thin'),
+            right=Side(style='thin'),
+            top=Side(style='thin'),
+            bottom=Side(style='thin')
+        )
+
+        headers = [
+            "S/N", "Employee ID", "Full Name", "TIN / Nat. ID",
+            "Gross Pay (ETB)", "Emp. Pension 7%", "Taxable Income",
+            "Tax Bracket", "Income Tax (ETB)", "Empr. Pension 11%", "Total Remittance"
+        ]
+        header_row = 6
+        for col, h in enumerate(headers, start=1):
+            cell = ws.cell(row=header_row, column=col, value=h)
+            cell.fill = header_fill
+            cell.font = header_font
+            cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+            cell.border = border
+        ws.row_dimensions[header_row].height = 28
+
+        total_gross = Decimal("0")
+        total_emp_pension = Decimal("0")
+        total_taxable = Decimal("0")
+        total_income_tax = Decimal("0")
+        total_empr_pension = Decimal("0")
+        total_remittance = Decimal("0")
+
+        for idx, item in enumerate(payroll_items, start=header_row + 1):
+            gross = Decimal(str(item.get('gross_salary', 0)))
+            emp_pen = Decimal(str(item.get('employee_pension', 0)))
+            taxable = gross - emp_pen if gross >= emp_pen else Decimal("0")
+            tax = Decimal(str(item.get('income_tax', 0)))
+            empr_pen = Decimal(str(item.get('employer_pension', 0)))
+            remit = tax + emp_pen + empr_pen
+
+            total_gross += gross
+            total_emp_pension += emp_pen
+            total_taxable += taxable
+            total_income_tax += tax
+            total_empr_pension += empr_pen
+            total_remittance += remit
+
+            ws.cell(row=idx, column=1, value=idx - header_row).border = border
+            ws.cell(row=idx, column=2, value=item.get('employee_id', '')).border = border
+            ws.cell(row=idx, column=3, value=item.get('worker_name', '')).border = border
+            ws.cell(row=idx, column=4, value=item.get('national_id', '')).border = border
+
+            def _money(c, val):
+                cell = ws.cell(row=idx, column=c, value=float(val))
+                cell.number_format = '#,##0.00'
+                cell.border = border
+                return cell
+
+            _money(5, gross)
+            _money(6, emp_pen)
+            _money(7, taxable)
+
+            tax_rule = item.get('tax_rule_applied', 'standard')
+            ws.cell(row=idx, column=8, value=tax_rule).border = border
+
+            _money(9, tax)
+            _money(10, empr_pen)
+            _money(11, remit)
+            ws.row_dimensions[idx].height = 20
+
+        tot_r = len(payroll_items) + header_row + 1
+        ws.merge_cells(f'A{tot_r}:D{tot_r}')
+        tot_lbl = ws.cell(row=tot_r, column=1, value="TOTAL STATUTORY REMITTANCE")
+        tot_lbl.font = Font(bold=True, size=11)
+        tot_lbl.alignment = Alignment(horizontal='right')
+        tot_lbl.border = border
+
+        for c, val in [
+            (5, total_gross), (6, total_emp_pension), (7, total_taxable),
+            (9, total_income_tax), (10, total_empr_pension), (11, total_remittance)
+        ]:
+            cell = ws.cell(row=tot_r, column=c, value=float(val))
+            cell.number_format = '#,##0.00'
+            cell.font = Font(bold=True)
+            cell.border = border
+
+        ws.cell(row=tot_r, column=8, value="").border = border
+
+        widths = {'A': 6, 'B': 14, 'C': 26, 'D': 14, 'E': 16, 'F': 16, 'G': 16, 'H': 14, 'I': 16, 'J': 16, 'K': 18}
+        for col_letter, w in widths.items():
+            ws.column_dimensions[col_letter].width = w
+
+        sig_r = tot_r + 3
+        ws.cell(row=sig_r, column=2, value="Prepared By: ___________________")
+        ws.cell(row=sig_r, column=5, value="Verified By: ___________________")
+        ws.cell(row=sig_r, column=9, value="Approved By: ___________________")
+
+        output = io.BytesIO()
+        wb.save(output)
+        output.seek(0)
+        return output.getvalue()
+
+    @staticmethod
+    def export_worker_census_excel(workers_data: List[Dict], site_name: str = "All Sites") -> bytes:
+        """
+        Enterprise Workforce Census & HR Registry in Excel format.
+        """
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Workforce Census"
+
+        ws.merge_cells('A1:N1')
+        title_cell = ws['A1']
+        title_cell.value = f"ETHIOWORKFORCE - WORKFORCE CENSUS & HR REGISTER ({site_name.upper()})"
+        title_cell.font = Font(bold=True, color="FFFFFF", size=13)
+        title_cell.alignment = Alignment(horizontal='center', vertical='center')
+        title_cell.fill = PatternFill(start_color="0D47A1", end_color="0D47A1", fill_type="solid")
+        ws.row_dimensions[1].height = 28
+
+        ws['A3'] = f"Generated On: {date.today().strftime('%B %d, %Y')} | Total Workers: {len(workers_data)}"
+        ws['A3'].font = Font(italic=True)
+
+        header_fill = PatternFill(start_color="1976D2", end_color="1976D2", fill_type="solid")
+        header_font = Font(bold=True, color="FFFFFF", size=10)
+        border = Border(
+            left=Side(style='thin'), right=Side(style='thin'),
+            top=Side(style='thin'), bottom=Side(style='thin')
+        )
+
+        headers = [
+            "S/N", "Employee ID", "Full Name", "Phone", "Site", "Workplace",
+            "Work Type", "Hierarchy", "Pay Mode", "Base Rate (ETB)", "Bank",
+            "Account No.", "Status", "Hire Date"
+        ]
+        header_row = 5
+        for col, h in enumerate(headers, start=1):
+            cell = ws.cell(row=header_row, column=col, value=h)
+            cell.fill = header_fill
+            cell.font = header_font
+            cell.alignment = Alignment(horizontal='center', vertical='center')
+            cell.border = border
+        ws.row_dimensions[header_row].height = 24
+
+        for idx, w in enumerate(workers_data, start=header_row + 1):
+            ws.cell(row=idx, column=1, value=idx - header_row).border = border
+            ws.cell(row=idx, column=2, value=w.get('employee_id', '')).border = border
+            ws.cell(row=idx, column=3, value=w.get('full_name', '')).border = border
+            ws.cell(row=idx, column=4, value=w.get('phone_number', '')).border = border
+            ws.cell(row=idx, column=5, value=w.get('site_name', '')).border = border
+            ws.cell(row=idx, column=6, value=w.get('work_place_name', '')).border = border
+            ws.cell(row=idx, column=7, value=w.get('work_type_name', '')).border = border
+            ws.cell(row=idx, column=8, value=w.get('hierarchy_level', '')).border = border
+            ws.cell(row=idx, column=9, value=w.get('payment_mode', '')).border = border
+
+            rate_cell = ws.cell(row=idx, column=10, value=float(w.get('base_rate', 0) or 0))
+            rate_cell.number_format = '#,##0.00'
+            rate_cell.border = border
+
+            ws.cell(row=idx, column=11, value=w.get('bank_name', '')).border = border
+            ws.cell(row=idx, column=12, value=w.get('bank_account_number', '')).border = border
+            ws.cell(row=idx, column=13, value=(w.get('status', '') or '').upper()).border = border
+            ws.cell(row=idx, column=14, value=str(w.get('hire_date', ''))).border = border
+            ws.row_dimensions[idx].height = 20
+
+        widths = {
+            'A': 6, 'B': 14, 'C': 26, 'D': 15, 'E': 16, 'F': 16, 'G': 18,
+            'H': 10, 'I': 14, 'J': 15, 'K': 12, 'L': 18, 'M': 12, 'N': 13
+        }
+        for col_letter, w in widths.items():
+            ws.column_dimensions[col_letter].width = w
+
+        output = io.BytesIO()
+        wb.save(output)
+        output.seek(0)
+        return output.getvalue()
+
+    @staticmethod
+    def export_attendance_roster_excel(roster_data: List[Dict], period_str: str) -> bytes:
+        """
+        Attendance & Overtime Ledger in Excel format.
+        """
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Attendance Roster"
+
+        ws.merge_cells('A1:M1')
+        title_cell = ws['A1']
+        title_cell.value = f"ETHIOWORKFORCE - ATTENDANCE & OVERTIME AUDIT LEDGER ({period_str})"
+        title_cell.font = Font(bold=True, color="FFFFFF", size=13)
+        title_cell.alignment = Alignment(horizontal='center', vertical='center')
+        title_cell.fill = PatternFill(start_color="37474F", end_color="37474F", fill_type="solid")
+        ws.row_dimensions[1].height = 28
+
+        header_fill = PatternFill(start_color="546E7A", end_color="546E7A", fill_type="solid")
+        header_font = Font(bold=True, color="FFFFFF", size=10)
+        border = Border(
+            left=Side(style='thin'), right=Side(style='thin'),
+            top=Side(style='thin'), bottom=Side(style='thin')
+        )
+
+        headers = [
+            "S/N", "Employee ID", "Full Name", "Site", "Present", "Late",
+            "Half Day", "Leave", "Absent", "Days Worked", "Regular Hrs", "OT Hours", "OT Pay (ETB)"
+        ]
+        header_row = 4
+        for col, h in enumerate(headers, start=1):
+            cell = ws.cell(row=header_row, column=col, value=h)
+            cell.fill = header_fill
+            cell.font = header_font
+            cell.alignment = Alignment(horizontal='center', vertical='center')
+            cell.border = border
+        ws.row_dimensions[header_row].height = 24
+
+        tot_present = 0
+        tot_worked = 0.0
+        tot_ot_hours = 0.0
+        tot_ot_pay = Decimal("0")
+
+        for idx, r in enumerate(roster_data, start=header_row + 1):
+            worked = float(r.get('days_worked', 0))
+            ot_h = float(r.get('overtime_hours', 0))
+            ot_p = Decimal(str(r.get('overtime_pay', 0)))
+
+            tot_present += int(r.get('present_count', 0))
+            tot_worked += worked
+            tot_ot_hours += ot_h
+            tot_ot_pay += ot_p
+
+            ws.cell(row=idx, column=1, value=idx - header_row).border = border
+            ws.cell(row=idx, column=2, value=r.get('employee_id', '')).border = border
+            ws.cell(row=idx, column=3, value=r.get('worker_name', '')).border = border
+            ws.cell(row=idx, column=4, value=r.get('site_name', '')).border = border
+            ws.cell(row=idx, column=5, value=r.get('present_count', 0)).border = border
+            ws.cell(row=idx, column=6, value=r.get('late_count', 0)).border = border
+            ws.cell(row=idx, column=7, value=r.get('half_day_count', 0)).border = border
+            ws.cell(row=idx, column=8, value=r.get('leave_count', 0)).border = border
+            ws.cell(row=idx, column=9, value=r.get('absent_count', 0)).border = border
+            ws.cell(row=idx, column=10, value=worked).border = border
+            ws.cell(row=idx, column=11, value=r.get('regular_hours', 0)).border = border
+            ws.cell(row=idx, column=12, value=ot_h).border = border
+
+            ot_pay_cell = ws.cell(row=idx, column=13, value=float(ot_p))
+            ot_pay_cell.number_format = '#,##0.00'
+            ot_pay_cell.border = border
+            ws.row_dimensions[idx].height = 20
+
+        widths = {
+            'A': 6, 'B': 14, 'C': 26, 'D': 16, 'E': 10, 'F': 10,
+            'G': 10, 'H': 10, 'I': 10, 'J': 12, 'K': 12, 'L': 12, 'M': 16
+        }
+        for col_letter, w in widths.items():
+            ws.column_dimensions[col_letter].width = w
+
+        output = io.BytesIO()
+        wb.save(output)
+        output.seek(0)
+        return output.getvalue()
+

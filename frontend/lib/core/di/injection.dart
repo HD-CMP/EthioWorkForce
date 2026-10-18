@@ -10,7 +10,13 @@ import '../../features/auth/data/datasources/auth_local_datasource.dart';
 import '../../features/auth/data/repositories/auth_repository_impl.dart';
 import '../../features/auth/domain/repositories/auth_repository.dart';
 import '../../features/auth/domain/usecases/login_usecase.dart';
+import '../../features/auth/domain/usecases/logout_usecase.dart';
 import '../../features/auth/presentation/bloc/auth_bloc.dart';
+import '../../features/payroll/data/datasources/payroll_remote_datasource.dart';
+import '../../features/payroll/data/repositories/payroll_repository_impl.dart';
+import '../../features/payroll/domain/repositories/payroll_repository.dart';
+import '../../features/payroll/presentation/bloc/payroll_bloc.dart';
+import '../../features/reports/data/datasources/reports_remote_datasource.dart';
 
 final getIt = GetIt.instance;
 
@@ -42,5 +48,26 @@ Future<void> configureDependencies() async {
   
   getIt.registerLazySingleton(() => LoginUseCase(getIt<AuthRepository>()));
   
-  getIt.registerFactory(() => AuthBloc(loginUseCase: getIt<LoginUseCase>()));
+  getIt.registerLazySingleton(() => LogoutUseCase(getIt<AuthRepository>()));
+  
+  getIt.registerFactory(() => AuthBloc(
+    loginUseCase: getIt<LoginUseCase>(),
+    logoutUseCase: getIt<LogoutUseCase>(),
+  ));
+  
+  getIt.registerLazySingleton<PayrollRemoteDataSource>(
+    () => PayrollRemoteDataSource(getIt<Dio>()),
+  );
+  
+  getIt.registerLazySingleton<PayrollRepository>(
+    () => PayrollRepositoryImpl(
+      remoteDataSource: getIt<PayrollRemoteDataSource>(),
+    ),
+  );
+  
+  getIt.registerFactory(() => PayrollBloc(repository: getIt<PayrollRepository>()));
+
+  getIt.registerLazySingleton<ReportsRemoteDataSource>(
+    () => ReportsRemoteDataSource(getIt<Dio>()),
+  );
 }

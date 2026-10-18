@@ -1,12 +1,13 @@
 from typing import Generator, Optional, List
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.core.database import get_db
 from app.core.security import decode_token
 from app.models.user import User, UserRole
 from app.models.user_site_assignment import UserSiteAssignment
+from app.models.user_work_place_assignment import UserWorkPlaceAssignment
 
 security = HTTPBearer()
 
@@ -25,7 +26,9 @@ def get_current_user(
             detail="Invalid authentication credentials"
         )
     
-    user = db.query(User).filter(User.id == user_id).first()
+    user = db.query(User).options(
+        joinedload(User.work_place_assignments).joinedload(UserWorkPlaceAssignment.work_place)
+    ).filter(User.id == user_id).first()
     if user is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

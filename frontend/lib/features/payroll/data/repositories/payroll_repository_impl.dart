@@ -9,9 +9,9 @@ class PayrollRepositoryImpl implements PayrollRepository {
   PayrollRepositoryImpl({required this.remoteDataSource});
 
   @override
-  Future<List<Payroll>> getPayrolls({String? status, DateTime? month}) async {
+  Future<List<Payroll>> getPayrolls({String? status, int? siteId}) async {
     try {
-      return await remoteDataSource.getPayrolls(status: status, month: month);
+      return await remoteDataSource.getPayrolls(status: status, siteId: siteId);
     } catch (e) {
       throw Exception('Failed to fetch payrolls: $e');
     }
@@ -45,11 +45,29 @@ class PayrollRepositoryImpl implements PayrollRepository {
   }
 
   @override
-  Future<Payroll> approvePayroll(int payrollId) async {
+  Future<Payroll> calculatePayroll(int payrollId) async {
     try {
-      return await remoteDataSource.approvePayroll(payrollId);
+      return await remoteDataSource.calculatePayroll(payrollId);
+    } catch (e) {
+      throw Exception('Failed to calculate payroll: $e');
+    }
+  }
+
+  @override
+  Future<Payroll> approvePayroll(int payrollId, {String? notes}) async {
+    try {
+      return await remoteDataSource.approvePayroll(payrollId, notes: notes);
     } catch (e) {
       throw Exception('Failed to approve payroll: $e');
+    }
+  }
+
+  @override
+  Future<Map<String, dynamic>> lockPayroll(int payrollId) async {
+    try {
+      return await remoteDataSource.lockPayroll(payrollId);
+    } catch (e) {
+      throw Exception('Failed to lock payroll: $e');
     }
   }
 
@@ -86,6 +104,15 @@ class PayrollRepositoryImpl implements PayrollRepository {
       return await remoteDataSource.exportPayrollTelebirr(payrollId);
     } catch (e) {
       throw Exception('Failed to export Telebirr payroll: $e');
+    }
+  }
+
+  @override
+  Future<String> exportCashPaymentSheet(int payrollId) async {
+    try {
+      return await remoteDataSource.exportCashPaymentSheet(payrollId);
+    } catch (e) {
+      throw Exception('Failed to export Cash Payment Sheet: $e');
     }
   }
 

@@ -6,8 +6,13 @@ from app.core.database import get_db
 from app.api.deps import get_current_user, require_role, require_super_admin, can_manage_users
 from app.models.user import User, UserRole
 from app.models.user_site_assignment import UserSiteAssignment
+from app.models.user_work_place_assignment import UserWorkPlaceAssignment
+from app.models.work_place import WorkPlace
+from app.models.worker import Worker, WorkerStatus
 from app.schemas.user import UserResponse, UserUpdate, UserProfileUpdate
 from app.schemas.registration_request import UserSiteAssignmentCreate, UserSiteAssignmentResponse
+from app.core.security import get_password_hash
+from pydantic import BaseModel
 
 router = APIRouter()
 
@@ -56,6 +61,59 @@ def update_my_profile(
     return current_user
 
 
+@router.get("/search")
+def search_workers(
+    q: str,
+    site_id: int = None,
+    limit: int = 10,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    search_term = f"%{q}%"
+    query = db.query(Worker).filter(
+        (Worker.full_name.ilike(search_term)) |
+        (Worker.employee_id.ilike(search_term)) |
+        (Worker.phone_number.ilike(search_term))
+    )
+    
+    # Filter by site if provided
+    if site_id is not None:
+        query = query.filter(Worker.site_id == site_id)
+    
+    # Only return active workers
+    query = query.filter(Worker.status == WorkerStatus.ACTIVE)
+    
+    workers = query.limit(limit).all()
+    
+    # Convert workers to UserResponse format for frontend compatibility
+    return [{
+        "id": w.id,
+        "username": w.employee_id,
+        "email": "",
+        "full_name": w.full_name,
+        "phone_number": w.phone_number or "",
+        "role": w.work_type.name if w.work_type else "Worker",
+        "is_active": w.status == WorkerStatus.ACTIVE,
+        "site_id": w.site_id,
+        "work_place_id": w.work_place_id
+    } for w in workers]
+
+
+@router.get("/check-username")
+def check_username_availability(
+    username: str,
+    db: Session = Depends(get_db)
+):
+    """Check if a username is available"""
+    existing_user = db.query(User).filter(User.username == username).first()
+    if existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Username already exists"
+        )
+    return {"available": True, "username": username}
+
+
 @router.get("/", response_model=List[UserResponse])
 def list_users(
     skip: int = 0,
@@ -63,7 +121,24 @@ def list_users(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role([UserRole.SUPER_ADMIN, UserRole.ADMIN]))
 ):
-    users = db.query(User).offset(skip).limit(limit).all()
+    # Super admins can see all users
+    if current_user.role == UserRole.SUPER_ADMIN:
+        users = db.query(User).offset(skip).limit(limit).all()
+        return users
+    
+    # Regular admins need both site AND workplace assignments to see users
+    admin_site_ids = [assignment.site_id for assignment in current_user.site_assignments]
+    admin_workplace_ids = [wp.work_place_id for wp in current_user.work_place_assignments]
+    
+    # If admin has no site assignments OR no workplace assignments, show nothing
+    if not admin_site_ids or not admin_workplace_ids:
+        return []
+    
+    # Get users who have assignments to the admin's sites
+    users = db.query(User).join(UserSiteAssignment).filter(
+        UserSiteAssignment.site_id.in_(admin_site_ids)
+    ).distinct().offset(skip).limit(limit).all()
+    
     return users
 
 
@@ -137,6 +212,41 @@ def delete_user(
     db.delete(user)
     db.commit()
     return None
+
+
+class PasswordResetRequest(BaseModel):
+    new_password: str
+
+@router.post("/{user_id}/reset-password", status_code=status.HTTP_200_OK)
+def reset_user_password(
+    user_id: int,
+    password_data: PasswordResetRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role([UserRole.SUPER_ADMIN, UserRole.ADMIN]))
+):
+    if not can_manage_users(current_user):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Insufficient permissions to reset passwords"
+        )
+        
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+        
+    if current_user.role == UserRole.ADMIN and user.role == UserRole.SUPER_ADMIN:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="ADMIN cannot reset SUPER_ADMIN password"
+        )
+        
+    if len(password_data.new_password) < 8:
+        raise HTTPException(status_code=400, detail="Password must be at least 8 characters")
+        
+    user.hashed_password = get_password_hash(password_data.new_password)
+    db.commit()
+    
+    return {"message": "Password reset successfully"}
 
 
 @router.get("/{user_id}/sites", response_model=List[UserSiteAssignmentResponse])
@@ -216,3 +326,80 @@ def remove_user_site_assignment(
     db.delete(assignment)
     db.commit()
     return None
+
+
+from pydantic import BaseModel as PydanticBaseModel
+
+class WorkplaceAssignmentUpdate(PydanticBaseModel):
+    workplace_ids: List[int]
+
+
+@router.post("/{user_id}/workplace-assignments", status_code=status.HTTP_200_OK)
+def update_user_workplace_assignments(
+    user_id: int,
+    data: WorkplaceAssignmentUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role([UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.SITE_ADMIN]))
+):
+    """Update user's workplace assignments"""
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Verify all workplaces exist
+    for wp_id in data.workplace_ids:
+        workplace = db.query(WorkPlace).filter(WorkPlace.id == wp_id).first()
+        if not workplace:
+            raise HTTPException(status_code=404, detail=f"Workplace {wp_id} not found")
+    
+    # Remove existing assignments
+    db.query(UserWorkPlaceAssignment).filter(
+        UserWorkPlaceAssignment.user_id == user_id
+    ).delete()
+    
+    # Add new assignments
+    for idx, wp_id in enumerate(data.workplace_ids):
+        assignment = UserWorkPlaceAssignment(
+            user_id=user_id,
+            work_place_id=wp_id,
+            is_primary=(idx == 0)  # First one is primary
+        )
+        db.add(assignment)
+    
+    db.commit()
+    
+    return {"message": "Workplace assignments updated successfully", "workplace_ids": data.workplace_ids}
+
+
+@router.patch("/{user_id}/profile", response_model=UserResponse)
+def update_user_profile(
+    user_id: int,
+    profile_update: UserProfileUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role([UserRole.SUPER_ADMIN, UserRole.ADMIN]))
+):
+    """Update user profile by admin"""
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    update_data = profile_update.model_dump(exclude_unset=True)
+    
+    if 'email' in update_data:
+        existing_user = db.query(User).filter(
+            User.email == update_data['email'],
+            User.id != user_id
+        ).first()
+        if existing_user:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email already in use"
+            )
+    
+    for field, value in update_data.items():
+        setattr(user, field, value)
+    
+    db.commit()
+    db.refresh(user)
+    
+    return user

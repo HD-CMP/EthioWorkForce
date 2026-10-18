@@ -115,36 +115,8 @@ def init_database():
         db.add(site_assignment3)
         logger.info("Created site assignments")
         
-        daily_laborer = WorkType(
-            name="Daily Laborer",
-            code="DL-001",
-            description="General construction worker paid daily",
-            payment_mode=PaymentMode.DAILY_RATE,
-            base_rate=Decimal("300"),
-            tax_rule=TaxRule.DAILY_CASUAL,
-            overtime_eligible=True,
-            overtime_multiplier=1.5,
-            pension_eligible=False,
-        )
-        db.add(daily_laborer)
-        
-        site_engineer = WorkType(
-            name="Site Engineer",
-            code="ENG-001",
-            description="Professional engineer on monthly salary",
-            payment_mode=PaymentMode.MONTHLY_SALARY,
-            base_rate=Decimal("20000"),
-            tax_rule=TaxRule.STANDARD_EMPLOYEE,
-            overtime_eligible=True,
-            overtime_multiplier=1.5,
-            pension_eligible=True,
-            employee_pension_rate=0.07,
-            employer_pension_rate=0.11,
-        )
-        db.add(site_engineer)
-        logger.info("Created demo work types")
-        
         db.commit()
+        logger.info("Initial setup completed. Run 'python scripts/seed_master_data.py' to add work types.")
         logger.info("Database initialization completed successfully!")
         
     except Exception as e:

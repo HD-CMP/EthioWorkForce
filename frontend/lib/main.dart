@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'dart:ui';
 
 import 'core/di/injection.dart';
 import 'core/router/app_router.dart';
@@ -43,6 +44,13 @@ class EthioWorkforceApp extends StatelessWidget {
         ],
         onGenerateRoute: AppRouter.onGenerateRoute,
         initialRoute: AppRouter.splash,
+        scrollBehavior: const MaterialScrollBehavior().copyWith(
+          dragDevices: {
+            PointerDeviceKind.touch,
+            PointerDeviceKind.mouse,
+            PointerDeviceKind.trackpad,
+          },
+        ),
       ),
     );
   }

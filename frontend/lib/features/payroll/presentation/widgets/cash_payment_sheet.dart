@@ -3,17 +3,22 @@ import 'package:signature/signature.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
+import '../../data/datasources/payroll_remote_datasource.dart';
 
 class CashPaymentSheet extends StatefulWidget {
+  final int payrollId;
   final String payrollCode;
   final String period;
   final List<PaymentRecord> records;
+  final bool isPayrollLocked;
 
   const CashPaymentSheet({
     Key? key,
+    required this.payrollId,
     required this.payrollCode,
     required this.period,
     required this.records,
+    this.isPayrollLocked = false,
   }) : super(key: key);
 
   @override
@@ -21,40 +26,232 @@ class CashPaymentSheet extends StatefulWidget {
 }
 
 class PaymentRecord {
+  final int itemId;
   final String employeeId;
   final String fullName;
   final double netAmount;
+  final String? paymentPeriodDescription;
+  final String? workTypeName;
   String? signatureData;
   DateTime? signedAt;
+  bool isPaid;
+  DateTime? paidAt;
 
   PaymentRecord({
+    required this.itemId,
     required this.employeeId,
     required this.fullName,
     required this.netAmount,
+    this.paymentPeriodDescription,
+    this.workTypeName,
     this.signatureData,
     this.signedAt,
+    this.isPaid = false,
+    this.paidAt,
   });
 }
 
-class _CashPaymentSheetState extends State<CashPaymentSheet> {
+class _CashPaymentSheetState extends State<CashPaymentSheet> with TickerProviderStateMixin {
   int? _selectedRecordIndex;
+  late TabController _tabController;
+  late TabController _workTypeTabController;
   final SignatureController _signatureController = SignatureController(
     penStrokeWidth: 3,
     penColor: Colors.black,
   );
+  bool _isLocked = false;
+  String _selectedWorkType = 'All';
+  final _dataSource = PayrollRemoteDataSource();
+  bool _isSaving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this, initialIndex: 1);
+    _workTypeTabController = TabController(length: _workTypeGroups.length, vsync: this);
+    _isLocked = widget.isPayrollLocked;
+  }
+
+  List<String> get _workTypeGroups {
+    final workTypes = widget.records
+        .map((r) => r.workTypeName ?? 'Unknown')
+        .toSet()
+        .toList();
+    
+    // Sort work types by total net amount (highest first)
+    workTypes.sort((a, b) {
+      final aTotal = widget.records
+          .where((r) => (r.workTypeName ?? 'Unknown') == a)
+          .fold(0.0, (sum, r) => sum + r.netAmount);
+      final bTotal = widget.records
+          .where((r) => (r.workTypeName ?? 'Unknown') == b)
+          .fold(0.0, (sum, r) => sum + r.netAmount);
+      return bTotal.compareTo(aTotal);
+    });
+    
+    return ['All', ...workTypes];
+  }
 
   @override
   void dispose() {
+    _tabController.dispose();
+    _workTypeTabController.dispose();
     _signatureController.dispose();
     super.dispose();
+  }
+
+  List<PaymentRecord> get _filteredRecords {
+    List<PaymentRecord> filtered;
+    if (_selectedWorkType == 'All') {
+      filtered = List.from(widget.records);
+    } else {
+      filtered = widget.records.where((r) => r.workTypeName == _selectedWorkType).toList();
+    }
+    filtered.sort((a, b) => b.netAmount.compareTo(a.netAmount));
+    return filtered;
+  }
+
+  int _getWorkTypeCount(String workType) {
+    if (workType == 'All') return widget.records.length;
+    return widget.records.where((r) => r.workTypeName == workType).length;
+  }
+
+  double _getWorkTypePaidAmount(String workType) {
+    final records = workType == 'All' 
+        ? widget.records 
+        : widget.records.where((r) => r.workTypeName == workType);
+    return records.where((r) => r.isPaid).fold(0.0, (sum, r) => sum + r.netAmount);
+  }
+
+  double _getWorkTypeUnpaidAmount(String workType) {
+    final records = workType == 'All' 
+        ? widget.records 
+        : widget.records.where((r) => r.workTypeName == workType);
+    return records.where((r) => !r.isPaid).fold(0.0, (sum, r) => sum + r.netAmount);
   }
 
   double get _totalAmount {
     return widget.records.fold(0.0, (sum, record) => sum + record.netAmount);
   }
 
+  double get _totalPaid {
+    return widget.records.where((r) => r.isPaid).fold(0.0, (sum, record) => sum + record.netAmount);
+  }
+
   int get _signedCount {
     return widget.records.where((r) => r.signatureData != null).length;
+  }
+
+  int get _paidCount {
+    return widget.records.where((r) => r.isPaid).length;
+  }
+
+  Future<void> _togglePayment(int index) async {
+    if (_isLocked || _isSaving) return;
+    
+    final record = widget.records[index];
+    final newStatus = !record.isPaid;
+    
+    setState(() {
+      _isSaving = true;
+    });
+    
+    try {
+      await _dataSource.markPaymentStatus(
+        payrollId: widget.payrollId,
+        itemId: record.itemId,
+        isPaid: newStatus,
+      );
+      
+      setState(() {
+        record.isPaid = newStatus;
+        if (newStatus) {
+          record.paidAt = DateTime.now();
+        } else {
+          record.paidAt = null;
+        }
+        _isSaving = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isSaving = false;
+      });
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to update payment status: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _confirmAndLock() async {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Lock Payroll'),
+        content: Text(
+          'Are you sure you want to lock this payroll?\n\n'
+          'Paid: $_paidCount / ${widget.records.length}\n'
+          'Total: ${_totalPaid.toStringAsFixed(2)} ETB\n\n'
+          'This will prevent any further changes to payment status.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(dialogContext);
+              
+              setState(() {
+                _isSaving = true;
+              });
+              
+              try {
+                await _dataSource.lockPayroll(widget.payrollId);
+                
+                setState(() {
+                  _isLocked = true;
+                  _isSaving = false;
+                });
+                
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Payroll locked successfully'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                }
+              } catch (e) {
+                setState(() {
+                  _isSaving = false;
+                });
+                
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Failed to lock payroll: $e'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Lock Payroll'),
+          ),
+        ],
+      ),
+    );
   }
 
   void _collectSignature(int index) {
@@ -144,14 +341,44 @@ class _CashPaymentSheetState extends State<CashPaymentSheet> {
       appBar: AppBar(
         title: const Text('Cash Payment Sheet'),
         actions: [
+          if (_isLocked)
+            const Padding(
+              padding: EdgeInsets.all(8.0),
+              child: Chip(
+                label: Text('LOCKED', style: TextStyle(color: Colors.white, fontSize: 12)),
+                backgroundColor: Colors.red,
+              ),
+            ),
           IconButton(
             icon: const Icon(Icons.print),
             onPressed: _exportToPdf,
             tooltip: 'Export to PDF',
           ),
         ],
+        bottom: TabBar(
+          controller: _tabController,
+          labelColor: Colors.white,
+          unselectedLabelColor: Colors.white70,
+          indicatorColor: Colors.white,
+          indicatorWeight: 3,
+          tabs: const [
+            Tab(icon: Icon(Icons.edit), text: 'Signature Collection'),
+            Tab(icon: Icon(Icons.toggle_on), text: 'Quick Payment'),
+          ],
+        ),
       ),
-      body: Column(
+      body: TabBarView(
+        controller: _tabController,
+        children: [
+          _buildSignatureTab(),
+          _buildQuickPaymentTab(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSignatureTab() {
+    return Column(
         children: [
           Container(
             padding: const EdgeInsets.all(16),
@@ -281,6 +508,452 @@ class _CashPaymentSheetState extends State<CashPaymentSheet> {
                       backgroundColor: Colors.green,
                       foregroundColor: Colors.white,
                     ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      );
+  }
+
+  Map<String, List<int>> _groupRecordsByPeriod() {
+    final groups = <String, List<int>>{};
+    
+    for (int i = 0; i < widget.records.length; i++) {
+      final period = widget.records[i].paymentPeriodDescription ?? 'Standard Period';
+      if (!groups.containsKey(period)) {
+        groups[period] = [];
+      }
+      groups[period]!.add(i);
+    }
+    
+    return groups;
+  }
+
+  Widget _buildQuickPaymentTab() {
+    final paidAmount = _getWorkTypePaidAmount(_selectedWorkType);
+    final unpaidAmount = _getWorkTypeUnpaidAmount(_selectedWorkType);
+    final filteredRecords = _filteredRecords;
+    
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.green.shade700, Colors.green.shade500],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.green.shade200,
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.payrollCode,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        widget.period,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.white.withOpacity(0.9),
+                        ),
+                      ),
+                    ],
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        '${filteredRecords.where((r) => r.isPaid).length} / ${filteredRecords.length}',
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      Text(
+                        'Paid',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.white.withOpacity(0.9),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: _AmountCard(
+                      title: 'Paid',
+                      amount: paidAmount,
+                      icon: Icons.check_circle,
+                      color: Colors.white,
+                      backgroundColor: Colors.white.withOpacity(0.2),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _AmountCard(
+                      title: 'Unpaid',
+                      amount: unpaidAmount,
+                      icon: Icons.pending,
+                      color: Colors.white,
+                      backgroundColor: Colors.white.withOpacity(0.2),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        Container(
+          color: Colors.grey.shade100,
+          child: TabBar(
+            controller: _workTypeTabController,
+            isScrollable: true,
+            labelColor: Colors.green.shade700,
+            unselectedLabelColor: Colors.grey.shade600,
+            indicatorColor: Colors.green.shade700,
+            indicatorWeight: 3,
+            labelStyle: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+            ),
+            unselectedLabelStyle: const TextStyle(
+              fontWeight: FontWeight.normal,
+              fontSize: 14,
+            ),
+            onTap: (index) {
+              setState(() {
+                _selectedWorkType = _workTypeGroups[index];
+              });
+            },
+            tabs: _workTypeGroups.map((workType) {
+              final count = _getWorkTypeCount(workType);
+              return Tab(
+                child: Row(
+                  children: [
+                    Text(workType),
+                    const SizedBox(width: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: _selectedWorkType == workType 
+                            ? Colors.green.shade700 
+                            : Colors.grey.shade400,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        count.toString(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+        Expanded(
+          child: filteredRecords.isEmpty
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.people_outline, size: 64, color: Colors.grey.shade400),
+                      const SizedBox(height: 16),
+                      Text(
+                        'No workers in this category',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              : ListView.builder(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  itemCount: filteredRecords.length,
+                  itemBuilder: (context, listIndex) {
+                    final actualIndex = widget.records.indexOf(filteredRecords[listIndex]);
+                    final record = filteredRecords[listIndex];
+                    
+                    return Card(
+                      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                      elevation: record.isPaid ? 3 : 1,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        side: BorderSide(
+                          color: record.isPaid ? Colors.green.shade200 : Colors.grey.shade200,
+                          width: 1,
+                        ),
+                      ),
+                      color: record.isPaid ? Colors.green.shade50 : Colors.white,
+                      child: ListTile(
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        leading: Stack(
+                          children: [
+                            CircleAvatar(
+                              radius: 24,
+                              backgroundColor: record.isPaid ? Colors.green : Colors.grey.shade600,
+                              child: Text(
+                                '${actualIndex + 1}',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            if (record.isPaid)
+                              Positioned(
+                                right: 0,
+                                bottom: 0,
+                                child: Container(
+                                  padding: const EdgeInsets.all(2),
+                                  decoration: const BoxDecoration(
+                                    color: Colors.white,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(
+                                    Icons.check_circle,
+                                    color: Colors.green.shade700,
+                                    size: 16,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                        title: Text(
+                          record.fullName,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15,
+                          ),
+                        ),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                Icon(Icons.badge, size: 12, color: Colors.grey.shade600),
+                                const SizedBox(width: 4),
+                                Text(
+                                  record.employeeId,
+                                  style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
+                                ),
+                              ],
+                            ),
+                            if (record.isPaid && record.paidAt != null) ...[
+                              const SizedBox(height: 2),
+                              Row(
+                                children: [
+                                  Icon(Icons.access_time, size: 12, color: Colors.green.shade600),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    'Paid: ${record.paidAt?.toString().split(' ')[0]}',
+                                    style: TextStyle(
+                                      color: Colors.green.shade700,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ],
+                        ),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Text(
+                                  '${record.netAmount.toStringAsFixed(2)}',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: record.isPaid ? Colors.green.shade700 : Colors.black87,
+                                  ),
+                                ),
+                                Text(
+                                  'ETB',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.grey.shade600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(width: 12),
+                            Transform.scale(
+                              scale: 0.9,
+                              child: Switch(
+                                value: record.isPaid,
+                                onChanged: _isLocked ? null : (_) => _togglePayment(actualIndex),
+                                activeColor: Colors.green.shade700,
+                                activeTrackColor: Colors.green.shade200,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+        ),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey.shade300,
+                blurRadius: 5,
+                offset: const Offset(0, -2),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Auto-save status info
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.blue.shade50,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.blue.shade200),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.info_outline, size: 20, color: Colors.blue.shade700),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        _isSaving 
+                          ? 'Saving changes...' 
+                          : 'Payment changes are saved automatically',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.blue.shade700,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                    if (_isSaving)
+                      SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.blue.shade700),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+              // Lock Payroll button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: _isLocked ? null : _confirmAndLock,
+                  icon: Icon(_isLocked ? Icons.lock : Icons.lock_outline),
+                  label: Text(_isLocked ? 'Payroll Locked' : 'Lock Payroll'),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    backgroundColor: _isLocked ? Colors.grey : Colors.green,
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _AmountCard extends StatelessWidget {
+  final String title;
+  final double amount;
+  final IconData icon;
+  final Color color;
+  final Color backgroundColor;
+
+  const _AmountCard({
+    required this.title,
+    required this.amount,
+    required this.icon,
+    required this.color,
+    required this.backgroundColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: color, size: 24),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    color: color.withOpacity(0.9),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '${amount.toStringAsFixed(2)} ETB',
+                  style: TextStyle(
+                    color: color,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
               ],

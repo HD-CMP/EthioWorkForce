@@ -13,10 +13,10 @@ class Settings(BaseSettings):
     )
 
     DATABASE_URL: str = Field(
-        default="postgresql://postgres:password@localhost:5432/ethioworkforce"
+        default="postgresql+pg8000://localhost:5432/ethioworkforce"
     )
     DATABASE_URL_TEST: str = Field(
-        default="postgresql://postgres:password@localhost:5432/ethioworkforce_test"
+        default="postgresql+pg8000://localhost:5432/ethioworkforce_test"
     )
 
     SECRET_KEY: str = Field(min_length=32)
@@ -29,7 +29,7 @@ class Settings(BaseSettings):
     ENVIRONMENT: str = "development"
 
     CORS_ORIGINS: Union[List[str], str] = Field(
-        default=["http://localhost:3000", "http://localhost:8080"]
+        default=["*"]
     )
 
     @field_validator('CORS_ORIGINS', mode='before')
@@ -41,6 +41,7 @@ class Settings(BaseSettings):
             return [origin.strip() for origin in v.split(',') if origin.strip()]
         return v
 
+    ENABLE_DOCS: bool = True
     SENTRY_DSN: str = ""
 
     LOG_LEVEL: str = "INFO"
@@ -53,9 +54,16 @@ class Settings(BaseSettings):
 
     @property
     def database_url_str(self) -> str:
+        """Return a normalized database URL string.
+        Handles Heroku/Render/Neon/Supabase 'postgres://' shorthand and ensures
+        pg8000 driver prefix is applied if psycopg2 is not specified, while
+        preserving query parameters (e.g. ?sslmode=require).
+        """
         url = str(self.DATABASE_URL)
         if url.startswith("postgres://"):
-            url = url.replace("postgres://", "postgresql://", 1)
+            url = url.replace("postgres://", "postgresql+pg8000://", 1)
+        elif url.startswith("postgresql://") and not url.startswith("postgresql+"):
+            url = url.replace("postgresql://", "postgresql+pg8000://", 1)
         return url
 
 
