@@ -53,7 +53,20 @@ jobs:
       
       - name: Build Universal APK
         working-directory: ./frontend
-        run: flutter build apk --release --no-tree-shake-icons --verbose
+        run: |
+          flutter build apk --release --no-tree-shake-icons --verbose > ../build.log 2>&1 || {
+            echo "::error::Build failed! Showing last 120 lines of build log:"
+            tail -n 120 ../build.log
+            exit 1
+          }
+
+      - name: Upload Build Log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: flutter-build-log
+          path: build.log
+          retention-days: 7
       
       - name: Upload APK artifacts
         uses: actions/upload-artifact@v4
