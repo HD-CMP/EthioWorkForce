@@ -22,6 +22,12 @@ if (flutterVersionName == null) {
     flutterVersionName = '1.0'
 }
 
+def keystoreProperties = new Properties()
+def keystorePropertiesFile = rootProject.file('key.properties')
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+}
+
 android {
     namespace "com.ethioworkforce.app"
     compileSdk 36
@@ -46,7 +52,7 @@ android {
     defaultConfig {
         applicationId "com.ethioworkforce.app"
         minSdk 24
-        targetSdk 36
+        targetSdk 35
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
         multiDexEnabled true
@@ -54,18 +60,27 @@ android {
 
     signingConfigs {
         release {
-            if (System.getenv("KEYSTORE_PATH")) {
+            if (keystorePropertiesFile.exists()) {
+                keyAlias keystoreProperties['keyAlias']
+                keyPassword keystoreProperties['keyPassword']
+                storeFile file(keystoreProperties['storeFile'])
+                storePassword keystoreProperties['storePassword']
+                v1SigningEnabled true
+                v2SigningEnabled true
+            } else if (System.getenv("KEYSTORE_PATH")) {
                 storeFile file(System.getenv("KEYSTORE_PATH"))
                 storePassword System.getenv("KEYSTORE_PASSWORD")
                 keyAlias System.getenv("KEY_ALIAS")
                 keyPassword System.getenv("KEY_PASSWORD")
+                v1SigningEnabled true
+                v2SigningEnabled true
             }
         }
     }
 
     buildTypes {
         release {
-            if (System.getenv("KEYSTORE_PATH")) {
+            if (keystorePropertiesFile.exists() || System.getenv("KEYSTORE_PATH")) {
                 signingConfig signingConfigs.release
             } else {
                 // Use debug signing for CI/CD builds without keystore
