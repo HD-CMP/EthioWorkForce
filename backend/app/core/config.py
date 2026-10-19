@@ -63,20 +63,35 @@ class Settings(BaseSettings):
     @property
     def database_url_str(self) -> str:
         """Return a normalized database URL string.
-        Handles Heroku/Render/Neon/Supabase 'postgres://' shorthand and ensures
-        pg8000 driver prefix is applied if psycopg2 is not specified.
-        Strips 'sslmode' query parameter when using pg8000 since pg8000 uses
-        connect_args ssl_context instead of sslmode keyword argument.
+        Handles Heroku/Render/Neon/Supabase 'postgres://' shorthand.
+        Prefers native psycopg2 when available; otherwise falls back to pg8000
+        and strips all libpq query parameters (sslmode, channel_binding, etc.)
+        that pg8000 rejects.
         """
         import re
         url = str(self.DATABASE_URL)
-        if url.startswith("postgres://"):
-            url = url.replace("postgres://", "postgresql+pg8000://", 1)
-        elif url.startswith("postgresql://") and not url.startswith("postgresql+"):
-            url = url.replace("postgresql://", "postgresql+pg8000://", 1)
+
+        has_psycopg2 = False
+        try:
+            import psycopg2
+            has_psycopg2 = True
+        except ImportError:
+            pass
+
+        if has_psycopg2:
+            if url.startswith("postgres://"):
+                url = url.replace("postgres://", "postgresql+psycopg2://", 1)
+            elif url.startswith("postgresql://") and not url.startswith("postgresql+"):
+                url = url.replace("postgresql://", "postgresql+psycopg2://", 1)
+        else:
+            if url.startswith("postgres://"):
+                url = url.replace("postgres://", "postgresql+pg8000://", 1)
+            elif url.startswith("postgresql://") and not url.startswith("postgresql+"):
+                url = url.replace("postgresql://", "postgresql+pg8000://", 1)
 
         if "pg8000" in url:
-            url = re.sub(r'[\?&]sslmode=[^&]+', '', url)
+            for param in ["sslmode", "channel_binding", "gssencmode", "target_session_attrs"]:
+                url = re.sub(rf'[\?&]{param}=[^&]+', '', url)
             if '?' not in url and '&' in url:
                 url = url.replace('&', '?', 1)
         return url
