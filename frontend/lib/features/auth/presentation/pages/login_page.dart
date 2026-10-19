@@ -115,12 +115,22 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                                     Container(
                                       width: 90, height: 90,
                                       decoration: BoxDecoration(
-                                        color: Colors.white.withOpacity(0.15),
-                                        shape: BoxShape.circle,
-                                        border: Border.all(color: Colors.white.withOpacity(0.3), width: 2),
-                                        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.15), blurRadius: 24, offset: const Offset(0, 8))],
+                                        borderRadius: BorderRadius.circular(22),
+                                        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.25), blurRadius: 24, offset: const Offset(0, 8))],
                                       ),
-                                      child: const Icon(Icons.business_center_rounded, color: Colors.white, size: 42),
+                                      clipBehavior: Clip.antiAlias,
+                                      child: Image.asset(
+                                        'assets/images/logo.png',
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (context, error, stackTrace) => Container(
+                                          decoration: BoxDecoration(
+                                            color: Colors.white.withOpacity(0.15),
+                                            shape: BoxShape.circle,
+                                            border: Border.all(color: Colors.white.withOpacity(0.3), width: 2),
+                                          ),
+                                          child: const Icon(Icons.business_center_rounded, color: Colors.white, size: 42),
+                                        ),
+                                      ),
                                     ),
                                     const SizedBox(height: 20),
                                     const Text(

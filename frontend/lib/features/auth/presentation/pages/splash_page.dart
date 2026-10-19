@@ -79,12 +79,22 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
                         Container(
                           width: 110, height: 110,
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.15),
-                            shape: BoxShape.circle,
-                            border: Border.all(color: Colors.white.withOpacity(0.3), width: 2.5),
-                            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 32, offset: const Offset(0, 12))],
+                            borderRadius: BorderRadius.circular(28),
+                            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.3), blurRadius: 32, offset: const Offset(0, 12))],
                           ),
-                          child: const Icon(Icons.business_center_rounded, color: Colors.white, size: 52),
+                          clipBehavior: Clip.antiAlias,
+                          child: Image.asset(
+                            'assets/images/logo.png',
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) => Container(
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.15),
+                                shape: BoxShape.circle,
+                                border: Border.all(color: Colors.white.withOpacity(0.3), width: 2.5),
+                              ),
+                              child: const Icon(Icons.business_center_rounded, color: Colors.white, size: 52),
+                            ),
+                          ),
                         ),
                         const SizedBox(height: 28),
                         const Text(
