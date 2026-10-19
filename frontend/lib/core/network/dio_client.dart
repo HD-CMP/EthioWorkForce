@@ -53,12 +53,12 @@ class DioClient {
       return savedUrl;
     }
     
-    // Default to production URL in release mode, development URL otherwise
-    return kIsWeb
-        ? defaultDevelopmentUrl  // Web dev always uses localhost
-        : (const bool.fromEnvironment('dart.vm.product')
-            ? defaultProductionUrl
-            : defaultDevelopmentUrl);
+    // Default to production URL in release mode (both Web and Mobile), development URL otherwise
+    const isRelease = bool.fromEnvironment('dart.vm.product');
+    if (isRelease) {
+      return defaultProductionUrl;
+    }
+    return defaultDevelopmentUrl;
   }
   
   /// Set offline mode
