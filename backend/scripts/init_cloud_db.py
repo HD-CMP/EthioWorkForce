@@ -50,6 +50,16 @@ def run_alembic_migrations():
             logger.warning("alembic.ini not found, creating all tables directly from metadata...")
             engine = create_engine(settings.database_url_str, connect_args=settings.database_connect_args)
             Base.metadata.create_all(bind=engine)
+
+        # Ensure latest columns exist on payrolls
+        try:
+            engine = create_engine(settings.database_url_str, connect_args=settings.database_connect_args)
+            with engine.connect() as conn:
+                conn.execute(text("ALTER TABLE payrolls ADD COLUMN IF NOT EXISTS work_type_id INTEGER REFERENCES work_types(id);"))
+                conn.execute(text("ALTER TABLE payrolls ADD COLUMN IF NOT EXISTS work_place_id INTEGER REFERENCES work_places(id);"))
+                conn.commit()
+        except Exception as e:
+            logger.debug(f"Direct column addition check notice: {e}")
     except Exception as e:
         logger.warning(f"Alembic auto-migration encountered warning/notice: {e}")
         logger.info("Ensuring all tables exist via SQLAlchemy metadata...")
