@@ -6,7 +6,7 @@ import os
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=(".env", "backend/.env", os.path.join(os.path.dirname(__file__), "../../../.env"), os.path.join(os.path.dirname(__file__), "../../.env")),
         env_file_encoding="utf-8",
         case_sensitive=True,
         extra="ignore"
@@ -19,7 +19,10 @@ class Settings(BaseSettings):
         default="postgresql+pg8000://localhost:5432/ethioworkforce_test"
     )
 
-    SECRET_KEY: str = Field(min_length=32)
+    SECRET_KEY: str = Field(
+        default="1ba3a94233f9296246a932a1cce71325f35b7dd0d1015da72d5029714ab718b3",
+        min_length=32
+    )
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
