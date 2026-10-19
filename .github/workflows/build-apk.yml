@@ -55,7 +55,7 @@ jobs:
         working-directory: ./frontend/android
         run: chmod +x gradlew
       
-      - name: Build Universal APK
+      - name: Build Universal and Split APKs
         working-directory: ./frontend
         run: |
           flutter build apk --release --no-tree-shake-icons --verbose > ../build.log 2>&1 || {
@@ -63,6 +63,8 @@ jobs:
             tail -n 120 ../build.log
             exit 1
           }
+          flutter build apk --release --split-per-abi --no-tree-shake-icons
+
 
       - name: Upload Build Log
         if: always()
