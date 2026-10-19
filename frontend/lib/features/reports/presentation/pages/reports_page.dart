@@ -303,60 +303,64 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
 
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
-      backgroundColor: const Color(0xFF1B5E20),
+      backgroundColor: const Color(0xFF007A3D),
       foregroundColor: Colors.white,
       elevation: 0,
-      title: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: const [
-          Text(
-            'Enterprise Reports & Analytics Hub',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-          ),
-          Text(
-            'Workforce Intelligence, Bank Batches & Statutory Tax Compliance',
-            style: TextStyle(fontSize: 12, color: Colors.white70),
-          ),
-        ],
+      titleSpacing: 0,
+      title: const Padding(
+        padding: EdgeInsets.only(left: 4),
+        child: Text(
+          'Reports & Analytics',
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
+          overflow: TextOverflow.ellipsis,
+        ),
       ),
       actions: [
-        // Site filter pill
-        Container(
-          margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.15),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Colors.white24),
-          ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<int?>(
-              value: _selectedSiteId,
-              dropdownColor: const Color(0xFF1B5E20),
-              icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
-              style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600),
-              hint: const Text('All Accessible Sites', style: TextStyle(color: Colors.white)),
-              items: [
-                const DropdownMenuItem<int?>(
-                  value: null,
-                  child: Text('All Accessible Sites', style: TextStyle(color: Colors.white)),
-                ),
-                ..._sites.map((s) => DropdownMenuItem<int?>(
-                      value: s['id'] as int,
-                      child: Text(s['name'] ?? 'Site #${s['id']}', style: const TextStyle(color: Colors.white)),
-                    )),
-              ],
-              onChanged: (newSiteId) {
-                setState(() => _selectedSiteId = newSiteId);
-                _loadDashboardData();
-                if (_tabController.index == 3) _loadAttendanceRoster();
-                if (_tabController.index == 4) _loadCensusData();
-              },
+        // Site filter pill — fixed width so it never crushes the title
+        ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 170),
+          child: Container(
+            margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: Colors.white24),
+            ),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<int?>(
+                value: _selectedSiteId,
+                dropdownColor: const Color(0xFF007A3D),
+                icon: const Icon(Icons.arrow_drop_down, color: Colors.white, size: 18),
+                style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
+                hint: const Text('All Sites', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                isExpanded: true,
+                items: [
+                  const DropdownMenuItem<int?>(
+                    value: null,
+                    child: Text('All Sites', style: TextStyle(color: Colors.white, fontSize: 12), overflow: TextOverflow.ellipsis),
+                  ),
+                  ..._sites.map((s) => DropdownMenuItem<int?>(
+                        value: s['id'] as int,
+                        child: Text(
+                          s['name'] ?? 'Site #${s['id']}',
+                          style: const TextStyle(color: Colors.white, fontSize: 12),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      )),
+                ],
+                onChanged: (newSiteId) {
+                  setState(() => _selectedSiteId = newSiteId);
+                  _loadDashboardData();
+                  if (_tabController.index == 3) _loadAttendanceRoster();
+                  if (_tabController.index == 4) _loadCensusData();
+                },
+              ),
             ),
           ),
         ),
         IconButton(
-          icon: const Icon(Icons.refresh),
+          icon: const Icon(Icons.refresh, size: 20),
           tooltip: 'Refresh Reports',
           onPressed: () {
             _loadDashboardData();
@@ -374,16 +378,17 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
         isScrollable: true,
         tabAlignment: TabAlignment.start,
         indicatorColor: const Color(0xFFFFD54F),
-        indicatorWeight: 3.5,
+        indicatorWeight: 3,
         labelColor: const Color(0xFFFFD54F),
-        unselectedLabelColor: Colors.white70,
-        labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+        unselectedLabelColor: Colors.white60,
+        labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+        unselectedLabelStyle: const TextStyle(fontSize: 12),
         tabs: const [
-          Tab(icon: Icon(Icons.dashboard_rounded, size: 20), text: 'Executive Overview'),
-          Tab(icon: Icon(Icons.account_balance_rounded, size: 20), text: 'Bank & Payments'),
-          Tab(icon: Icon(Icons.verified_user_rounded, size: 20), text: 'Tax & Compliance'),
-          Tab(icon: Icon(Icons.fact_check_rounded, size: 20), text: 'Attendance & Overtime'),
-          Tab(icon: Icon(Icons.badge_rounded, size: 20), text: 'Workforce Census'),
+          Tab(icon: Icon(Icons.dashboard_rounded, size: 18), text: 'Overview'),
+          Tab(icon: Icon(Icons.account_balance_rounded, size: 18), text: 'Banking'),
+          Tab(icon: Icon(Icons.verified_user_rounded, size: 18), text: 'Tax'),
+          Tab(icon: Icon(Icons.fact_check_rounded, size: 18), text: 'Attendance'),
+          Tab(icon: Icon(Icons.badge_rounded, size: 18), text: 'Census'),
         ],
       ),
     );
@@ -548,16 +553,23 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.pie_chart_rounded, color: Color(0xFF2E7D32)),
+                      const Icon(Icons.pie_chart_rounded, color: Color(0xFF007A3D)),
                       const SizedBox(width: 8),
-                      const Text(
-                        '30-Day Attendance Composition',
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                      ),
-                      const Spacer(),
-                      Text(
-                        'Total: ${att['total_records'] ?? 0} logs',
-                        style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              '30-Day Attendance Composition',
+                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            Text(
+                              'Total: ${att['total_records'] ?? 0} logs',
+                              style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
@@ -590,11 +602,14 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
                           children: [
                             Row(
                               children: [
-                                const Icon(Icons.location_on_rounded, color: Color(0xFF1976D2)),
+                                const Icon(Icons.location_on_rounded, color: Color(0xFF1565C0)),
                                 const SizedBox(width: 8),
-                                const Text(
-                                  'Workforce by Site',
-                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                const Expanded(
+                                  child: Text(
+                                    'Workforce by Site',
+                                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                 ),
                               ],
                             ),
@@ -630,9 +645,12 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
                               children: [
                                 const Icon(Icons.work_rounded, color: Color(0xFF00695C)),
                                 const SizedBox(width: 8),
-                                const Text(
-                                  'Workforce by Role & Type',
-                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                const Expanded(
+                                  child: Text(
+                                    'Workforce by Role & Type',
+                                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                 ),
                               ],
                             ),
@@ -670,9 +688,12 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
                     children: [
                       const Icon(Icons.history_edu_rounded, color: Color(0xFF4A148C)),
                       const SizedBox(width: 8),
-                      const Text(
-                        'Recent Payroll Runs & Statutory Remittance',
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      const Expanded(
+                        child: Text(
+                          'Recent Payroll Runs & Statutory Remittance',
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                     ],
                   ),
@@ -909,9 +930,9 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
             padding: const EdgeInsets.all(18),
             child: Row(
               children: [
-                const Icon(Icons.receipt_long_rounded, color: Color(0xFF1B5E20)),
+                const Icon(Icons.receipt_long_rounded, color: Color(0xFF007A3D)),
                 const SizedBox(width: 12),
-                const Text('Select Payroll Run:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                const Text('Select Payroll Run:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
                 const SizedBox(width: 16),
                 Expanded(
                   child: DropdownButtonHideUnderline(
@@ -1143,9 +1164,9 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.verified_user_rounded, color: Color(0xFF2E7D32)),
+                    const Icon(Icons.verified_user_rounded, color: Color(0xFF007A3D)),
                     const SizedBox(width: 12),
-                    const Text('Tax Declaration Payroll:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                    const Text('Tax Declaration Payroll:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
                     const SizedBox(width: 16),
                     Expanded(
                       child: DropdownButtonHideUnderline(
