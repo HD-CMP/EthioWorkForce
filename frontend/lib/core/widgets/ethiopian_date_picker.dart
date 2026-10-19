@@ -261,15 +261,20 @@ class _EthiopianDatePickerDialogState extends State<_EthiopianDatePickerDialog> 
                 child: Padding(
                   padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
                   child: Row(
-                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
-                        '$weekday, ${EthiopianCalendar.monthsEnglish[selectedEth.month - 1]} ${selectedEth.day}',
-                        style: TextStyle(
-                          color: colorScheme.onPrimary,
-                          fontSize: 28,
-                          fontWeight: FontWeight.w400,
-                          letterSpacing: 0.25,
+                      Expanded(
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            '$weekday, ${EthiopianCalendar.monthsEnglish[selectedEth.month - 1]} ${selectedEth.day}',
+                            style: TextStyle(
+                              color: colorScheme.onPrimary,
+                              fontSize: 24,
+                              fontWeight: FontWeight.w500,
+                              letterSpacing: 0.25,
+                            ),
+                          ),
                         ),
                       ),
                     ],
@@ -306,13 +311,17 @@ class _EthiopianDatePickerDialogState extends State<_EthiopianDatePickerDialog> 
                 ),
               ),
             ] else ...[
-              Text(
-                '$weekday, ${EthiopianCalendar.monthsEnglish[selectedEth.month - 1]} ${selectedEth.day}',
-                style: TextStyle(
-                  color: colorScheme.onPrimary,
-                  fontSize: 28,
-                  fontWeight: FontWeight.w400,
-                  letterSpacing: 0.25,
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  '$weekday, ${EthiopianCalendar.monthsEnglish[selectedEth.month - 1]} ${selectedEth.day}',
+                  style: TextStyle(
+                    color: colorScheme.onPrimary,
+                    fontSize: 24,
+                    fontWeight: FontWeight.w500,
+                    letterSpacing: 0.25,
+                  ),
                 ),
               ),
             ],
