@@ -41,7 +41,17 @@ class _RoleManagementPageState extends State<RoleManagementPage> {
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to load roles: $e')),
+          SnackBar(
+            content: const Row(children: [
+              Icon(Icons.error_outline, color: Colors.white, size: 18),
+              SizedBox(width: 10),
+              Expanded(child: Text('Unable to load roles. Please try again.')),
+            ]),
+            backgroundColor: const Color(0xFFB71C1C),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
+          ),
         );
       }
     }
@@ -57,12 +67,12 @@ class _RoleManagementPageState extends State<RoleManagementPage> {
         icon: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.red[50],
+            color: const Color(0xFFFFEBEE),
             shape: BoxShape.circle,
           ),
           child: const Icon(
             Icons.warning_rounded,
-            color: Colors.red,
+            color: Color(0xFFB71C1C),
             size: 32,
           ),
         ),
@@ -82,13 +92,13 @@ class _RoleManagementPageState extends State<RoleManagementPage> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.orange[50],
+                color: const Color(0xFFFFF3E0),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.orange[200]!),
+                border: Border.all(color: const Color(0xFFFFCC80)),
               ),
               child: const Row(
                 children: [
-                  Icon(Icons.info_outline, color: Colors.orange, size: 20),
+                  Icon(Icons.info_outline, color: Color(0xFFE65100), size: 20),
                   SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -109,7 +119,7 @@ class _RoleManagementPageState extends State<RoleManagementPage> {
           ElevatedButton.icon(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
+              backgroundColor: const Color(0xFFB71C1C),
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(
                 horizontal: 24,
@@ -127,15 +137,32 @@ class _RoleManagementPageState extends State<RoleManagementPage> {
       try {
         await _datasource.deleteRole(role.id);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Role deleted successfully'),
-            backgroundColor: Colors.green,
+          SnackBar(
+            content: Row(children: [
+              const Icon(Icons.check_circle_outline, color: Colors.white, size: 18),
+              const SizedBox(width: 10),
+              Text('"${role.displayName}" deleted successfully'),
+            ]),
+            backgroundColor: const Color(0xFF007A3D),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
           ),
         );
         _loadRoles();
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to delete role: $e')),
+          SnackBar(
+            content: Row(children: [
+              const Icon(Icons.error_outline, color: Colors.white, size: 18),
+              const SizedBox(width: 10),
+              Expanded(child: Text('Failed to delete role: $e')),
+            ]),
+            backgroundColor: const Color(0xFFB71C1C),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
+          ),
         );
       }
     }
@@ -153,12 +180,13 @@ class _RoleManagementPageState extends State<RoleManagementPage> {
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setDialogState) => Dialog(
+          insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
           child: Container(
-            width: 600,
-            constraints: const BoxConstraints(maxWidth: 600),
+            width: double.infinity,
+            constraints: const BoxConstraints(maxWidth: 520),
             padding: const EdgeInsets.all(24),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -339,14 +367,34 @@ class _RoleManagementPageState extends State<RoleManagementPage> {
                       onPressed: () async {
                 if (displayNameController.text.isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Please enter a display name')),
+                    SnackBar(
+                      content: const Row(children: [
+                        Icon(Icons.warning_amber_rounded, color: Colors.white, size: 18),
+                        SizedBox(width: 10),
+                        Text('Please enter a display name'),
+                      ]),
+                      backgroundColor: const Color(0xFFE65100),
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      margin: const EdgeInsets.all(16),
+                    ),
                   );
                   return;
                 }
 
                 if (role == null && nameController.text.isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Please enter a role name')),
+                    SnackBar(
+                      content: const Row(children: [
+                        Icon(Icons.warning_amber_rounded, color: Colors.white, size: 18),
+                        SizedBox(width: 10),
+                        Text('Please enter a role identifier'),
+                      ]),
+                      backgroundColor: const Color(0xFFE65100),
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      margin: const EdgeInsets.all(16),
+                    ),
                   );
                   return;
                 }
@@ -379,18 +427,31 @@ class _RoleManagementPageState extends State<RoleManagementPage> {
                   Navigator.pop(dialogContext);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text(
-                        role == null
-                            ? 'Role created successfully'
-                            : 'Role updated successfully',
-                      ),
-                      backgroundColor: Colors.green,
+                      content: Row(children: [
+                        const Icon(Icons.check_circle_outline, color: Colors.white, size: 18),
+                        const SizedBox(width: 10),
+                        Text(role == null ? 'Role created successfully' : 'Role updated successfully'),
+                      ]),
+                      backgroundColor: const Color(0xFF007A3D),
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      margin: const EdgeInsets.all(16),
                     ),
                   );
                   _loadRoles();
                 } catch (e) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Failed to save role: $e')),
+                    SnackBar(
+                      content: Row(children: [
+                        const Icon(Icons.error_outline, color: Colors.white, size: 18),
+                        const SizedBox(width: 10),
+                        Expanded(child: Text('Failed to save role: $e')),
+                      ]),
+                      backgroundColor: const Color(0xFFB71C1C),
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      margin: const EdgeInsets.all(16),
+                    ),
                   );
                 }
               },

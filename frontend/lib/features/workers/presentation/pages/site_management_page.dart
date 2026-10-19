@@ -102,9 +102,12 @@ class _SiteManagementPageState extends State<SiteManagementPage> with SingleTick
             onPressed: () => Navigator.pop(context, false),
             child: const Text('Cancel'),
           ),
-          TextButton(
+          ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFB71C1C),
+              foregroundColor: Colors.white,
+            ),
             child: const Text('Delete'),
           ),
         ],
@@ -116,7 +119,17 @@ class _SiteManagementPageState extends State<SiteManagementPage> with SingleTick
         await _datasource.deleteSite(site.id!);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Site deleted successfully')),
+            SnackBar(
+              content: Row(children: [
+                const Icon(Icons.check_circle_outline, color: Colors.white, size: 18),
+                const SizedBox(width: 10),
+                Text('"${site.name}" deleted successfully'),
+              ]),
+              backgroundColor: const Color(0xFF007A3D),
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              margin: const EdgeInsets.all(16),
+            ),
           );
           _loadSites();
         }
@@ -124,8 +137,15 @@ class _SiteManagementPageState extends State<SiteManagementPage> with SingleTick
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(e is ApiException ? e.displayMessage : 'Failed to delete site'),
-              backgroundColor: Colors.red,
+              content: Row(children: [
+                const Icon(Icons.error_outline, color: Colors.white, size: 18),
+                const SizedBox(width: 10),
+                Expanded(child: Text(e is ApiException ? e.displayMessage : 'Failed to delete site')),
+              ]),
+              backgroundColor: const Color(0xFFB71C1C),
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              margin: const EdgeInsets.all(16),
             ),
           );
         }

@@ -80,8 +80,15 @@ class _PayrollListViewState extends State<_PayrollListView> {
         setState(() => _isLoadingSites = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error loading sites: ${e.toString()}'),
-            backgroundColor: Colors.red,
+            content: Row(children: [
+              const Icon(Icons.error_outline, color: Colors.white, size: 18),
+              const SizedBox(width: 10),
+              Expanded(child: Text('Unable to load sites. Please try again.')),
+            ]),
+            backgroundColor: const Color(0xFFB71C1C),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
           ),
         );
       }
@@ -474,7 +481,7 @@ class _PayrollLoadedView extends StatelessWidget {
                     title: 'This Month',
                     value: currencyFormat.format(thisMonthTotal),
                     icon: Icons.calendar_month,
-                    color: Colors.blue,
+                    color: const Color(0xFF007A3D),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -483,7 +490,7 @@ class _PayrollLoadedView extends StatelessWidget {
                     title: 'Pending',
                     value: pendingCount.toString(),
                     icon: Icons.pending_actions,
-                    color: Colors.orange,
+                    color: const Color(0xFF0A192F),
                   ),
                 ),
               ],
@@ -608,10 +615,10 @@ class _PayrollCard extends StatelessWidget {
 
     final statusColors = {
       'draft': Colors.grey,
-      'calculated': Colors.orange,
-      'approved': Colors.green,
-      'paid': Colors.blue,
-      'cancelled': Colors.red,
+      'calculated': const Color(0xFF0A192F),
+      'approved': const Color(0xFF007A3D),
+      'paid': const Color(0xFF005C2E),
+      'cancelled': const Color(0xFFB71C1C),
     };
 
     final statusLabels = {
@@ -747,7 +754,7 @@ class _PayrollCard extends StatelessWidget {
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: Colors.green,
+                      color: Color(0xFF007A3D),
                     ),
                   ),
                 ],

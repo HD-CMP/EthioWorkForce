@@ -121,9 +121,16 @@ class _PayrollDetailPageState extends State<PayrollDetailPage> {
       await _dataSource.approvePayroll(payrollId);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Payroll run approved successfully!'),
-            backgroundColor: Color(0xFF2E7D32),
+          SnackBar(
+            content: const Row(children: [
+              Icon(Icons.check_circle_outline, color: Colors.white, size: 18),
+              SizedBox(width: 10),
+              Text('Payroll run approved successfully!'),
+            ]),
+            backgroundColor: const Color(0xFF007A3D),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
           ),
         );
         context.read<PayrollBloc>().add(LoadPayrollWithItems(payrollId));
@@ -131,7 +138,17 @@ class _PayrollDetailPageState extends State<PayrollDetailPage> {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Approval failed: $e'), backgroundColor: Colors.red),
+          SnackBar(
+            content: Row(children: [
+              const Icon(Icons.error_outline, color: Colors.white, size: 18),
+              const SizedBox(width: 10),
+              Expanded(child: Text('Approval failed: $e')),
+            ]),
+            backgroundColor: const Color(0xFFB71C1C),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
+          ),
         );
       }
     }
@@ -141,7 +158,12 @@ class _PayrollDetailPageState extends State<PayrollDetailPage> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Lock & Archive Payroll'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(children: [
+          Icon(Icons.lock_outline, color: Color(0xFFB71C1C), size: 26),
+          SizedBox(width: 10),
+          Text('Lock & Archive Payroll'),
+        ]),
         content: const Text(
           'Locking this payroll will permanently seal all associated attendance '
           'and overtime records in this period. This action cannot be undone.',
@@ -149,7 +171,7 @@ class _PayrollDetailPageState extends State<PayrollDetailPage> {
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFB71C1C)),
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFB71C1C), foregroundColor: Colors.white),
             onPressed: () => Navigator.pop(ctx, true),
             child: const Text('Lock & Archive'),
           ),
@@ -162,9 +184,16 @@ class _PayrollDetailPageState extends State<PayrollDetailPage> {
       await _dataSource.lockPayroll(payrollId);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Payroll locked and archived successfully! Records are sealed.'),
-            backgroundColor: Color(0xFF2E7D32),
+          SnackBar(
+            content: const Row(children: [
+              Icon(Icons.lock, color: Colors.white, size: 18),
+              SizedBox(width: 10),
+              Expanded(child: Text('Payroll locked and archived. Records are sealed.')),
+            ]),
+            backgroundColor: const Color(0xFF007A3D),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
           ),
         );
         context.read<PayrollBloc>().add(LoadPayrollWithItems(payrollId));
@@ -172,7 +201,17 @@ class _PayrollDetailPageState extends State<PayrollDetailPage> {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lock failed: $e'), backgroundColor: Colors.red),
+          SnackBar(
+            content: Row(children: [
+              const Icon(Icons.error_outline, color: Colors.white, size: 18),
+              const SizedBox(width: 10),
+              Expanded(child: Text('Lock failed: $e')),
+            ]),
+            backgroundColor: const Color(0xFFB71C1C),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
+          ),
         );
       }
     }

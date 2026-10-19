@@ -441,7 +441,17 @@ class _RegisterAdminTabState extends State<_RegisterAdminTab> {
           _loadingRoles = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to load roles: $e')),
+          SnackBar(
+            content: const Row(children: [
+              Icon(Icons.error_outline, color: Colors.white, size: 18),
+              SizedBox(width: 10),
+              Expanded(child: Text('Unable to load roles. Please try again.')),
+            ]),
+            backgroundColor: const Color(0xFFB71C1C),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
+          ),
         );
       }
     }
@@ -484,7 +494,17 @@ class _RegisterAdminTabState extends State<_RegisterAdminTab> {
           _loadingSites = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to load sites: $e')),
+          SnackBar(
+            content: const Row(children: [
+              Icon(Icons.error_outline, color: Colors.white, size: 18),
+              SizedBox(width: 10),
+              Expanded(child: Text('Unable to load sites. Please try again.')),
+            ]),
+            backgroundColor: const Color(0xFFB71C1C),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
+          ),
         );
       }
     }
@@ -515,7 +535,17 @@ class _RegisterAdminTabState extends State<_RegisterAdminTab> {
           _loadingWorkplaces = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to load workplaces: $e')),
+          SnackBar(
+            content: const Row(children: [
+              Icon(Icons.error_outline, color: Colors.white, size: 18),
+              SizedBox(width: 10),
+              Expanded(child: Text('Unable to load workplaces. Please try again.')),
+            ]),
+            backgroundColor: const Color(0xFFB71C1C),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
+          ),
         );
       }
     }

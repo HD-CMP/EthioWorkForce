@@ -46,7 +46,17 @@ class _WorkerDetailPageState extends State<WorkerDetailPage> {
         final updated = await _datasource.getWorkerById(_worker.id!);
         setState(() => _worker = updated);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Worker updated successfully')),
+          SnackBar(
+            content: const Row(children: [
+              Icon(Icons.check_circle_outline, color: Colors.white, size: 18),
+              SizedBox(width: 10),
+              Text('Worker details updated successfully'),
+            ]),
+            backgroundColor: const Color(0xFF007A3D),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
+          ),
         );
       } catch (e) {
         String errorMessage;
@@ -56,7 +66,17 @@ class _WorkerDetailPageState extends State<WorkerDetailPage> {
           errorMessage = 'Failed to refresh worker details.';
         }
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(errorMessage), backgroundColor: Colors.orange),
+          SnackBar(
+            content: Row(children: [
+              const Icon(Icons.warning_amber_rounded, color: Colors.white, size: 18),
+              const SizedBox(width: 10),
+              Expanded(child: Text(errorMessage)),
+            ]),
+            backgroundColor: const Color(0xFFE65100),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
+          ),
         );
       }
     }
@@ -66,16 +86,21 @@ class _WorkerDetailPageState extends State<WorkerDetailPage> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Worker'),
-        content: Text('Are you sure you want to delete ${_worker.fullName}?'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(children: [
+          Icon(Icons.warning_amber_rounded, color: Color(0xFFB71C1C), size: 26),
+          SizedBox(width: 10),
+          Text('Delete Worker'),
+        ]),
+        content: Text('Are you sure you want to permanently delete ${_worker.fullName}? This cannot be undone.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
             child: const Text('Cancel'),
           ),
-          TextButton(
+          ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFB71C1C), foregroundColor: Colors.white),
             child: const Text('Delete'),
           ),
         ],
@@ -88,7 +113,17 @@ class _WorkerDetailPageState extends State<WorkerDetailPage> {
         if (mounted) {
           Navigator.pop(context);
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Worker deleted successfully')),
+            SnackBar(
+              content: Row(children: [
+                const Icon(Icons.check_circle_outline, color: Colors.white, size: 18),
+                const SizedBox(width: 10),
+                Text('${_worker.fullName} has been removed.'),
+              ]),
+              backgroundColor: const Color(0xFF007A3D),
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              margin: const EdgeInsets.all(16),
+            ),
           );
         }
       } catch (e) {
@@ -101,14 +136,16 @@ class _WorkerDetailPageState extends State<WorkerDetailPage> {
           }
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(errorMessage),
-              backgroundColor: Colors.red,
+              content: Row(children: [
+                const Icon(Icons.error_outline, color: Colors.white, size: 18),
+                const SizedBox(width: 10),
+                Expanded(child: Text(errorMessage)),
+              ]),
+              backgroundColor: const Color(0xFFB71C1C),
               behavior: SnackBarBehavior.floating,
-              action: SnackBarAction(
-                label: 'Dismiss',
-                textColor: Colors.white,
-                onPressed: () {},
-              ),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              margin: const EdgeInsets.all(16),
+              action: SnackBarAction(label: 'Dismiss', textColor: Colors.white, onPressed: () {}),
             ),
           );
         }
