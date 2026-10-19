@@ -178,6 +178,101 @@ class _PayrollDetailPageState extends State<PayrollDetailPage> {
     }
   }
 
+  Future<void> _confirmDeletePayroll(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        title: const Row(children: [
+          Icon(Icons.warning_amber_rounded, color: Color(0xFFB71C1C), size: 28),
+          SizedBox(width: 12),
+          Text('Delete Payroll?', style: TextStyle(fontSize: 18)),
+        ]),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('You are about to permanently delete:', style: TextStyle(color: Colors.grey[700])),
+            const SizedBox(height: 8),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF5F5F5),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                widget.payrollCode,
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              'This will permanently remove all associated payroll items. This action cannot be undone.',
+              style: TextStyle(color: Color(0xFFB71C1C), fontSize: 13),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFB71C1C),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            icon: const Icon(Icons.delete_forever, size: 18),
+            label: const Text('Delete'),
+            onPressed: () => Navigator.pop(ctx, true),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !context.mounted) return;
+
+    try {
+      final dio = await DioClient.createDio();
+      await dio.delete('/payroll/${widget.payrollId}');
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Row(children: [
+              Icon(Icons.check_circle_outline, color: Colors.white, size: 18),
+              SizedBox(width: 10),
+              Text('Payroll deleted successfully'),
+            ]),
+            backgroundColor: const Color(0xFF007A3D),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
+          ),
+        );
+        Navigator.pop(context, true);
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Row(children: [
+              Icon(Icons.error_outline, color: Colors.white, size: 18),
+              SizedBox(width: 10),
+              Expanded(child: Text('Cannot delete — payroll may be locked or approved.')),
+            ]),
+            backgroundColor: const Color(0xFFB71C1C),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final localizations = AppLocalizations.of(context);
@@ -186,40 +281,106 @@ class _PayrollDetailPageState extends State<PayrollDetailPage> {
       create: (_) => getIt<PayrollBloc>()..add(LoadPayrollWithItems(widget.payrollId)),
       child: Scaffold(
         appBar: AppBar(
-          title: Text('Payroll ${widget.payrollCode}'),
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Payroll Details',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+              Text(
+                widget.payrollCode,
+                style: const TextStyle(fontSize: 11, color: Colors.white70),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
           actions: [
             IconButton(
-              icon: const Icon(Icons.share),
-              onPressed: () {},
+              icon: const Icon(Icons.share_outlined),
+              tooltip: 'Share Payroll Report',
+              onPressed: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: const Row(children: [
+                      Icon(Icons.info_outline, color: Colors.white, size: 18),
+                      SizedBox(width: 10),
+                      Text('Export to PDF or Excel to share'),
+                    ]),
+                    backgroundColor: const Color(0xFF007A3D),
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    margin: const EdgeInsets.all(16),
+                    action: SnackBarAction(
+                      label: 'EXPORT',
+                      textColor: const Color(0xFFFFD54F),
+                      onPressed: () {},
+                    ),
+                  ),
+                );
+              },
+            ),
+            PopupMenuButton<String>(
+              icon: const Icon(Icons.more_vert),
+              tooltip: 'More options',
+              onSelected: (value) {
+                if (value == 'delete') {
+                  _confirmDeletePayroll(context);
+                }
+              },
+              itemBuilder: (context) => [
+                const PopupMenuItem(
+                  value: 'delete',
+                  child: Row(children: [
+                    Icon(Icons.delete_outline, color: Color(0xFFB71C1C), size: 20),
+                    SizedBox(width: 12),
+                    Text('Delete Payroll', style: TextStyle(color: Color(0xFFB71C1C))),
+                  ]),
+                ),
+              ],
             ),
           ],
         ),
         body: BlocBuilder<PayrollBloc, PayrollState>(
           builder: (context, state) {
-            if (state is PayrollLoading) {
+            if (state is PayrollLoading || state is PayrollInitial || state is PayrollLoaded || state is PayrollDetailsLoaded || state is PayrollCalculating || state is PayrollCalculated || state is PayrollApproving || state is PayrollApproved) {
               return const Center(child: CircularProgressIndicator());
             }
-            
+
             if (state is PayrollError) {
               return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.error_outline, size: 64, color: Colors.red),
-                    const SizedBox(height: 16),
-                    Text(state.message),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: () => context.read<PayrollBloc>().add(LoadPayrollWithItems(widget.payrollId)),
-                      child: const Text('Retry'),
-                    ),
-                  ],
+                child: Padding(
+                  padding: const EdgeInsets.all(32),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.error_outline, size: 64, color: Color(0xFFB71C1C)),
+                      const SizedBox(height: 16),
+                      const Text(
+                        'Could not load payroll details',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        state.message,
+                        style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 24),
+                      ElevatedButton.icon(
+                        onPressed: () => context.read<PayrollBloc>().add(LoadPayrollWithItems(widget.payrollId)),
+                        icon: const Icon(Icons.refresh),
+                        label: const Text('Retry'),
+                      ),
+                    ],
+                  ),
                 ),
               );
             }
-            
+
             if (state is! PayrollWithItemsLoaded) {
-              return const Center(child: Text('No data available'));
+              return const Center(child: CircularProgressIndicator());
             }
             
             final payroll = state.payroll;

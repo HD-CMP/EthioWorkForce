@@ -118,7 +118,17 @@ class _WorkTypeManagementPageState extends State<WorkTypeManagementPage> with Si
         await _datasource.deleteWorkType(workType.id!);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Work type deleted successfully')),
+            SnackBar(
+              content: const Row(children: [
+                Icon(Icons.check_circle_outline, color: Colors.white, size: 18),
+                SizedBox(width: 10),
+                Text('Work type deleted successfully'),
+              ]),
+              backgroundColor: const Color(0xFF007A3D),
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              margin: const EdgeInsets.all(16),
+            ),
           );
           _loadWorkTypes();
         }
@@ -196,8 +206,8 @@ class _WorkTypeManagementPageState extends State<WorkTypeManagementPage> with Si
           child: ListTile(
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             leading: CircleAvatar(
-              backgroundColor: workType.isActive 
-                  ? Colors.blue[600] 
+              backgroundColor: workType.isActive
+                  ? const Color(0xFF007A3D)
                   : Colors.grey[400],
               child: const Icon(Icons.work, color: Colors.white),
             ),
@@ -352,12 +362,12 @@ class _WorkTypeManagementPageState extends State<WorkTypeManagementPage> with Si
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: workType.isActive
-                  ? [Colors.blue[50]!, Colors.blue[100]!]
-                  : [Colors.grey[200]!, Colors.grey[300]!],
+            color: workType.isActive ? Colors.white : Colors.grey[100],
+            border: Border.all(
+              color: workType.isActive
+                  ? const Color(0xFF007A3D).withOpacity(0.15)
+                  : Colors.grey.shade300,
+              width: 1.5,
             ),
           ),
           child: Column(
@@ -368,7 +378,7 @@ class _WorkTypeManagementPageState extends State<WorkTypeManagementPage> with Si
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: workType.isActive ? Colors.blue[600] : Colors.grey[500],
+                      color: workType.isActive ? const Color(0xFF007A3D) : Colors.grey[500],
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Icon(Icons.work, color: Colors.white, size: 24),
@@ -377,7 +387,7 @@ class _WorkTypeManagementPageState extends State<WorkTypeManagementPage> with Si
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: workType.isActive ? Colors.green : Colors.grey,
+                      color: workType.isActive ? const Color(0xFF007A3D) : Colors.grey[600],
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
