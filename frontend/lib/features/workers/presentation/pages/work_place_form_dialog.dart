@@ -1,10 +1,11 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 import '../../domain/entities/work_place.dart';
 import '../../domain/entities/worker.dart';
 import '../../data/datasources/work_place_remote_datasource.dart';
 import '../../data/datasources/worker_remote_datasource.dart';
 import '../../../../core/network/api_exception.dart';
+import '../../../../core/utils/app_snackbar.dart';
 
 class WorkPlaceFormDialog extends StatefulWidget {
   final int siteId;
@@ -150,22 +151,19 @@ class _WorkPlaceFormDialogState extends State<WorkPlaceFormDialog> {
 
       if (mounted) {
         Navigator.pop(context, true);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(widget.workPlace == null 
-                ? 'Work place created successfully' 
-                : 'Work place updated successfully'),
-          ),
+        AppSnackBar.showSuccess(
+          context,
+          widget.workPlace == null
+              ? 'Work place created successfully'
+              : 'Work place updated successfully',
         );
       }
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e is ApiException ? e.displayMessage : 'Failed to save work place'),
-            backgroundColor: Colors.red,
-          ),
+        AppSnackBar.showError(
+          context,
+          e is ApiException ? e.displayMessage : 'Failed to save work place',
         );
       }
     }
@@ -316,7 +314,7 @@ class _WorkPlaceFormDialogState extends State<WorkPlaceFormDialog> {
                                         text: ' • $workType',
                                         style: TextStyle(
                                           fontSize: 12,
-                                          color: Colors.grey[600],
+                                          color: const Color(0xFF6B7280),
                                         ),
                                       ),
                                     ],

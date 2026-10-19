@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
@@ -118,29 +118,29 @@ class _WorkerFormPageState extends State<WorkerFormPage> {
   Future<void> _loadUserRoleAndInitialize() async {
     try {
       // Load sites and work types first (before checking user role)
-      print('📥 Loading sites...');
+      debugPrint('📥 Loading sites...');
       await _loadSites();
-      print('✅ Sites loaded: ${_sites.length}');
+      debugPrint('✅ Sites loaded: ${_sites.length}');
       
-      print('📥 Loading work types...');
+      debugPrint('📥 Loading work types...');
       await _loadWorkTypes();
-      print('✅ Work types loaded: ${_workTypes.length}');
+      debugPrint('✅ Work types loaded: ${_workTypes.length}');
       
-      print('🔍 About to fetch user data from /users/me');
+      debugPrint('🔍 About to fetch user data from /users/me');
       // Get user data
       final dio = getIt<Dio>();
-      print('✅ Dio instance obtained');
+      debugPrint('✅ Dio instance obtained');
       final response = await dio.get('/users/me');
-      print('✅ /users/me response received: ${response.statusCode}');
-      print('📦 Response data: ${response.data}');
+      debugPrint('✅ /users/me response received: ${response.statusCode}');
+      debugPrint('📦 Response data: ${response.data}');
       final currentUser = response.data;
       final role = currentUser['role'] as String?;
       final workplaceAssignments = currentUser['work_place_assignments'] as List<dynamic>? ?? [];
       
-      print('👤 User role: $role');
-      print('📍 Workplace assignments count: ${workplaceAssignments.length}');
+      debugPrint('👤 User role: $role');
+      debugPrint('📍 Workplace assignments count: ${workplaceAssignments.length}');
       if (workplaceAssignments.isNotEmpty) {
-        print('📍 First assignment: ${workplaceAssignments[0]}');
+        debugPrint('📍 First assignment: ${workplaceAssignments[0]}');
       }
       
       final isSuperAdmin = role == 'super_admin';
@@ -154,16 +154,16 @@ class _WorkerFormPageState extends State<WorkerFormPage> {
       
       // Auto-assign for regular admins (only for new workers)
       if (!isSuperAdmin && workplaceAssignments.isNotEmpty && widget.worker == null) {
-        print('🎯 Auto-assign check: isSuperAdmin=$isSuperAdmin, hasAssignments=${workplaceAssignments.isNotEmpty}, isNewWorker=${widget.worker == null}');
+        debugPrint('🎯 Auto-assign check: isSuperAdmin=$isSuperAdmin, hasAssignments=${workplaceAssignments.isNotEmpty}, isNewWorker=${widget.worker == null}');
         final firstWorkplace = workplaceAssignments[0] as Map<String, dynamic>;
         final workPlace = firstWorkplace['work_place'] as Map<String, dynamic>?;
-        print('🏢 Work place data: $workPlace');
+        debugPrint('🏢 Work place data: $workPlace');
         
         if (workPlace != null) {
           final autoSiteId = workPlace['site_id'] as int?;
           final autoWorkPlaceId = workPlace['id'] as int?;
           
-          print('Auto-filling for regular admin: siteId=$autoSiteId, workPlaceId=$autoWorkPlaceId');
+          debugPrint('Auto-filling for regular admin: siteId=$autoSiteId, workPlaceId=$autoWorkPlaceId');
           
           if (autoSiteId != null && autoWorkPlaceId != null) {
             if (mounted) {
@@ -173,10 +173,10 @@ class _WorkerFormPageState extends State<WorkerFormPage> {
               });
             }
             await _loadWorkPlaces();
-            print('Workplaces loaded: ${_workPlaces.length}, selected workplace exists: ${_workPlaces.any((wp) => wp.id == autoWorkPlaceId)}');
+            debugPrint('Workplaces loaded: ${_workPlaces.length}, selected workplace exists: ${_workPlaces.any((wp) => wp.id == autoWorkPlaceId)}');
           }
         } else {
-          print('workPlace is null in assignment');
+          debugPrint('workPlace is null in assignment');
         }
       }
       
@@ -195,8 +195,8 @@ class _WorkerFormPageState extends State<WorkerFormPage> {
         _loadPotentialSupervisors();
       }
     } catch (e, stackTrace) {
-      print('❌ Error loading user role: $e');
-      print('📚 Stack trace: $stackTrace');
+      debugPrint('❌ Error loading user role: $e');
+      debugPrint('📚 Stack trace: $stackTrace');
       // If error loading user data, proceed with default behavior
       if (mounted) {
         setState(() {
@@ -233,26 +233,26 @@ class _WorkerFormPageState extends State<WorkerFormPage> {
   }
   
   Future<void> _loadWorkTypes() async {
-    print('🔧 _loadWorkTypes START');
+    debugPrint('🔧 _loadWorkTypes START');
     setState(() => _loadingWorkTypes = true);
     try {
-      print('📡 Calling getWorkTypes...');
+      debugPrint('📡 Calling getWorkTypes...');
       final workTypes = await _workTypeDatasource.getWorkTypes(isActive: true);
-      print('✅ getWorkTypes returned ${workTypes.length} items');
-      print('🔍 mounted=$mounted');
+      debugPrint('✅ getWorkTypes returned ${workTypes.length} items');
+      debugPrint('🔍 mounted=$mounted');
       if (mounted) {
         setState(() {
           _workTypes = workTypes;
           _loadingWorkTypes = false;
         });
-        print('✅ setState completed for work types');
+        debugPrint('✅ setState completed for work types');
       } else {
-        print('⚠️ Widget not mounted, skipping setState');
+        debugPrint('⚠️ Widget not mounted, skipping setState');
       }
-      print('🔧 _loadWorkTypes END');
+      debugPrint('🔧 _loadWorkTypes END');
     } catch (e, stackTrace) {
-      print('❌ Error in _loadWorkTypes: $e');
-      print('📚 Stack trace: $stackTrace');
+      debugPrint('❌ Error in _loadWorkTypes: $e');
+      debugPrint('📚 Stack trace: $stackTrace');
       if (mounted) {
         setState(() => _loadingWorkTypes = false);
       }
@@ -548,14 +548,34 @@ class _WorkerFormPageState extends State<WorkerFormPage> {
         await _datasource.createWorker(worker);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Worker created successfully')),
+            SnackBar(
+              content: const Row(children: [
+                Icon(Icons.check_circle_outline, color: Colors.white, size: 18),
+                SizedBox(width: 10),
+                Text('Worker registered successfully!'),
+              ]),
+              backgroundColor: const Color(0xFF007A3D),
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              margin: const EdgeInsets.all(16),
+            ),
           );
         }
       } else {
         await _datasource.updateWorker(worker);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Worker updated successfully')),
+            SnackBar(
+              content: const Row(children: [
+                Icon(Icons.check_circle_outline, color: Colors.white, size: 18),
+                SizedBox(width: 10),
+                Text('Worker details saved successfully!'),
+              ]),
+              backgroundColor: const Color(0xFF007A3D),
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              margin: const EdgeInsets.all(16),
+            ),
           );
         }
       }
@@ -581,9 +601,15 @@ class _WorkerFormPageState extends State<WorkerFormPage> {
   void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.red,
+        content: Row(children: [
+          const Icon(Icons.error_outline, color: Colors.white, size: 18),
+          const SizedBox(width: 10),
+          Expanded(child: Text(message)),
+        ]),
+        backgroundColor: const Color(0xFFB71C1C),
         behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        margin: const EdgeInsets.all(16),
         action: SnackBarAction(
           label: 'Dismiss',
           textColor: Colors.white,
@@ -655,7 +681,7 @@ class _WorkerFormPageState extends State<WorkerFormPage> {
                         prefixIcon: const Icon(Icons.badge),
                         border: const OutlineInputBorder(),
                         filled: isEditing,
-                        fillColor: isEditing ? Colors.grey[100] : null,
+                        fillColor: isEditing ? const Color(0xFFF3F4F6) : null,
                         helperText: isEditing ? 'Cannot be changed' : 'Unique identifier for the worker',
                         suffixIcon: !isEditing && _selectedSiteId != null && _selectedWorkTypeId != null
                             ? _isCheckingEmployeeId
@@ -668,9 +694,9 @@ class _WorkerFormPageState extends State<WorkerFormPage> {
                                     ),
                                   )
                                 : _employeeIdAvailable == true
-                                    ? const Icon(Icons.check_circle, color: Colors.green)
+                                    ? const Icon(Icons.check_circle, color: const Color(0xFF007A3D))
                                     : _employeeIdAvailable == false
-                                        ? const Icon(Icons.error, color: Colors.red)
+                                        ? const Icon(Icons.error, color: const Color(0xFFB71C1C))
                                         : null
                             : null,
                         errorText: !isEditing && _employeeIdAvailable == false 
@@ -755,7 +781,7 @@ class _WorkerFormPageState extends State<WorkerFormPage> {
                               prefixIcon: const Icon(Icons.location_on),
                               border: const OutlineInputBorder(),
                               filled: !_isSuperAdmin,
-                              fillColor: !_isSuperAdmin ? Colors.grey[100] : null,
+                              fillColor: !_isSuperAdmin ? const Color(0xFFF3F4F6) : null,
                             ),
                             items: _sites.map((site) {
                               return DropdownMenuItem<int>(
@@ -807,7 +833,7 @@ class _WorkerFormPageState extends State<WorkerFormPage> {
                               prefixIcon: const Icon(Icons.business),
                               border: const OutlineInputBorder(),
                               filled: !_isSuperAdmin,
-                              fillColor: !_isSuperAdmin ? Colors.grey[100] : null,
+                              fillColor: !_isSuperAdmin ? const Color(0xFFF3F4F6) : null,
                               helperText: _selectedSiteId == null 
                                   ? 'Select a site first' 
                                   : _loadingWorkPlaces 
@@ -920,25 +946,25 @@ class _WorkerFormPageState extends State<WorkerFormPage> {
                                   Container(
                                     padding: const EdgeInsets.all(12),
                                     decoration: BoxDecoration(
-                                      gradient: LinearGradient(
+                                      gradient: const LinearGradient(
                                         colors: [
-                                          Colors.amber[50]!,
-                                          Colors.orange[50]!,
+                                          Color(0xFFFFF3E0),
+                                          Color(0xFFFFF8F0),
                                         ],
                                       ),
                                       borderRadius: BorderRadius.circular(10),
-                                      border: Border.all(color: Colors.amber[300]!),
+                                      border: Border.all(color: const Color(0xFFFFB74D)),
                                     ),
                                     child: Row(
                                       children: [
-                                        Icon(Icons.stars_rounded, color: Colors.amber[700], size: 20),
+                                        const Icon(Icons.stars_rounded, color: Color(0xFFE65100), size: 20),
                                         const SizedBox(width: 8),
                                         Expanded(
                                           child: Text(
                                             'This role requires an individual salary. The Work Type rate will NOT be used.',
                                             style: TextStyle(
                                               fontSize: 12,
-                                              color: Colors.amber[900],
+                                              color: const Color(0xFFBF360C),
                                               fontWeight: FontWeight.w600,
                                             ),
                                           ),
@@ -1017,7 +1043,7 @@ class _WorkerFormPageState extends State<WorkerFormPage> {
                           value: null,
                           child: Row(
                             children: [
-                              Icon(Icons.remove_circle_outline, size: 18, color: Colors.grey),
+                              Icon(Icons.remove_circle_outline, size: 18, color: const Color(0xFF9CA3AF)),
                               SizedBox(width: 8),
                               Text('None - No Supervisor', style: TextStyle(fontStyle: FontStyle.italic)),
                             ],
@@ -1070,7 +1096,7 @@ class _WorkerFormPageState extends State<WorkerFormPage> {
                                             supervisor.employeeId,
                                             style: TextStyle(
                                               fontSize: 11,
-                                              color: Colors.grey[700],
+                                              color: const Color(0xFF374151),
                                               fontFamily: 'monospace',
                                             ),
                                           ),
@@ -1079,7 +1105,7 @@ class _WorkerFormPageState extends State<WorkerFormPage> {
                                               ' • ',
                                               style: TextStyle(
                                                 fontSize: 11,
-                                                color: Colors.grey[500],
+                                                color: const Color(0xFF9CA3AF),
                                               ),
                                             ),
                                             Flexible(
@@ -1087,7 +1113,7 @@ class _WorkerFormPageState extends State<WorkerFormPage> {
                                                 supervisor.workType!,
                                                 style: TextStyle(
                                                   fontSize: 11,
-                                                  color: Colors.grey[600],
+                                                  color: const Color(0xFF6B7280),
                                                   fontWeight: FontWeight.w500,
                                                 ),
                                                 overflow: TextOverflow.ellipsis,
@@ -1131,13 +1157,13 @@ class _WorkerFormPageState extends State<WorkerFormPage> {
                     Container(
                       decoration: BoxDecoration(
                         color: _status == 'active' 
-                            ? Colors.green[50] 
-                            : Colors.orange[50],
+                            ? const Color(0xFFE8F5EE) 
+                            : const Color(0xFFFFF3E0),
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
                           color: _status == 'active' 
-                              ? Colors.green[200]! 
-                              : Colors.orange[200]!,
+                              ? const Color(0xFFB2DFCA) 
+                              : const Color(0xFFFFCC80),
                         ),
                       ),
                       child: SwitchListTile(
@@ -1148,14 +1174,14 @@ class _WorkerFormPageState extends State<WorkerFormPage> {
                               : 'Worker is currently inactive',
                           style: TextStyle(
                             color: _status == 'active' 
-                                ? Colors.green[900] 
-                                : Colors.orange[900],
+                                ? const Color(0xFF003D1F) 
+                                : const Color(0xFFBF360C),
                             fontWeight: FontWeight.w500,
                           ),
                         ),
                         value: _status == 'active',
                         onChanged: (value) => setState(() => _status = value ? 'active' : 'inactive'),
-                        activeColor: Colors.green,
+                        activeThumbColor: const Color(0xFF007A3D),
                         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                       ),
                     ),
@@ -1194,7 +1220,7 @@ class _WorkerFormPageState extends State<WorkerFormPage> {
                             ? '✓ Detected: $_detectedBankName' 
                             : null,
                         helperStyle: TextStyle(
-                          color: Colors.green[700],
+                          color: const Color(0xFF005C2E),
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -1235,8 +1261,8 @@ class _WorkerFormPageState extends State<WorkerFormPage> {
                             : 'Select a bank first',
                         suffixIcon: _selectedBank != null && _bankAccountController.text.isNotEmpty
                             ? (_selectedBank!.validateAccountNumber(_bankAccountController.text)
-                                ? Icon(Icons.check_circle, color: Colors.green[700])
-                                : Icon(Icons.error, color: Colors.red[700]))
+                                ? Icon(Icons.check_circle, color: const Color(0xFF005C2E))
+                                : Icon(Icons.error, color: const Color(0xFFB71C1C)))
                             : null,
                       ),
                       keyboardType: TextInputType.number,
@@ -1275,7 +1301,7 @@ class _WorkerFormPageState extends State<WorkerFormPage> {
                           'Formatted: ${_selectedBank!.formatAccountNumber(_bankAccountController.text)}',
                           style: TextStyle(
                             fontSize: 12,
-                            color: Colors.grey[600],
+                            color: const Color(0xFF6B7280),
                             fontFamily: 'monospace',
                           ),
                         ),

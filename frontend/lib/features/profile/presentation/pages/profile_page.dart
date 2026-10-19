@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/network/dio_client.dart';
@@ -129,7 +129,17 @@ class _ProfilePageState extends State<ProfilePage> {
       if (mounted) {
         final message = e.response?.data['detail'] ?? 'Error updating profile';
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message), backgroundColor: Colors.red),
+          SnackBar(
+            content: Row(children: [
+              const Icon(Icons.error_outline, color: Colors.white, size: 18),
+              const SizedBox(width: 10),
+              Expanded(child: Text(message)),
+            ]),
+            backgroundColor: const Color(0xFFB71C1C),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
+          ),
         );
       }
     } finally {
@@ -142,9 +152,16 @@ class _ProfilePageState extends State<ProfilePage> {
     
     if (_newPasswordController.text != _confirmPasswordController.text) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('New passwords do not match'),
-          backgroundColor: Colors.red,
+        SnackBar(
+          content: const Row(children: [
+            Icon(Icons.warning_amber_rounded, color: Colors.white, size: 18),
+            SizedBox(width: 10),
+            Text('New passwords do not match'),
+          ]),
+          backgroundColor: const Color(0xFFE65100),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          margin: const EdgeInsets.all(16),
         ),
       );
       return;
@@ -175,9 +192,16 @@ class _ProfilePageState extends State<ProfilePage> {
         _confirmPasswordController.clear();
         
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Password changed successfully'),
-            backgroundColor: Colors.green,
+          SnackBar(
+            content: const Row(children: [
+              Icon(Icons.check_circle_outline, color: Colors.white, size: 18),
+              SizedBox(width: 10),
+              Text('Password changed successfully!'),
+            ]),
+            backgroundColor: const Color(0xFF007A3D),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
           ),
         );
         
@@ -187,7 +211,17 @@ class _ProfilePageState extends State<ProfilePage> {
       if (mounted) {
         final message = e.response?.data['detail'] ?? 'Error changing password';
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message), backgroundColor: Colors.red),
+          SnackBar(
+            content: Row(children: [
+              const Icon(Icons.error_outline, color: Colors.white, size: 18),
+              const SizedBox(width: 10),
+              Expanded(child: Text(message)),
+            ]),
+            backgroundColor: const Color(0xFFB71C1C),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
+          ),
         );
       }
     } finally {
@@ -208,7 +242,7 @@ class _ProfilePageState extends State<ProfilePage> {
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.1),
+                color: const Color(0x1A000000),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
               ),
@@ -225,7 +259,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Theme.of(context).primaryColor.withOpacity(0.1),
+                        color: const Color(0x1A007A3D),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(Icons.lock_reset, color: Theme.of(context).primaryColor, size: 28),
@@ -235,7 +269,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       'Change Password',
                       style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                         fontWeight: FontWeight.bold,
-                        color: Colors.grey[800],
+                        color: const Color(0xFF1F2937),
                       ),
                     ),
                   ],
@@ -243,7 +277,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 const SizedBox(height: 8),
                 Text(
                   'Update your credentials securely. Use a strong password to protect your account.',
-                  style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                  style: TextStyle(color: const Color(0xFF6B7280), fontSize: 14),
                 ),
                 const SizedBox(height: 24),
                 TextFormField(
@@ -253,7 +287,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                     prefixIcon: const Icon(Icons.lock_outline),
                     filled: true,
-                    fillColor: Colors.grey[50],
+                    fillColor: const Color(0xFFF9FAFB),
                   ),
                   obscureText: true,
                   validator: (value) {
@@ -271,7 +305,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                     prefixIcon: const Icon(Icons.lock),
                     filled: true,
-                    fillColor: Colors.grey[50],
+                    fillColor: const Color(0xFFF9FAFB),
                   ),
                   obscureText: true,
                   validator: (value) {
@@ -292,7 +326,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                     prefixIcon: const Icon(Icons.lock),
                     filled: true,
-                    fillColor: Colors.grey[50],
+                    fillColor: const Color(0xFFF9FAFB),
                   ),
                   obscureText: true,
                   validator: (value) {
@@ -362,7 +396,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         children: [
                           CircleAvatar(
                             radius: 60,
-                            backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
+                            backgroundColor: const Color(0x1A007A3D),
                             child: Icon(
                               Icons.person,
                               size: 60,
@@ -492,7 +526,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           label: const Text('Change Password', style: TextStyle(fontWeight: FontWeight.bold)),
                           style: OutlinedButton.styleFrom(
                             foregroundColor: Theme.of(context).primaryColor,
-                            side: BorderSide(color: Theme.of(context).primaryColor.withOpacity(0.5), width: 1.5),
+                            side: BorderSide(color: const Color(0x80007A3D), width: 1.5),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
@@ -532,7 +566,7 @@ class _ProfilePageState extends State<ProfilePage> {
             label,
             style: const TextStyle(
               fontWeight: FontWeight.w500,
-              color: Colors.grey,
+              color: const Color(0xFF9CA3AF),
             ),
           ),
           const SizedBox(width: 16),

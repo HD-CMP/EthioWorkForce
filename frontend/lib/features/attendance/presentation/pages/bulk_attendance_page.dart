@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../data/datasources/attendance_remote_datasource.dart';
@@ -9,6 +9,7 @@ import '../../../overtime/domain/entities/overtime.dart';
 import '../../../overtime/data/datasources/overtime_remote_datasource.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/services/audio_feedback_service.dart';
+import '../../../../core/utils/app_snackbar.dart';
 import '../../../../core/widgets/visual_feedback_overlay.dart';
 import '../../../../core/widgets/ethiopian_date_picker.dart';
 import '../../../../core/utils/ethiopian_calendar.dart';
@@ -169,19 +170,19 @@ class _BulkAttendancePageState extends State<BulkAttendancePage> {
   Color _getStatusColor(String status) {
     switch (status) {
       case 'present':
-        return Colors.green;
+        return const Color(0xFF007A3D);
       case 'absent':
-        return Colors.red;
+        return const Color(0xFFB71C1C);
       case 'late':
-        return Colors.orange;
+        return const Color(0xFFE65100);
       case 'excused':
-        return Colors.blue;
+        return const Color(0xFF1E3A5F);
       case 'leave':
-        return Colors.purple;
+        return const Color(0xFF0A192F);
       case 'half_day':
-        return Colors.amber;
+        return const Color(0xFFE65100);
       default:
-        return Colors.grey;
+        return const Color(0xFF9CA3AF);
     }
   }
 
@@ -278,7 +279,7 @@ class _BulkAttendancePageState extends State<BulkAttendancePage> {
       builder: (context) => AlertDialog(
         title: Row(
           children: [
-            Icon(Icons.access_time, color: Colors.orange[700], size: 28),
+            Icon(Icons.access_time, color: const Color(0xFFE65100), size: 28),
             const SizedBox(width: 12),
             const Expanded(
               child: Text(
@@ -299,17 +300,17 @@ class _BulkAttendancePageState extends State<BulkAttendancePage> {
               ),
               Text(
                 'ID: ${worker.employeeId}',
-                style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                style: TextStyle(fontSize: 14, color: const Color(0xFF6B7280)),
               ),
               const SizedBox(height: 8),
               Text(
                 'Date: $dateText',
-                style: TextStyle(fontSize: 13, color: Colors.grey[700]),
+                style: TextStyle(fontSize: 13, color: const Color(0xFF374151)),
               ),
               const SizedBox(height: 16),
               const Text(
                 'Enter overtime hours for this worker',
-                style: TextStyle(fontSize: 13, color: Colors.black54),
+                style: TextStyle(fontSize: 13, color: const Color(0xFF6B7280)),
               ),
               const SizedBox(height: 12),
               TextField(
@@ -332,7 +333,7 @@ class _BulkAttendancePageState extends State<BulkAttendancePage> {
           if (existingOvertime.hours > 0)
             TextButton(
               onPressed: () => Navigator.pop(context, 0.0),
-              child: Text('Clear', style: TextStyle(color: Colors.red[600])),
+              child: Text('Clear', style: TextStyle(color: const Color(0xFFB71C1C))),
             ),
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -345,15 +346,22 @@ class _BulkAttendancePageState extends State<BulkAttendancePage> {
                 Navigator.pop(context, hours);
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Please enter a value between 0 and 24'),
-                    backgroundColor: Colors.red,
+                  SnackBar(
+                    content: const Row(children: [
+                      Icon(Icons.warning_amber_rounded, color: Colors.white, size: 18),
+                      SizedBox(width: 10),
+                      Text('Please enter a value between 0 and 24'),
+                    ]),
+                    backgroundColor: const Color(0xFFE65100),
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    margin: const EdgeInsets.all(16),
                   ),
                 );
               }
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.orange[600],
+              backgroundColor: const Color(0xFFE65100),
               foregroundColor: Colors.white,
             ),
             child: const Text('Save'),
@@ -399,12 +407,20 @@ class _BulkAttendancePageState extends State<BulkAttendancePage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(hours > 0 
-              ? 'Saved: ${worker.fullName} - ${hours}h overtime'
-              : 'Overtime cleared: ${worker.fullName}'
-            ),
-            backgroundColor: Colors.green,
+            content: Row(children: [
+              const Icon(Icons.check_circle_outline, color: Colors.white, size: 18),
+              SizedBox(width: 10),
+              Expanded(
+                child: Text(hours > 0 
+                  ? 'Saved: ${worker.fullName} - ${hours}h overtime'
+                  : 'Overtime cleared: ${worker.fullName}'
+                ),
+              ),
+            ]),
+            backgroundColor: const Color(0xFF007A3D),
             behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
           ),
         );
       }
@@ -412,9 +428,15 @@ class _BulkAttendancePageState extends State<BulkAttendancePage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error saving overtime: $e'),
-            backgroundColor: Colors.red,
+            content: Row(children: [
+              const Icon(Icons.error_outline, color: Colors.white, size: 18),
+              SizedBox(width: 10),
+              Expanded(child: Text('Error saving overtime: $e')),
+            ]),
+            backgroundColor: const Color(0xFFB71C1C),
             behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
           ),
         );
       }
@@ -588,7 +610,7 @@ class _BulkAttendancePageState extends State<BulkAttendancePage> {
       builder: (context) => AlertDialog(
         title: Row(
           children: [
-            Icon(Icons.warning_amber_rounded, color: Colors.orange[700], size: 28),
+            Icon(Icons.warning_amber_rounded, color: const Color(0xFFE65100), size: 28),
             const SizedBox(width: 12),
             const Text('Confirm Bulk Unmark'),
           ],
@@ -612,7 +634,7 @@ class _BulkAttendancePageState extends State<BulkAttendancePage> {
             child: const Text('Cancel'),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFB71C1C)),
             onPressed: () => Navigator.pop(context, true),
             child: const Text('Delete All'),
           ),
@@ -664,6 +686,9 @@ class _BulkAttendancePageState extends State<BulkAttendancePage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(localizations?.markAttendance ?? 'Mark Attendance'),
+        backgroundColor: const Color(0xFF007A3D),
+        foregroundColor: Colors.white,
+        iconTheme: const IconThemeData(color: Colors.white),
         actions: [
           IconButton(
             icon: const Icon(Icons.calendar_today),
@@ -717,7 +742,7 @@ class _BulkAttendancePageState extends State<BulkAttendancePage> {
           _buildSettingsCard(),
           if (_workPlaces.isNotEmpty) _buildWorkPlaceFilters(),
           if (_bulkMode == 'attendance') _buildSelectAllBar(),
-          const Expanded(child: Center(child: CircularProgressIndicator())),
+          const Expanded(child: Center(child: CircularProgressIndicator(color: Color(0xFF007A3D)))),
         ],
       );
     }
@@ -740,10 +765,10 @@ class _BulkAttendancePageState extends State<BulkAttendancePage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.person_off, size: 80, color: Colors.grey[400]),
+                  Icon(Icons.person_off, size: 80, color: const Color(0xFF9CA3AF)),
                   const SizedBox(height: 16),
                   Text('No workers found',
-                      style: TextStyle(fontSize: 18, color: Colors.grey[600])),
+                      style: TextStyle(fontSize: 18, color: const Color(0xFF6B7280))),
                 ],
               ),
             ),
@@ -781,17 +806,17 @@ class _BulkAttendancePageState extends State<BulkAttendancePage> {
       return Card(
         margin: const EdgeInsets.only(bottom: 8),
         elevation: 1,
-        color: hasOvertime ? Colors.orange[50] : null,
+        color: hasOvertime ? const Color(0xFFFFF3E0) : null,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
           side: hasOvertime
-              ? BorderSide(color: Colors.orange[300]!, width: 1.5)
+              ? BorderSide(color: const Color(0xFFFFB74D), width: 1.5)
               : BorderSide.none,
         ),
         child: ListTile(
           onTap: () => _showOvertimeDialog(worker),
           leading: CircleAvatar(
-            backgroundColor: hasOvertime ? Colors.orange[700] : Theme.of(context).primaryColor,
+            backgroundColor: hasOvertime ? const Color(0xFFE65100) : Theme.of(context).primaryColor,
             child: Text(
               worker.fullName.isNotEmpty ? worker.fullName[0].toUpperCase() : '?',
               style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
@@ -803,7 +828,7 @@ class _BulkAttendancePageState extends State<BulkAttendancePage> {
               if (hasOvertime) ...[
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(color: Colors.orange[700], borderRadius: BorderRadius.circular(12)),
+                  decoration: BoxDecoration(color: const Color(0xFFE65100), borderRadius: BorderRadius.circular(12)),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -826,14 +851,14 @@ class _BulkAttendancePageState extends State<BulkAttendancePage> {
       margin: const EdgeInsets.only(bottom: 8),
       elevation: isSelected ? 4 : 1,
       color: hasAttendance
-          ? (_isUnmarkMode && isSelected ? Colors.red[50] : Colors.green[50])
+          ? (_isUnmarkMode && isSelected ? const Color(0xFFFFEBEE) : const Color(0xFFE8F5EE))
           : null,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: isSelected
-            ? BorderSide(color: _isUnmarkMode ? Colors.red : Theme.of(context).primaryColor, width: 2)
+            ? BorderSide(color: _isUnmarkMode ? const Color(0xFFB71C1C) : Theme.of(context).primaryColor, width: 2)
             : hasAttendance
-                ? BorderSide(color: Colors.green[300]!, width: 1.5)
+                ? BorderSide(color: const Color(0xFF66B28A), width: 1.5)
                 : BorderSide.none,
       ),
       child: CheckboxListTile(
@@ -848,7 +873,7 @@ class _BulkAttendancePageState extends State<BulkAttendancePage> {
               child: Text(worker.fullName,
                   style: TextStyle(
                     fontWeight: FontWeight.w600,
-                    color: hasAttendance && !_isUnmarkMode ? Colors.grey[600] : null,
+                    color: hasAttendance && !_isUnmarkMode ? const Color(0xFF6B7280) : null,
                   )),
             ),
             if (hasAttendance && attendance != null) ...[
@@ -876,19 +901,19 @@ class _BulkAttendancePageState extends State<BulkAttendancePage> {
           children: [
             const SizedBox(height: 4),
             Text('ID: ${worker.employeeId}',
-                style: TextStyle(color: hasAttendance && !_isUnmarkMode ? Colors.grey[600] : null)),
+                style: TextStyle(color: hasAttendance && !_isUnmarkMode ? const Color(0xFF6B7280) : null)),
             if (hasAttendance && attendance != null)
               Padding(
                 padding: const EdgeInsets.only(top: 4),
                 child: Row(
                   children: [
-                    Icon(Icons.access_time, size: 12, color: Colors.green[700]),
+                    Icon(Icons.access_time, size: 12, color: const Color(0xFF005C2E)),
                     const SizedBox(width: 4),
                     Text(attendance.checkInTime ?? 'No check-in time',
-                        style: TextStyle(fontSize: 12, color: Colors.green[700], fontWeight: FontWeight.w500)),
+                        style: TextStyle(fontSize: 12, color: const Color(0xFF005C2E), fontWeight: FontWeight.w500)),
                     if (attendance.isVerified) ...[
                       const SizedBox(width: 8),
-                      Icon(Icons.verified, size: 12, color: Colors.green[900]),
+                      Icon(Icons.verified, size: 12, color: const Color(0xFF003D1F)),
                     ],
                   ],
                 ),
@@ -897,19 +922,19 @@ class _BulkAttendancePageState extends State<BulkAttendancePage> {
         ),
         secondary: CircleAvatar(
           backgroundColor: _isUnmarkMode
-              ? (isSelected ? Colors.red[600] : (hasAttendance ? Colors.green[600] : Colors.grey[300]))
+              ? (isSelected ? const Color(0xFFB71C1C) : (hasAttendance ? const Color(0xFF007A3D) : const Color(0xFFD1D5DB)))
               : (hasAttendance
-                  ? Colors.green[600]
+                  ? const Color(0xFF007A3D)
                   : isSelected
                       ? Theme.of(context).primaryColor
-                      : Colors.grey[300]),
+                      : const Color(0xFFD1D5DB)),
           child: Icon(
             _isUnmarkMode && hasAttendance
                 ? (isSelected ? Icons.remove_circle : Icons.check)
                 : hasAttendance
                     ? Icons.check
                     : Icons.person,
-            color: hasAttendance || isSelected ? Colors.white : Colors.grey[600],
+            color: hasAttendance || isSelected ? Colors.white : const Color(0xFF6B7280),
           ),
         ),
       ),
@@ -936,7 +961,7 @@ class _BulkAttendancePageState extends State<BulkAttendancePage> {
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: Colors.grey[700],
+                      color: const Color(0xFF374151),
                     ),
                   ),
                 ),
@@ -944,10 +969,10 @@ class _BulkAttendancePageState extends State<BulkAttendancePage> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: unmarkedCount == 0 ? Colors.green[50] : Colors.blue[50],
+                      color: unmarkedCount == 0 ? const Color(0xFFE8F5EE) : const Color(0xFFE8EDF4),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                        color: unmarkedCount == 0 ? Colors.green[300]! : Colors.blue[300]!,
+                        color: unmarkedCount == 0 ? const Color(0xFF66B28A) : const Color(0xFF64B5F6),
                       ),
                     ),
                     child: Row(
@@ -956,7 +981,7 @@ class _BulkAttendancePageState extends State<BulkAttendancePage> {
                         Icon(
                           unmarkedCount == 0 ? Icons.check_circle : Icons.pending_actions,
                           size: 16,
-                          color: unmarkedCount == 0 ? Colors.green[700] : Colors.blue[700],
+                          color: unmarkedCount == 0 ? const Color(0xFF005C2E) : const Color(0xFF0A192F),
                         ),
                         const SizedBox(width: 6),
                         Text(
@@ -964,7 +989,7 @@ class _BulkAttendancePageState extends State<BulkAttendancePage> {
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.bold,
-                            color: unmarkedCount == 0 ? Colors.green[700] : Colors.blue[700],
+                            color: unmarkedCount == 0 ? const Color(0xFF005C2E) : const Color(0xFF0A192F),
                           ),
                         ),
                       ],
@@ -978,10 +1003,10 @@ class _BulkAttendancePageState extends State<BulkAttendancePage> {
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
-                          color: _isUnmarkMode ? Colors.red[50] : Colors.grey[100],
+                          color: _isUnmarkMode ? const Color(0xFFFFEBEE) : const Color(0xFFF3F4F6),
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
-                            color: _isUnmarkMode ? Colors.red[300]! : Colors.grey[300]!,
+                            color: _isUnmarkMode ? const Color(0xFFE57373) : const Color(0xFFD1D5DB),
                             width: 1.5,
                           ),
                         ),
@@ -991,7 +1016,7 @@ class _BulkAttendancePageState extends State<BulkAttendancePage> {
                             Icon(
                               _isUnmarkMode ? Icons.undo : Icons.edit,
                               size: 16,
-                              color: _isUnmarkMode ? Colors.red[700] : Colors.grey[700],
+                              color: _isUnmarkMode ? const Color(0xFFB71C1C) : const Color(0xFF374151),
                             ),
                             const SizedBox(width: 6),
                             Text(
@@ -999,7 +1024,7 @@ class _BulkAttendancePageState extends State<BulkAttendancePage> {
                               style: TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.bold,
-                                color: _isUnmarkMode ? Colors.red[700] : Colors.grey[700],
+                                color: _isUnmarkMode ? const Color(0xFFB71C1C) : const Color(0xFF374151),
                               ),
                             ),
                           ],
@@ -1016,9 +1041,9 @@ class _BulkAttendancePageState extends State<BulkAttendancePage> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey[300]!),
+                  border: Border.all(color: const Color(0xFFD1D5DB)),
                   borderRadius: BorderRadius.circular(8),
-                  color: Colors.grey[50],
+                  color: const Color(0xFFF9FAFB),
                 ),
                 child: Row(
                   children: [
@@ -1042,13 +1067,13 @@ class _BulkAttendancePageState extends State<BulkAttendancePage> {
                           const SizedBox(height: 2),
                           Text(
                             _showEthiopianCalendar ? 'Ethiopian Calendar' : 'Gregorian Calendar',
-                            style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+                            style: TextStyle(fontSize: 11, color: const Color(0xFF6B7280)),
                           ),
                         ],
                       ),
                     ),
                     const SizedBox(width: 8),
-                    Icon(Icons.arrow_drop_down, size: 20, color: Colors.grey[600]),
+                    Icon(Icons.arrow_drop_down, size: 20, color: const Color(0xFF6B7280)),
                   ],
                 ),
               ),
@@ -1057,7 +1082,7 @@ class _BulkAttendancePageState extends State<BulkAttendancePage> {
             Container(
               padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
-                color: Colors.grey[100],
+                color: const Color(0xFFF3F4F6),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Row(
@@ -1077,7 +1102,7 @@ class _BulkAttendancePageState extends State<BulkAttendancePage> {
                           color: _bulkMode == 'attendance' ? Colors.white : Colors.transparent,
                           borderRadius: BorderRadius.circular(10),
                           boxShadow: _bulkMode == 'attendance'
-                              ? [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 4, offset: const Offset(0, 2))]
+                              ? [BoxShadow(color: const Color(0x1A000000), blurRadius: 4, offset: const Offset(0, 2))]
                               : null,
                         ),
                         child: Row(
@@ -1086,7 +1111,7 @@ class _BulkAttendancePageState extends State<BulkAttendancePage> {
                             Icon(
                               Icons.check_circle_outline,
                               size: 18,
-                              color: _bulkMode == 'attendance' ? Theme.of(context).primaryColor : Colors.grey[600],
+                              color: _bulkMode == 'attendance' ? Theme.of(context).primaryColor : const Color(0xFF6B7280),
                             ),
                             const SizedBox(width: 8),
                             Text(
@@ -1094,7 +1119,7 @@ class _BulkAttendancePageState extends State<BulkAttendancePage> {
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: _bulkMode == 'attendance' ? FontWeight.bold : FontWeight.normal,
-                                color: _bulkMode == 'attendance' ? Theme.of(context).primaryColor : Colors.grey[600],
+                                color: _bulkMode == 'attendance' ? Theme.of(context).primaryColor : const Color(0xFF6B7280),
                               ),
                             ),
                           ],
@@ -1118,7 +1143,7 @@ class _BulkAttendancePageState extends State<BulkAttendancePage> {
                           color: _bulkMode == 'overtime' ? Colors.white : Colors.transparent,
                           borderRadius: BorderRadius.circular(10),
                           boxShadow: _bulkMode == 'overtime'
-                              ? [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 4, offset: const Offset(0, 2))]
+                              ? [BoxShadow(color: const Color(0x1A000000), blurRadius: 4, offset: const Offset(0, 2))]
                               : null,
                         ),
                         child: Row(
@@ -1127,7 +1152,7 @@ class _BulkAttendancePageState extends State<BulkAttendancePage> {
                             Icon(
                               Icons.access_time,
                               size: 18,
-                              color: _bulkMode == 'overtime' ? Colors.orange[700] : Colors.grey[600],
+                              color: _bulkMode == 'overtime' ? const Color(0xFFE65100) : const Color(0xFF6B7280),
                             ),
                             const SizedBox(width: 8),
                             Text(
@@ -1135,7 +1160,7 @@ class _BulkAttendancePageState extends State<BulkAttendancePage> {
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: _bulkMode == 'overtime' ? FontWeight.bold : FontWeight.normal,
-                                color: _bulkMode == 'overtime' ? Colors.orange[700] : Colors.grey[600],
+                                color: _bulkMode == 'overtime' ? const Color(0xFFE65100) : const Color(0xFF6B7280),
                               ),
                             ),
                           ],
@@ -1151,20 +1176,20 @@ class _BulkAttendancePageState extends State<BulkAttendancePage> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.green[50],
+                  color: const Color(0xFFE8F5EE),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.green[200]!),
+                  border: Border.all(color: const Color(0xFFB2DFCA)),
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.info_outline, size: 20, color: Colors.green[700]),
+                    Icon(Icons.info_outline, size: 20, color: const Color(0xFF005C2E)),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         'All workers have been marked for this date',
                         style: TextStyle(
                           fontSize: 13,
-                          color: Colors.green[900],
+                          color: const Color(0xFF003D1F),
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -1178,20 +1203,20 @@ class _BulkAttendancePageState extends State<BulkAttendancePage> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.red[50],
+                  color: const Color(0xFFFFEBEE),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.red[300]!),
+                  border: Border.all(color: const Color(0xFFE57373)),
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.warning_amber_rounded, size: 20, color: Colors.red[700]),
+                    Icon(Icons.warning_amber_rounded, size: 20, color: const Color(0xFFB71C1C)),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         'Unmark mode: Select marked workers to remove their attendance',
                         style: TextStyle(
                           fontSize: 13,
-                          color: Colors.red[900],
+                          color: const Color(0xFF7F0000),
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -1238,7 +1263,7 @@ class _BulkAttendancePageState extends State<BulkAttendancePage> {
                         child: Text(
                           _checkInTime?.format(context) ?? 'Not Set',
                           style: TextStyle(
-                            color: _checkInTime != null ? Colors.black : Colors.grey,
+                            color: _checkInTime != null ? Colors.black : const Color(0xFF9CA3AF),
                           ),
                         ),
                       ),
@@ -1252,20 +1277,20 @@ class _BulkAttendancePageState extends State<BulkAttendancePage> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.orange[50],
+                  color: const Color(0xFFFFF3E0),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.orange[300]!),
+                  border: Border.all(color: const Color(0xFFFFB74D)),
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.info_outline, size: 20, color: Colors.orange[700]),
+                    Icon(Icons.info_outline, size: 20, color: const Color(0xFFE65100)),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         'Overtime mode: Click on workers to enter overtime and set attendance status. Workers can have overtime without being present for regular hours.',
                         style: TextStyle(
                           fontSize: 13,
-                          color: Colors.orange[900],
+                          color: const Color(0xFFBF360C),
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -1300,7 +1325,7 @@ class _BulkAttendancePageState extends State<BulkAttendancePage> {
               label: Text('All ($allCount)'),
               selected: _selectedWorkPlace == null,
               onSelected: (_) => _selectWorkPlace(null),
-              selectedColor: Theme.of(context).primaryColor.withOpacity(0.2),
+              selectedColor: const Color(0x33007A3D),
               checkmarkColor: Theme.of(context).primaryColor,
             ),
             const SizedBox(width: 8),
@@ -1312,7 +1337,7 @@ class _BulkAttendancePageState extends State<BulkAttendancePage> {
                   label: Text('$place ($count)'),
                   selected: _selectedWorkPlace == place,
                   onSelected: (_) => _selectWorkPlace(place),
-                  selectedColor: Theme.of(context).primaryColor.withOpacity(0.2),
+                  selectedColor: const Color(0x33007A3D),
                   checkmarkColor: Theme.of(context).primaryColor,
                 ),
               );
@@ -1330,7 +1355,7 @@ class _BulkAttendancePageState extends State<BulkAttendancePage> {
     
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      color: _isUnmarkMode ? Colors.red[50] : Colors.grey[100],
+      color: _isUnmarkMode ? const Color(0xFFFFEBEE) : const Color(0xFFF3F4F6),
       child: Row(
         children: [
           Checkbox(
@@ -1354,7 +1379,7 @@ class _BulkAttendancePageState extends State<BulkAttendancePage> {
                       : '$otherCount already marked',
                     style: TextStyle(
                       fontSize: 12,
-                      color: _isUnmarkMode ? Colors.grey[600] : Colors.green[700],
+                      color: _isUnmarkMode ? const Color(0xFF6B7280) : const Color(0xFF005C2E),
                     ),
                   ),
               ],
@@ -1381,7 +1406,7 @@ class _BulkAttendancePageState extends State<BulkAttendancePage> {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: const Color(0x1A000000),
             blurRadius: 4,
             offset: const Offset(0, -2),
           ),
@@ -1405,12 +1430,12 @@ class _BulkAttendancePageState extends State<BulkAttendancePage> {
                   if (!_isUnmarkMode)
                     Text(
                       'Status: ${_selectedStatus.toUpperCase()}',
-                      style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                      style: TextStyle(fontSize: 14, color: const Color(0xFF6B7280)),
                     )
                   else
                     Text(
                       'Action: UNMARK',
-                      style: TextStyle(fontSize: 14, color: Colors.red[600], fontWeight: FontWeight.w600),
+                      style: TextStyle(fontSize: 14, color: const Color(0xFFB71C1C), fontWeight: FontWeight.w600),
                     ),
                 ],
               ),
@@ -1420,7 +1445,7 @@ class _BulkAttendancePageState extends State<BulkAttendancePage> {
               onPressed: _isLoading ? null : _submitBulkAttendance,
               style: _isUnmarkMode
                   ? ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
+                      backgroundColor: const Color(0xFFB71C1C),
                       foregroundColor: Colors.white,
                     )
                   : null,

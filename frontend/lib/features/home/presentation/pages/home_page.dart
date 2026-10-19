@@ -28,7 +28,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   // Quick stat values
   int _totalWorkers = 0;
   int _presentToday = 0;
-  int _pendingPayroll = 0;
+  int _activeSites = 0;
   bool _statsLoaded = false;
 
   @override
@@ -89,12 +89,14 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           'date_from': DateTime.now().toIso8601String().split('T')[0],
           'date_to': DateTime.now().toIso8601String().split('T')[0],
         }).catchError((_) => Response(requestOptions: RequestOptions(path: ''), data: [])),
+        dio.get('/sites', queryParameters: {'is_active': true}).catchError((_) => Response(requestOptions: RequestOptions(path: ''), data: [])),
       ]);
 
       if (!mounted) return;
 
       final workersData = results[0].data;
       final attendanceData = results[1].data;
+      final sitesData = results[2].data;
 
       setState(() {
         if (workersData is Map) {
@@ -106,6 +108,16 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           _presentToday = attendanceData
               .where((a) => (a['status'] ?? '') == 'present')
               .length;
+        }
+        if (sitesData is List) {
+          _activeSites = sitesData.length;
+        } else if (sitesData is Map) {
+          final list = sitesData['data'] ?? sitesData['sites'] ?? [];
+          if (list is List) {
+            _activeSites = list.length;
+          } else {
+            _activeSites = (sitesData['total'] ?? sitesData['count'] ?? 0) as int;
+          }
         }
         _statsLoaded = true;
       });
@@ -170,16 +182,16 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                     height: 52,
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
-                        colors: [Color(0xFF1B5E20), Color(0xFF4CAF50)],
+                        colors: [Color(0xFF005C2E), Color(0xFF007A3D)],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
                       shape: BoxShape.circle,
-                      boxShadow: [
+                      boxShadow: const [
                         BoxShadow(
-                          color: const Color(0xFF1B5E20).withOpacity(0.3),
+                          color: Color(0x4D005C2E),
                           blurRadius: 8,
-                          offset: const Offset(0, 4),
+                          offset: Offset(0, 4),
                         ),
                       ],
                     ),
@@ -197,14 +209,14 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                       children: [
                         Text(
                           _userData?['full_name'] ?? 'User',
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.black87),
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Color(0xFF1A1A1A)),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 3),
                         Text(
                           _userData?['email'] ?? '',
-                          style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                          style: const TextStyle(fontSize: 12, color: Color(0xFF9CA3AF)),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -212,13 +224,13 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF1B5E20).withOpacity(0.1),
+                            color: const Color(0xFFE8F5EE),
                             borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: const Color(0xFF1B5E20).withOpacity(0.3)),
+                            border: Border.all(color: const Color(0xFF007A3D)),
                           ),
                           child: Text(
                             _getRoleLabel(_userData?['role']),
-                            style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Color(0xFF1B5E20), letterSpacing: 0.5),
+                            style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Color(0xFF007A3D), letterSpacing: 0.5),
                           ),
                         ),
                       ],
@@ -227,16 +239,16 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 ],
               ),
               const SizedBox(height: 12),
-              Divider(color: Colors.grey[200]),
+              const Divider(color: Color(0xFFE5E7EB)),
             ],
           ),
         ),
-        _menuItem('profile', Icons.person_outline, 'My Profile', Colors.blue),
-        _menuItem('settings', Icons.settings_outlined, 'Settings', Colors.purple),
-        PopupMenuItem<String>(
+        _menuItem('profile', Icons.person_outline, 'My Profile', const Color(0xFF0A192F), const Color(0xFFE8EDF4)),
+        _menuItem('settings', Icons.settings_outlined, 'Settings', const Color(0xFF007A3D), const Color(0xFFE8F5EE)),
+        const PopupMenuItem<String>(
           enabled: false,
           height: 8,
-          child: Divider(color: Colors.grey[200], height: 1),
+          child: Divider(color: Color(0xFFE5E7EB), height: 1),
         ),
         PopupMenuItem<String>(
           value: 'logout',
@@ -246,11 +258,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             children: [
               Container(
                 width: 34, height: 34,
-                decoration: BoxDecoration(color: Colors.red[50], borderRadius: BorderRadius.circular(9)),
-                child: const Icon(Icons.logout_rounded, size: 18, color: Colors.red),
+                decoration: BoxDecoration(color: const Color(0xFFFFEBEE), borderRadius: BorderRadius.circular(9)),
+                child: const Icon(Icons.logout_rounded, size: 18, color: Color(0xFFB71C1C)),
               ),
               const SizedBox(width: 12),
-              const Text('Logout', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.red)),
+              const Text('Logout', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFFB71C1C))),
             ],
           ),
         ),
@@ -265,7 +277,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     });
   }
 
-  PopupMenuItem<String> _menuItem(String value, IconData icon, String label, MaterialColor color) {
+  PopupMenuItem<String> _menuItem(String value, IconData icon, String label, Color iconColor, Color bgColor) {
     return PopupMenuItem<String>(
       value: value,
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -274,13 +286,13 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         children: [
           Container(
             width: 34, height: 34,
-            decoration: BoxDecoration(color: color[50], borderRadius: BorderRadius.circular(9)),
-            child: Icon(icon, size: 18, color: color[700]),
+            decoration: BoxDecoration(color: bgColor, borderRadius: BorderRadius.circular(9)),
+            child: Icon(icon, size: 18, color: iconColor),
           ),
           const SizedBox(width: 12),
-          Text(label, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.black87)),
+          Text(label, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Color(0xFF1A1A1A))),
           const Spacer(),
-          Icon(Icons.chevron_right, size: 18, color: Colors.grey[400]),
+          const Icon(Icons.chevron_right, size: 18, color: Color(0xFF9CA3AF)),
         ],
       ),
     );
@@ -370,13 +382,13 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             children: [
               Container(
                 width: 60, height: 60,
-                decoration: BoxDecoration(color: Colors.red[50], shape: BoxShape.circle),
-                child: Icon(Icons.logout_rounded, size: 28, color: Colors.red[600]),
+                decoration: const BoxDecoration(color: Color(0xFFFFEBEE), shape: BoxShape.circle),
+                child: const Icon(Icons.logout_rounded, size: 28, color: Color(0xFFB71C1C)),
               ),
               const SizedBox(height: 18),
-              const Text('Sign Out', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87)),
+              const Text('Sign Out', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF1A1A1A))),
               const SizedBox(height: 10),
-              Text('Are you sure you want to sign out?', textAlign: TextAlign.center, style: TextStyle(fontSize: 14, color: Colors.grey[600], height: 1.4)),
+              const Text('Are you sure you want to sign out?', textAlign: TextAlign.center, style: TextStyle(fontSize: 14, color: Color(0xFF6B7280), height: 1.4)),
               const SizedBox(height: 24),
               Row(
                 children: [
@@ -385,10 +397,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                       onPressed: () => Navigator.pop(ctx),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 13),
-                        side: BorderSide(color: Colors.grey[300]!),
+                        side: const BorderSide(color: Color(0xFFD1D5DB)),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
-                      child: const Text('Cancel', style: TextStyle(fontWeight: FontWeight.w600, color: Colors.black87)),
+                      child: const Text('Cancel', style: TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF1A1A1A))),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -399,7 +411,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                         context.read<AuthBloc>().add(LogoutRequested());
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
+                        backgroundColor: const Color(0xFFB71C1C),
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 13),
                         elevation: 0,
@@ -428,26 +440,33 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       child: Scaffold(
         backgroundColor: const Color(0xFFF0F4F0),
         body: SafeArea(
-          child: CustomScrollView(
-            slivers: [
-              _buildSliverHeader(),
-              SliverToBoxAdapter(
-                child: FadeTransition(
-                  opacity: _fadeAnimation ?? const AlwaysStoppedAnimation(1.0),
-                  child: SlideTransition(
-                    position: _slideAnimation ?? const AlwaysStoppedAnimation(Offset.zero),
-                    child: Column(
-                      children: [
-                        if (_isSuperAdmin) _buildQuickStats(),
-                        _buildSectionTitle('Quick Access'),
-                        _buildModuleGrid(),
-                        const SizedBox(height: 24),
-                      ],
+          child: RefreshIndicator(
+            color: const Color(0xFF007A3D),
+            onRefresh: () async {
+              await _loadUserData();
+            },
+            child: CustomScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              slivers: [
+                _buildSliverHeader(),
+                SliverToBoxAdapter(
+                  child: FadeTransition(
+                    opacity: _fadeAnimation ?? const AlwaysStoppedAnimation(1.0),
+                    child: SlideTransition(
+                      position: _slideAnimation ?? const AlwaysStoppedAnimation(Offset.zero),
+                      child: Column(
+                        children: [
+                          if (_isSuperAdmin) _buildQuickStats(),
+                          _buildSectionTitle('Quick Access'),
+                          _buildModuleGrid(),
+                          const SizedBox(height: 24),
+                        ],
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -459,7 +478,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       child: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFF1B5E20), Color(0xFF2E7D32), Color(0xFF388E3C)],
+            colors: [Color(0xFF003D1F), Color(0xFF005C2E), Color(0xFF007A3D)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -471,9 +490,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               right: -40, top: -40,
               child: Container(
                 width: 160, height: 160,
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.white.withOpacity(0.06),
+                  color: Color(0x0FFFFFFF),
                 ),
               ),
             ),
@@ -481,9 +500,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               right: 40, top: 20,
               child: Container(
                 width: 80, height: 80,
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.white.withOpacity(0.05),
+                  color: Color(0x0DFFFFFF),
                 ),
               ),
             ),
@@ -491,9 +510,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               left: -30, bottom: -20,
               child: Container(
                 width: 120, height: 120,
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.white.withOpacity(0.04),
+                  color: Color(0x0AFFFFFF),
                 ),
               ),
             ),
@@ -512,7 +531,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                             Container(
                               width: 34, height: 34,
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.15),
+                                color: const Color(0x26FFFFFF),
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               child: const Icon(Icons.business_center_rounded, color: Colors.white, size: 18),
@@ -550,7 +569,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                       ),
                                       Text(
                                         _getRoleLabel(_userData?['role']),
-                                        style: TextStyle(color: Colors.white.withOpacity(0.75), fontSize: 10),
+                                        style: const TextStyle(color: Color(0xBFFFFFFF), fontSize: 10),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                       ),
@@ -560,11 +579,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                 const SizedBox(width: 10),
                                 Container(
                                   width: 38, height: 38,
-                                  decoration: BoxDecoration(
+                                  decoration: const BoxDecoration(
                                     color: Colors.white,
                                     shape: BoxShape.circle,
                                     boxShadow: [
-                                      BoxShadow(color: Colors.black.withOpacity(0.15), blurRadius: 8, offset: const Offset(0, 3)),
+                                      BoxShadow(color: Color(0x26000000), blurRadius: 8, offset: Offset(0, 3)),
                                     ],
                                   ),
                                   child: Center(
@@ -575,7 +594,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                   ),
                                 ),
                                 const SizedBox(width: 4),
-                                Icon(Icons.keyboard_arrow_down_rounded, color: Colors.white.withOpacity(0.8), size: 20),
+                                const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xCCFFFFFF), size: 20),
                               ],
                             ),
                           ),
@@ -585,8 +604,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                   const SizedBox(height: 28),
                   // Greeting
                   Text(
-                    _getGreeting() + ',',
-                    style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 14, fontWeight: FontWeight.w400),
+                    '${_getGreeting()},',
+                    style: const TextStyle(color: Color(0xCCFFFFFF), fontSize: 14, fontWeight: FontWeight.w400),
                   ),
                   const SizedBox(height: 4),
                   Text(
@@ -597,9 +616,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.15),
+                      color: const Color(0x26FFFFFF),
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: Colors.white.withOpacity(0.25)),
+                      border: Border.all(color: const Color(0x40FFFFFF)),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -645,7 +664,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           const SizedBox(width: 12),
           _buildStatCard(
             'Active Sites',
-            '—',
+            _statsLoaded ? '$_activeSites' : '—',
             Icons.location_city_rounded,
             const Color(0xFF0A192F),
             const Color(0xFFE8EDF4),
@@ -662,8 +681,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 3)),
+          boxShadow: const [
+            BoxShadow(color: Color(0x0D000000), blurRadius: 10, offset: Offset(0, 3)),
           ],
         ),
         child: Column(
@@ -677,7 +696,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             const SizedBox(height: 10),
             Text(value, style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: color, letterSpacing: -0.5)),
             const SizedBox(height: 2),
-            Text(label, style: TextStyle(fontSize: 10, color: Colors.grey[500], fontWeight: FontWeight.w500)),
+            Text(label, style: const TextStyle(fontSize: 10, color: Color(0xFF9CA3AF), fontWeight: FontWeight.w500)),
           ],
         ),
       ),
@@ -760,7 +779,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               ),
               boxShadow: [
                 BoxShadow(
-                  color: gradient[0].withOpacity(0.35),
+                  color: Color.fromARGB(89, gradient[0].red, gradient[0].green, gradient[0].blue),
                   blurRadius: 16,
                   offset: const Offset(0, 6),
                 ),
@@ -773,9 +792,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                   right: -16, bottom: -16,
                   child: Container(
                     width: 80, height: 80,
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Colors.white.withOpacity(0.1),
+                      color: Color(0x1AFFFFFF),
                     ),
                   ),
                 ),
@@ -783,9 +802,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                   right: 10, top: -20,
                   child: Container(
                     width: 50, height: 50,
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Colors.white.withOpacity(0.07),
+                      color: Color(0x12FFFFFF),
                     ),
                   ),
                 ),
@@ -798,7 +817,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                       Container(
                         width: 46, height: 46,
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
+                          color: const Color(0x33FFFFFF),
                           borderRadius: BorderRadius.circular(14),
                         ),
                         child: Icon(icon, color: Colors.white, size: 24),
@@ -813,7 +832,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                           const SizedBox(height: 3),
                           Text(
                             subtitle,
-                            style: TextStyle(color: Colors.white.withOpacity(0.75), fontSize: 11, fontWeight: FontWeight.w400),
+                            style: const TextStyle(color: Color(0xBFFFFFFF), fontSize: 11, fontWeight: FontWeight.w400),
                           ),
                         ],
                       ),

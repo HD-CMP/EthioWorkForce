@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../domain/entities/work_type.dart';
@@ -31,7 +31,7 @@ class WorkTypeDetailPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: const Color(0xFFF9FAFB),
       appBar: AppBar(
         title: const Text('Work Type Details'),
         elevation: 0,
@@ -40,7 +40,7 @@ class WorkTypeDetailPage extends StatelessWidget {
             margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              color: workType.isActive ? Colors.green : Colors.grey,
+              color: workType.isActive ? const Color(0xFF007A3D) : const Color(0xFF374151),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Row(
@@ -99,8 +99,8 @@ class WorkTypeDetailPage extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: workType.isActive
-              ? [Colors.blue[600]!, Colors.blue[800]!]
-              : [Colors.grey[600]!, Colors.grey[800]!],
+              ? [const Color(0xFF003049), const Color(0xFF005F73)]
+              : [const Color(0xFF374151), const Color(0xFF1F2937)],
         ),
       ),
       child: Column(
@@ -108,7 +108,7 @@ class WorkTypeDetailPage extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+              color: const Color(0x33FFFFFF),
               shape: BoxShape.circle,
             ),
             child: const Icon(Icons.work, size: 60, color: Colors.white),
@@ -127,7 +127,7 @@ class WorkTypeDetailPage extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+              color: const Color(0x33FFFFFF),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
@@ -150,26 +150,26 @@ class WorkTypeDetailPage extends StatelessWidget {
       context,
       title: 'Basic Information',
       icon: Icons.info_outline,
-      iconColor: Colors.blue,
+      iconColor: const Color(0xFF005F73),
       children: [
         if (workType.description != null && workType.description!.isNotEmpty)
           _buildFullWidthInfoTile(
             icon: Icons.description,
             label: 'Description',
             value: workType.description!,
-            iconColor: Colors.blue[700]!,
+            iconColor: const Color(0xFF005F73),
           ),
         _buildInfoTile(
           icon: Icons.code,
           label: 'Work Type Code',
           value: workType.code,
-          iconColor: Colors.purple[700]!,
+          iconColor: const Color(0xFF0A192F),
         ),
         _buildInfoTile(
           icon: Icons.toggle_on,
           label: 'Status',
           value: workType.isActive ? 'Active' : 'Inactive',
-          iconColor: workType.isActive ? Colors.green[700]! : Colors.grey[700]!,
+          iconColor: workType.isActive ? const Color(0xFF007A3D) : const Color(0xFF374151),
         ),
       ],
     );
@@ -185,13 +185,13 @@ class WorkTypeDetailPage extends StatelessWidget {
       context,
       title: 'Payment Information',
       icon: Icons.payments,
-      iconColor: Colors.green,
+      iconColor: const Color(0xFF007A3D),
       children: [
         _buildInfoTile(
           icon: Icons.account_balance_wallet,
           label: 'Payment Mode',
           value: workType.paymentMode.displayName,
-          iconColor: Colors.green[700]!,
+          iconColor: const Color(0xFF007A3D),
         ),
         if (workType.hierarchyLevel >= 5)
           _buildInfoTile(
@@ -199,7 +199,7 @@ class WorkTypeDetailPage extends StatelessWidget {
             label: 'Base Rate (Shared for all workers)',
             value: 'ETB ${workType.baseRate.toStringAsFixed(2)}',
             subtitle: 'All ${workType.hierarchyLevel == 5 ? "Operational" : "Trainee"} workers earn this rate',
-            iconColor: Colors.amber[700]!,
+            iconColor: const Color(0xFFD4A017),
           )
         else
           _buildInfoTile(
@@ -207,14 +207,14 @@ class WorkTypeDetailPage extends StatelessWidget {
             label: 'Salary Policy',
             value: 'Individual Salary per Worker',
             subtitle: 'Each worker has their own salary — set during registration',
-            iconColor: Colors.amber[700]!,
+            iconColor: const Color(0xFFD4A017),
           ),
         if (workType.paymentPeriodDays != null)
           _buildInfoTile(
             icon: Icons.calendar_today,
             label: 'Payment Period',
             value: '${workType.paymentPeriodDays} days',
-            iconColor: Colors.blue[700]!,
+            iconColor: const Color(0xFF005F73),
           ),
         if (workType.paymentPeriodStartDate != null)
           _buildInfoTile(
@@ -222,7 +222,7 @@ class WorkTypeDetailPage extends StatelessWidget {
             label: 'Payment Period Start Date',
             value: _formatDate(workType.paymentPeriodStartDate!),
             subtitle: 'Anchor date for period calculations',
-            iconColor: Colors.deepOrange[700]!,
+            iconColor: const Color(0xFFE65100),
           ),
       ],
     );
@@ -233,13 +233,13 @@ class WorkTypeDetailPage extends StatelessWidget {
       context,
       title: 'Tax & Deductions',
       icon: Icons.receipt_long,
-      iconColor: Colors.orange,
+      iconColor: const Color(0xFFE65100),
       children: [
         _buildInfoTile(
           icon: Icons.gavel,
           label: 'Tax Rule',
           value: workType.taxRule.displayName,
-          iconColor: Colors.orange[700]!,
+          iconColor: const Color(0xFFE65100),
         ),
       ],
     );
@@ -250,39 +250,39 @@ class WorkTypeDetailPage extends StatelessWidget {
       context,
       title: 'Benefits & Allowances',
       icon: Icons.card_giftcard,
-      iconColor: Colors.teal,
+      iconColor: const Color(0xFF00796B),
       children: [
         _buildInfoTile(
           icon: Icons.access_time,
           label: 'Overtime Eligible',
           value: workType.overtimeEligible ? 'Yes' : 'No',
-          iconColor: workType.overtimeEligible ? Colors.green[700]! : Colors.red[700]!,
+          iconColor: workType.overtimeEligible ? const Color(0xFF007A3D) : const Color(0xFFB71C1C),
         ),
         if (workType.overtimeEligible && workType.overtimeRatePerHour != null)
           _buildInfoTile(
             icon: Icons.monetization_on,
             label: 'Overtime Rate/Hour',
             value: 'ETB ${workType.overtimeRatePerHour!.toStringAsFixed(2)}',
-            iconColor: Colors.amber[700]!,
+            iconColor: const Color(0xFFD4A017),
           ),
         _buildInfoTile(
           icon: Icons.savings,
           label: 'Pension Eligible',
           value: workType.pensionEligible ? 'Yes' : 'No',
-          iconColor: workType.pensionEligible ? Colors.green[700]! : Colors.red[700]!,
+          iconColor: workType.pensionEligible ? const Color(0xFF007A3D) : const Color(0xFFB71C1C),
         ),
         if (workType.pensionEligible) ...[
           _buildInfoTile(
             icon: Icons.person,
             label: 'Employee Pension Rate',
             value: '${((workType.employeePensionRate ?? 0) * 100).toStringAsFixed(1)}%',
-            iconColor: Colors.indigo[700]!,
+            iconColor: const Color(0xFF0A192F),
           ),
           _buildInfoTile(
             icon: Icons.business,
             label: 'Employer Pension Rate',
             value: '${((workType.employerPensionRate ?? 0) * 100).toStringAsFixed(1)}%',
-            iconColor: Colors.deepPurple[700]!,
+            iconColor: const Color(0xFF0A192F),
           ),
         ],
       ],
@@ -294,14 +294,14 @@ class WorkTypeDetailPage extends StatelessWidget {
       context,
       title: 'Organizational Hierarchy',
       icon: Icons.stairs,
-      iconColor: Colors.deepPurple,
+      iconColor: const Color(0xFF1E3A5F),
       children: [
         _buildInfoTile(
           icon: Icons.trending_up,
           label: 'Hierarchy Level',
           value: 'Level ${workType.hierarchyLevel}',
           subtitle: getHierarchyLevelName(workType.hierarchyLevel),
-          iconColor: Colors.deepPurple[700]!,
+          iconColor: const Color(0xFF1E3A5F),
         ),
         _buildInfoTile(
           icon: Icons.supervisor_account,
@@ -310,7 +310,7 @@ class WorkTypeDetailPage extends StatelessWidget {
           subtitle: workType.requiresSupervisor
               ? 'Workers must report to someone'
               : 'Independent role',
-          iconColor: workType.requiresSupervisor ? Colors.blue[700]! : Colors.grey[700]!,
+          iconColor: workType.requiresSupervisor ? const Color(0xFF005F73) : const Color(0xFF374151),
         ),
         if (workType.maxSubordinates != null)
           _buildInfoTile(
@@ -318,7 +318,7 @@ class WorkTypeDetailPage extends StatelessWidget {
             label: 'Max Subordinates',
             value: '${workType.maxSubordinates}',
             subtitle: 'Maximum direct reports allowed',
-            iconColor: Colors.cyan[700]!,
+            iconColor: const Color(0xFF005F73),
           ),
       ],
     );
@@ -335,21 +335,21 @@ class WorkTypeDetailPage extends StatelessWidget {
       context,
       title: 'Record Information',
       icon: Icons.history,
-      iconColor: Colors.grey,
+      iconColor: const Color(0xFF374151),
       children: [
         if (workType.createdAt != null)
           _buildInfoTile(
             icon: Icons.add_circle_outline,
             label: 'Created At',
             value: _formatDateTime(workType.createdAt!),
-            iconColor: Colors.green[700]!,
+            iconColor: const Color(0xFF007A3D),
           ),
         if (workType.updatedAt != null)
           _buildInfoTile(
             icon: Icons.update,
             label: 'Last Updated',
             value: _formatDateTime(workType.updatedAt!),
-            iconColor: Colors.orange[700]!,
+            iconColor: const Color(0xFFE65100),
           ),
       ],
     );
@@ -369,7 +369,7 @@ class WorkTypeDetailPage extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: const Color(0x0D000000),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -381,7 +381,7 @@ class WorkTypeDetailPage extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: iconColor.withOpacity(0.1),
+              color: Color.fromARGB(26, iconColor.red, iconColor.green, iconColor.blue),
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(16),
                 topRight: Radius.circular(16),
@@ -391,12 +391,16 @@ class WorkTypeDetailPage extends StatelessWidget {
               children: [
                 Icon(icon, color: iconColor, size: 24),
                 const SizedBox(width: 12),
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: iconColor,
+                Expanded(
+                  child: Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: iconColor,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
@@ -428,7 +432,7 @@ class WorkTypeDetailPage extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: iconColor.withOpacity(0.1),
+              color: Color.fromARGB(26, iconColor.red, iconColor.green, iconColor.blue),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(icon, color: iconColor, size: 20),
@@ -442,7 +446,7 @@ class WorkTypeDetailPage extends StatelessWidget {
                   label,
                   style: TextStyle(
                     fontSize: 13,
-                    color: Colors.grey[600],
+                    color: const Color(0xFF6B7280),
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -452,7 +456,7 @@ class WorkTypeDetailPage extends StatelessWidget {
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
-                    color: Colors.black87,
+                    color: const Color(0xFF1A1A1A),
                   ),
                 ),
                 if (subtitle != null) ...[
@@ -461,7 +465,7 @@ class WorkTypeDetailPage extends StatelessWidget {
                     subtitle,
                     style: TextStyle(
                       fontSize: 12,
-                      color: Colors.grey[500],
+                      color: const Color(0xFF9CA3AF),
                       fontStyle: FontStyle.italic,
                     ),
                   ),
@@ -490,18 +494,22 @@ class WorkTypeDetailPage extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: iconColor.withOpacity(0.1),
+                  color: Color.fromARGB(26, iconColor.red, iconColor.green, iconColor.blue),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(icon, color: iconColor, size: 20),
               ),
               const SizedBox(width: 12),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 13,
-                  color: Colors.grey[600],
-                  fontWeight: FontWeight.w500,
+              Expanded(
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: const Color(0xFF6B7280),
+                    fontWeight: FontWeight.w500,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ],
@@ -511,15 +519,15 @@ class WorkTypeDetailPage extends StatelessWidget {
             padding: const EdgeInsets.all(12),
             width: double.infinity,
             decoration: BoxDecoration(
-              color: Colors.grey[50],
+              color: const Color(0xFFF9FAFB),
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.grey[200]!),
+              border: Border.all(color: const Color(0xFFE5E7EB)),
             ),
             child: Text(
               value,
               style: const TextStyle(
                 fontSize: 14,
-                color: Colors.black87,
+                color: const Color(0xFF1A1A1A),
                 height: 1.5,
               ),
             ),

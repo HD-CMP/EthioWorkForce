@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
@@ -189,7 +189,17 @@ class _OvertimeManagementPageState extends State<OvertimeManagementPage> {
 
     if (overtimeEntries.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No overtime hours to save')),
+        SnackBar(
+          content: const Row(children: [
+            Icon(Icons.info_outline, color: Colors.white, size: 18),
+            SizedBox(width: 10),
+            Text('No overtime hours to save'),
+          ]),
+          backgroundColor: const Color(0xFF0A192F),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          margin: const EdgeInsets.all(16),
+        ),
       );
       return;
     }
@@ -206,10 +216,17 @@ class _OvertimeManagementPageState extends State<OvertimeManagementPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              'Overtime saved: ${result['updated']} updated, ${result['created']} created',
-            ),
-            backgroundColor: Colors.green,
+            content: Row(children: [
+              const Icon(Icons.check_circle_outline, color: Colors.white, size: 18),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text('Overtime saved: ${result['updated']} updated, ${result['created']} created'),
+              ),
+            ]),
+            backgroundColor: const Color(0xFF007A3D),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
           ),
         );
         _loadWorkers();
@@ -218,8 +235,15 @@ class _OvertimeManagementPageState extends State<OvertimeManagementPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e is ApiException ? e.displayMessage : 'Failed to save overtime'),
-            backgroundColor: Colors.red,
+            content: Row(children: [
+              const Icon(Icons.error_outline, color: Colors.white, size: 18),
+              const SizedBox(width: 10),
+              Expanded(child: Text(e is ApiException ? e.displayMessage : 'Failed to save overtime')),
+            ]),
+            backgroundColor: const Color(0xFFB71C1C),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
           ),
         );
       }
@@ -268,7 +292,7 @@ class _OvertimeManagementPageState extends State<OvertimeManagementPage> {
                     : const Icon(Icons.save),
                 label: const Text('Save Overtime'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
+                  backgroundColor: const Color(0xFF007A3D),
                   foregroundColor: Colors.white,
                 ),
               ),
@@ -336,7 +360,7 @@ class _OvertimeManagementPageState extends State<OvertimeManagementPage> {
               padding: const EdgeInsets.all(16),
               child: Text(
                 _errorMessage!,
-                style: const TextStyle(color: Colors.red),
+                style: const TextStyle(color: const Color(0xFFB71C1C)),
               ),
             ),
           if (_isLoading)
@@ -351,7 +375,7 @@ class _OvertimeManagementPageState extends State<OvertimeManagementPage> {
                       ? 'Select a site to begin'
                       : 'No active workers found at this site',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: Colors.grey[600],
+                        color: const Color(0xFF6B7280),
                       ),
                 ),
               ),
@@ -377,11 +401,11 @@ class _OvertimeManagementPageState extends State<OvertimeManagementPage> {
                           Row(
                             children: [
                               CircleAvatar(
-                                backgroundColor: Colors.blue[100],
+                                backgroundColor: const Color(0xFFE8F5E9),
                                 child: Text(
                                   worker.fullName.isNotEmpty ? worker.fullName[0].toUpperCase() : 'W',
-                                  style: TextStyle(
-                                    color: Colors.blue[900],
+                                  style: const TextStyle(
+                                    color: Color(0xFF007A3D),
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
@@ -401,7 +425,7 @@ class _OvertimeManagementPageState extends State<OvertimeManagementPage> {
                                     Text(
                                       '${worker.employeeId} • ${worker.workType ?? 'N/A'}',
                                       style: TextStyle(
-                                        color: Colors.grey[600],
+                                        color: const Color(0xFF6B7280),
                                         fontSize: 13,
                                       ),
                                     ),
@@ -409,23 +433,27 @@ class _OvertimeManagementPageState extends State<OvertimeManagementPage> {
                                       _workTypesMap[worker.workTypeId]?.overtimeRatePerHour != null
                                         ? Text(
                                             'OT Rate: ETB ${_workTypesMap[worker.workTypeId]!.overtimeRatePerHour!.toStringAsFixed(2)}/hr',
-                                            style: TextStyle(
-                                              color: Colors.green[700],
+                                            style: const TextStyle(
+                                              color: Color(0xFF007A3D),
                                               fontSize: 12,
                                               fontWeight: FontWeight.w500,
                                             ),
                                           )
                                         : Row(
                                             children: [
-                                              Icon(Icons.warning_amber_rounded, size: 14, color: Colors.orange[700]),
+                                              const Icon(Icons.warning_amber_rounded, size: 14, color: Color(0xFFE65100)),
                                               const SizedBox(width: 4),
-                                              Text(
-                                                'OT Rate not configured',
-                                                style: TextStyle(
-                                                  color: Colors.orange[700],
-                                                  fontSize: 12,
-                                                  fontWeight: FontWeight.w500,
-                                                  fontStyle: FontStyle.italic,
+                                              Expanded(
+                                                child: Text(
+                                                  'OT Rate not configured',
+                                                  style: const TextStyle(
+                                                    color: Color(0xFFE65100),
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.w500,
+                                                    fontStyle: FontStyle.italic,
+                                                  ),
+                                                  maxLines: 1,
+                                                  overflow: TextOverflow.ellipsis,
                                                 ),
                                               ),
                                             ],
@@ -465,20 +493,20 @@ class _OvertimeManagementPageState extends State<OvertimeManagementPage> {
                                       Container(
                                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                                         decoration: BoxDecoration(
-                                          color: Colors.orange[50],
+                                          color: const Color(0xFFFFF3E0),
                                           borderRadius: BorderRadius.circular(6),
-                                          border: Border.all(color: Colors.orange[300]!),
+                                          border: Border.all(color: const Color(0xFFFFCC80)),
                                         ),
-                                        child: Row(
+                                        child: const Row(
                                           children: [
-                                            Icon(Icons.info_outline, size: 16, color: Colors.orange[800]),
+                                            Icon(Icons.info_outline, size: 16, color: Color(0xFFE65100)),
                                             const SizedBox(width: 8),
                                             Expanded(
                                               child: Text(
                                                 'Overtime rate not set. Fallback calculation (1.5x base rate) will be used.',
                                                 style: TextStyle(
                                                   fontSize: 11,
-                                                  color: Colors.orange[900],
+                                                  color: Color(0xFFBF360C),
                                                 ),
                                               ),
                                             ),
@@ -497,9 +525,9 @@ class _OvertimeManagementPageState extends State<OvertimeManagementPage> {
                                     vertical: 12,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: Colors.green[50],
+                                    color: const Color(0xFFE8F5E9),
                                     borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(color: Colors.green[200]!),
+                                    border: Border.all(color: const Color(0xFFC8E6C9)),
                                   ),
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.end,
@@ -508,15 +536,15 @@ class _OvertimeManagementPageState extends State<OvertimeManagementPage> {
                                         'OT Payment',
                                         style: TextStyle(
                                           fontSize: 11,
-                                          color: Colors.grey[600],
+                                          color: const Color(0xFF6B7280),
                                         ),
                                       ),
                                       Text(
                                         'ETB ${totalPay.toStringAsFixed(2)}',
-                                        style: TextStyle(
+                                        style: const TextStyle(
                                           fontSize: 18,
                                           fontWeight: FontWeight.bold,
-                                          color: Colors.green[800],
+                                          color: Color(0xFF007A3D),
                                         ),
                                       ),
                                     ],

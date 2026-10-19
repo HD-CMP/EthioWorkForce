@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../domain/entities/attendance.dart';
@@ -43,12 +43,12 @@ class _AttendanceDetailPageState extends State<AttendanceDetailPage> {
   bool _showEthiopianCalendar = true;
 
   final List<Map<String, dynamic>> _statusOptions = [
-    {'value': 'present', 'label': 'Present', 'icon': Icons.check_circle, 'color': Colors.green},
-    {'value': 'absent', 'label': 'Absent', 'icon': Icons.cancel, 'color': Colors.red},
-    {'value': 'late', 'label': 'Late', 'icon': Icons.access_time, 'color': Colors.orange},
-    {'value': 'excused', 'label': 'Excused', 'icon': Icons.event_available, 'color': Colors.blue},
-    {'value': 'leave', 'label': 'Leave', 'icon': Icons.beach_access, 'color': Colors.purple},
-    {'value': 'half_day', 'label': 'Half Day', 'icon': Icons.schedule, 'color': Colors.amber},
+    {'value': 'present', 'label': 'Present', 'icon': Icons.check_circle, 'color': const Color(0xFF007A3D)},
+    {'value': 'absent', 'label': 'Absent', 'icon': Icons.cancel, 'color': const Color(0xFFB71C1C)},
+    {'value': 'late', 'label': 'Late', 'icon': Icons.access_time, 'color': const Color(0xFFE65100)},
+    {'value': 'excused', 'label': 'Excused', 'icon': Icons.event_available, 'color': const Color(0xFF1E3A5F)},
+    {'value': 'leave', 'label': 'Leave', 'icon': Icons.beach_access, 'color': const Color(0xFF0A192F)},
+    {'value': 'half_day', 'label': 'Half Day', 'icon': Icons.schedule, 'color': const Color(0xFFE65100)},
   ];
 
   @override
@@ -230,7 +230,7 @@ class _AttendanceDetailPageState extends State<AttendanceDetailPage> {
               child: Chip(
                 avatar: const Icon(Icons.verified, color: Colors.white, size: 18),
                 label: const Text('Verified', style: TextStyle(color: Colors.white)),
-                backgroundColor: Colors.green,
+                backgroundColor: const Color(0xFF007A3D),
               ),
             ),
         ],
@@ -280,7 +280,7 @@ class _AttendanceDetailPageState extends State<AttendanceDetailPage> {
             Row(
               children: [
                 CircleAvatar(
-                  backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
+                  backgroundColor: const Color(0x1A007A3D),
                   child: Icon(Icons.person, color: Theme.of(context).primaryColor),
                 ),
                 const SizedBox(width: 12),
@@ -294,7 +294,7 @@ class _AttendanceDetailPageState extends State<AttendanceDetailPage> {
                       ),
                       Text(
                         'ID: ${widget.attendance?.employeeId ?? 'N/A'}',
-                        style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                        style: TextStyle(fontSize: 14, color: const Color(0xFF6B7280)),
                       ),
                     ],
                   ),
@@ -305,11 +305,11 @@ class _AttendanceDetailPageState extends State<AttendanceDetailPage> {
               const Divider(height: 24),
               Row(
                 children: [
-                  Icon(Icons.calendar_today, size: 16, color: Colors.grey[600]),
+                  Icon(Icons.calendar_today, size: 16, color: const Color(0xFF6B7280)),
                   const SizedBox(width: 8),
                   Text(
                     widget.attendance!.formattedEthiopianDate,
-                    style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+                    style: TextStyle(fontSize: 14, color: const Color(0xFF374151)),
                   ),
                 ],
               ),
@@ -355,7 +355,7 @@ class _AttendanceDetailPageState extends State<AttendanceDetailPage> {
           children: [
             Text(
               'Time',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.grey[700]),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: const Color(0xFF374151)),
             ),
             const SizedBox(height: 12),
             Row(
@@ -374,7 +374,7 @@ class _AttendanceDetailPageState extends State<AttendanceDetailPage> {
                             ? _checkInTime!.format(context) 
                             : 'Not Set',
                         style: TextStyle(
-                          color: _checkInTime != null ? Colors.black : Colors.grey,
+                          color: _checkInTime != null ? Colors.black : const Color(0xFF9CA3AF),
                         ),
                       ),
                     ),
@@ -395,7 +395,7 @@ class _AttendanceDetailPageState extends State<AttendanceDetailPage> {
                             ? _checkOutTime!.format(context) 
                             : 'Not Set',
                         style: TextStyle(
-                          color: _checkOutTime != null ? Colors.black : Colors.grey,
+                          color: _checkOutTime != null ? Colors.black : const Color(0xFF9CA3AF),
                         ),
                       ),
                     ),
@@ -418,7 +418,7 @@ class _AttendanceDetailPageState extends State<AttendanceDetailPage> {
           children: [
             Text(
               localizations?.status ?? 'Status',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.grey[700]),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: const Color(0xFF374151)),
             ),
             const SizedBox(height: 12),
             Wrap(
@@ -442,7 +442,7 @@ class _AttendanceDetailPageState extends State<AttendanceDetailPage> {
                   selected: isSelected,
                   selectedColor: option['color'] as Color,
                   labelStyle: TextStyle(
-                    color: isSelected ? Colors.white : Colors.black87,
+                    color: isSelected ? Colors.white : const Color(0xFF1A1A1A),
                   ),
                   onSelected: (selected) {
                     if (selected) {
@@ -469,7 +469,7 @@ class _AttendanceDetailPageState extends State<AttendanceDetailPage> {
           children: [
             Text(
               'Working Hours',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.grey[700]),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: const Color(0xFF374151)),
             ),
             const SizedBox(height: 16),
             Row(
@@ -478,7 +478,7 @@ class _AttendanceDetailPageState extends State<AttendanceDetailPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Regular Hours', style: TextStyle(color: Colors.grey[600])),
+                      Text('Regular Hours', style: TextStyle(color: const Color(0xFF6B7280))),
                       const SizedBox(height: 8),
                       Row(
                         children: [
@@ -508,7 +508,7 @@ class _AttendanceDetailPageState extends State<AttendanceDetailPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Overtime Hours', style: TextStyle(color: Colors.grey[600])),
+                      Text('Overtime Hours', style: TextStyle(color: const Color(0xFF6B7280))),
                       const SizedBox(height: 8),
                       Row(
                         children: [
@@ -552,7 +552,7 @@ class _AttendanceDetailPageState extends State<AttendanceDetailPage> {
           border: const OutlineInputBorder(),
           prefixIcon: const Icon(Icons.notes),
           filled: true,
-          fillColor: Colors.blue.withOpacity(0.05),
+          fillColor: Color(0x0D1E3A5F),
         ),
         maxLines: 2,
         validator: (value) {

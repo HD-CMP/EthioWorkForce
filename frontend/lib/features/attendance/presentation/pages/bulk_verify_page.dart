@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../data/datasources/attendance_remote_datasource.dart';
@@ -12,6 +12,7 @@ import '../../../../core/services/audio_feedback_service.dart';
 import '../../../../core/widgets/visual_feedback_overlay.dart';
 import '../../../../core/widgets/ethiopian_date_picker.dart';
 import '../../../../core/utils/ethiopian_calendar.dart';
+import '../../../../core/utils/app_snackbar.dart';
 
 class BulkVerifyPage extends StatefulWidget {
   final int siteId;
@@ -194,19 +195,19 @@ class _BulkVerifyPageState extends State<BulkVerifyPage> {
   Color _getStatusColor(String status) {
     switch (status) {
       case 'present':
-        return Colors.green;
+        return const Color(0xFF007A3D);
       case 'absent':
-        return Colors.red;
+        return const Color(0xFFB71C1C);
       case 'late':
-        return Colors.orange;
+        return const Color(0xFFE65100);
       case 'excused':
-        return Colors.blue;
+        return const Color(0xFF1E3A5F);
       case 'leave':
-        return Colors.purple;
+        return const Color(0xFF0A192F);
       case 'half_day':
-        return Colors.amber;
+        return const Color(0xFFE65100);
       default:
-        return Colors.grey;
+        return const Color(0xFF9CA3AF);
     }
   }
 
@@ -276,7 +277,7 @@ class _BulkVerifyPageState extends State<BulkVerifyPage> {
       builder: (context) => AlertDialog(
         title: Row(
           children: [
-            Icon(Icons.access_time, color: Colors.orange[700], size: 28),
+            Icon(Icons.access_time, color: const Color(0xFFE65100), size: 28),
             const SizedBox(width: 12),
             const Text('Verify Overtime'),
           ],
@@ -291,27 +292,27 @@ class _BulkVerifyPageState extends State<BulkVerifyPage> {
             ),
             Text(
               'ID: ${worker.employeeId}',
-              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+              style: TextStyle(fontSize: 14, color: const Color(0xFF6B7280)),
             ),
             const SizedBox(height: 16),
             if (overtime.hours > 0) ...[
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.orange[50],
+                  color: const Color(0xFFFFF3E0),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.orange[300]!),
+                  border: Border.all(color: const Color(0xFFFFB74D)),
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.access_time, size: 20, color: Colors.orange[700]),
+                    Icon(Icons.access_time, size: 20, color: const Color(0xFFE65100)),
                     const SizedBox(width: 12),
                     Text(
                       'Current Overtime: ${overtime.hours} hours',
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
-                        color: Colors.orange[900],
+                        color: const Color(0xFFBF360C),
                       ),
                     ),
                   ],
@@ -323,7 +324,7 @@ class _BulkVerifyPageState extends State<BulkVerifyPage> {
               overtime.isVerified 
                   ? 'This overtime has already been verified.'
                   : 'Verify this overtime for payroll processing?',
-              style: TextStyle(color: Colors.grey[700]),
+              style: TextStyle(color: const Color(0xFF374151)),
             ),
           ],
         ),
@@ -336,7 +337,7 @@ class _BulkVerifyPageState extends State<BulkVerifyPage> {
             ElevatedButton(
               onPressed: () => Navigator.pop(context, 1),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green[600],
+                backgroundColor: const Color(0xFF007A3D),
                 foregroundColor: Colors.white,
               ),
               child: const Text('Verify'),
@@ -362,23 +363,11 @@ class _BulkVerifyPageState extends State<BulkVerifyPage> {
       await _loadData();
       
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Overtime verified successfully'),
-            backgroundColor: Colors.green,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        AppSnackBar.showSuccess(context, 'Overtime verified successfully');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error verifying overtime: $e'),
-            backgroundColor: Colors.red,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        AppSnackBar.showError(context, 'Error verifying overtime: $e');
       }
     } finally {
       if (mounted) {
@@ -518,7 +507,7 @@ class _BulkVerifyPageState extends State<BulkVerifyPage> {
       builder: (context) => AlertDialog(
         title: Row(
           children: [
-            Icon(Icons.warning_amber_rounded, color: Colors.orange[700], size: 28),
+            Icon(Icons.warning_amber_rounded, color: const Color(0xFFE65100), size: 28),
             const SizedBox(width: 12),
             const Text('Confirm Bulk Unverify'),
           ],
@@ -542,7 +531,7 @@ class _BulkVerifyPageState extends State<BulkVerifyPage> {
             child: const Text('Cancel'),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFE65100)),
             onPressed: () => Navigator.pop(context, true),
             child: const Text('Unverify'),
           ),
@@ -664,7 +653,7 @@ class _BulkVerifyPageState extends State<BulkVerifyPage> {
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: Colors.grey[700],
+                      color: const Color(0xFF374151),
                     ),
                   ),
                 ),
@@ -672,10 +661,10 @@ class _BulkVerifyPageState extends State<BulkVerifyPage> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: unverifiedCount == 0 ? Colors.green[50] : Colors.orange[50],
+                      color: unverifiedCount == 0 ? const Color(0xFFE8F5EE) : const Color(0xFFFFF3E0),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                        color: unverifiedCount == 0 ? Colors.green[300]! : Colors.orange[300]!,
+                        color: unverifiedCount == 0 ? const Color(0xFF66B28A) : const Color(0xFFFFB74D),
                       ),
                     ),
                     child: Row(
@@ -684,7 +673,7 @@ class _BulkVerifyPageState extends State<BulkVerifyPage> {
                         Icon(
                           unverifiedCount == 0 ? Icons.verified : Icons.pending,
                           size: 16,
-                          color: unverifiedCount == 0 ? Colors.green[700] : Colors.orange[700],
+                          color: unverifiedCount == 0 ? const Color(0xFF005C2E) : const Color(0xFFE65100),
                         ),
                         const SizedBox(width: 6),
                         Text(
@@ -692,7 +681,7 @@ class _BulkVerifyPageState extends State<BulkVerifyPage> {
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.bold,
-                            color: unverifiedCount == 0 ? Colors.green[700] : Colors.orange[700],
+                            color: unverifiedCount == 0 ? const Color(0xFF005C2E) : const Color(0xFFE65100),
                           ),
                         ),
                       ],
@@ -706,10 +695,10 @@ class _BulkVerifyPageState extends State<BulkVerifyPage> {
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
-                          color: _isUnverifyMode ? Colors.orange[50] : Colors.grey[100],
+                          color: _isUnverifyMode ? const Color(0xFFFFF3E0) : const Color(0xFFF3F4F6),
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
-                            color: _isUnverifyMode ? Colors.orange[300]! : Colors.grey[300]!,
+                            color: _isUnverifyMode ? const Color(0xFFFFB74D) : const Color(0xFFD1D5DB),
                             width: 1.5,
                           ),
                         ),
@@ -719,7 +708,7 @@ class _BulkVerifyPageState extends State<BulkVerifyPage> {
                             Icon(
                               _isUnverifyMode ? Icons.undo : Icons.verified,
                               size: 16,
-                              color: _isUnverifyMode ? Colors.orange[700] : Colors.grey[700],
+                              color: _isUnverifyMode ? const Color(0xFFE65100) : const Color(0xFF374151),
                             ),
                             const SizedBox(width: 6),
                             Text(
@@ -727,7 +716,7 @@ class _BulkVerifyPageState extends State<BulkVerifyPage> {
                               style: TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.bold,
-                                color: _isUnverifyMode ? Colors.orange[700] : Colors.grey[700],
+                                color: _isUnverifyMode ? const Color(0xFFE65100) : const Color(0xFF374151),
                               ),
                             ),
                           ],
@@ -744,7 +733,7 @@ class _BulkVerifyPageState extends State<BulkVerifyPage> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                 decoration: BoxDecoration(
-                  border: Border.all(color: Theme.of(context).primaryColor.withOpacity(0.3)),
+                  border: Border.all(color: const Color(0x4D007A3D)),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
@@ -777,7 +766,7 @@ class _BulkVerifyPageState extends State<BulkVerifyPage> {
             Container(
               padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
-                color: Colors.grey[100],
+                color: const Color(0xFFF3F4F6),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Row(
@@ -797,7 +786,7 @@ class _BulkVerifyPageState extends State<BulkVerifyPage> {
                           color: _bulkMode == 'attendance' ? Colors.white : Colors.transparent,
                           borderRadius: BorderRadius.circular(10),
                           boxShadow: _bulkMode == 'attendance'
-                              ? [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 4, offset: const Offset(0, 2))]
+                              ? [BoxShadow(color: const Color(0x1A000000), blurRadius: 4, offset: const Offset(0, 2))]
                               : null,
                         ),
                         child: Row(
@@ -806,7 +795,7 @@ class _BulkVerifyPageState extends State<BulkVerifyPage> {
                             Icon(
                               Icons.check_circle_outline,
                               size: 18,
-                              color: _bulkMode == 'attendance' ? Theme.of(context).primaryColor : Colors.grey[600],
+                              color: _bulkMode == 'attendance' ? Theme.of(context).primaryColor : const Color(0xFF6B7280),
                             ),
                             const SizedBox(width: 8),
                             Text(
@@ -814,7 +803,7 @@ class _BulkVerifyPageState extends State<BulkVerifyPage> {
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: _bulkMode == 'attendance' ? FontWeight.bold : FontWeight.normal,
-                                color: _bulkMode == 'attendance' ? Theme.of(context).primaryColor : Colors.grey[600],
+                                color: _bulkMode == 'attendance' ? Theme.of(context).primaryColor : const Color(0xFF6B7280),
                               ),
                             ),
                           ],
@@ -838,7 +827,7 @@ class _BulkVerifyPageState extends State<BulkVerifyPage> {
                           color: _bulkMode == 'overtime' ? Colors.white : Colors.transparent,
                           borderRadius: BorderRadius.circular(10),
                           boxShadow: _bulkMode == 'overtime'
-                              ? [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 4, offset: const Offset(0, 2))]
+                              ? [BoxShadow(color: const Color(0x1A000000), blurRadius: 4, offset: const Offset(0, 2))]
                               : null,
                         ),
                         child: Row(
@@ -847,7 +836,7 @@ class _BulkVerifyPageState extends State<BulkVerifyPage> {
                             Icon(
                               Icons.access_time,
                               size: 18,
-                              color: _bulkMode == 'overtime' ? Colors.orange[700] : Colors.grey[600],
+                              color: _bulkMode == 'overtime' ? const Color(0xFFE65100) : const Color(0xFF6B7280),
                             ),
                             const SizedBox(width: 8),
                             Text(
@@ -855,7 +844,7 @@ class _BulkVerifyPageState extends State<BulkVerifyPage> {
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: _bulkMode == 'overtime' ? FontWeight.bold : FontWeight.normal,
-                                color: _bulkMode == 'overtime' ? Colors.orange[700] : Colors.grey[600],
+                                color: _bulkMode == 'overtime' ? const Color(0xFFE65100) : const Color(0xFF6B7280),
                               ),
                             ),
                           ],
@@ -871,20 +860,20 @@ class _BulkVerifyPageState extends State<BulkVerifyPage> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.orange[50],
+                  color: const Color(0xFFFFF3E0),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.orange[300]!),
+                  border: Border.all(color: const Color(0xFFFFB74D)),
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.info_outline, size: 20, color: Colors.orange[700]),
+                    Icon(Icons.info_outline, size: 20, color: const Color(0xFFE65100)),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         'Overtime verification mode: Select records with overtime to verify.',
                         style: TextStyle(
                           fontSize: 13,
-                          color: Colors.orange[900],
+                          color: const Color(0xFFBF360C),
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -898,20 +887,20 @@ class _BulkVerifyPageState extends State<BulkVerifyPage> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.orange[50],
+                  color: const Color(0xFFFFF3E0),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.orange[300]!),
+                  border: Border.all(color: const Color(0xFFFFB74D)),
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.warning_amber_rounded, size: 20, color: Colors.orange[700]),
+                    Icon(Icons.warning_amber_rounded, size: 20, color: const Color(0xFFE65100)),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         'Unverify mode: Select verified records to remove verification',
                         style: TextStyle(
                           fontSize: 13,
-                          color: Colors.orange[900],
+                          color: const Color(0xFFBF360C),
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -925,20 +914,20 @@ class _BulkVerifyPageState extends State<BulkVerifyPage> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.green[50],
+                  color: const Color(0xFFE8F5EE),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.green[200]!),
+                  border: Border.all(color: const Color(0xFFB2DFCA)),
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.check_circle, size: 20, color: Colors.green[700]),
+                    Icon(Icons.check_circle, size: 20, color: const Color(0xFF005C2E)),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         'All attendance records have been verified',
                         style: TextStyle(
                           fontSize: 13,
-                          color: Colors.green[900],
+                          color: const Color(0xFF003D1F),
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -968,7 +957,7 @@ class _BulkVerifyPageState extends State<BulkVerifyPage> {
                 _selectedAttendanceIds.clear();
                 _selectAll = false;
               }),
-              selectedColor: Theme.of(context).primaryColor.withOpacity(0.2),
+              selectedColor: const Color(0x33007A3D),
               checkmarkColor: Theme.of(context).primaryColor,
             ),
             const SizedBox(width: 8),
@@ -980,8 +969,8 @@ class _BulkVerifyPageState extends State<BulkVerifyPage> {
                 _selectedAttendanceIds.clear();
                 _selectAll = false;
               }),
-              selectedColor: Colors.green.withOpacity(0.2),
-              checkmarkColor: Colors.green,
+              selectedColor: const Color(0x33007A3D),
+              checkmarkColor: const Color(0xFF007A3D),
             ),
             const SizedBox(width: 8),
             FilterChip(
@@ -992,8 +981,8 @@ class _BulkVerifyPageState extends State<BulkVerifyPage> {
                 _selectedAttendanceIds.clear();
                 _selectAll = false;
               }),
-              selectedColor: Colors.red.withOpacity(0.2),
-              checkmarkColor: Colors.red,
+              selectedColor: const Color(0x33B71C1C),
+              checkmarkColor: const Color(0xFFB71C1C),
             ),
             const SizedBox(width: 8),
             FilterChip(
@@ -1004,8 +993,8 @@ class _BulkVerifyPageState extends State<BulkVerifyPage> {
                 _selectedAttendanceIds.clear();
                 _selectAll = false;
               }),
-              selectedColor: Colors.orange.withOpacity(0.2),
-              checkmarkColor: Colors.orange,
+              selectedColor: Color(0x33E65100),
+              checkmarkColor: const Color(0xFFE65100),
             ),
             const SizedBox(width: 8),
             FilterChip(
@@ -1016,8 +1005,8 @@ class _BulkVerifyPageState extends State<BulkVerifyPage> {
                 _selectedAttendanceIds.clear();
                 _selectAll = false;
               }),
-              selectedColor: Colors.blue.withOpacity(0.2),
-              checkmarkColor: Colors.blue,
+              selectedColor: const Color(0x331E3A5F),
+              checkmarkColor: const Color(0xFF1E3A5F),
             ),
           ],
         ),
@@ -1045,7 +1034,7 @@ class _BulkVerifyPageState extends State<BulkVerifyPage> {
               label: Text('All ($allCount)'),
               selected: _selectedWorkPlace == null,
               onSelected: (_) => _selectWorkPlace(null),
-              selectedColor: Theme.of(context).primaryColor.withOpacity(0.2),
+              selectedColor: const Color(0x33007A3D),
               checkmarkColor: Theme.of(context).primaryColor,
             ),
             const SizedBox(width: 8),
@@ -1057,7 +1046,7 @@ class _BulkVerifyPageState extends State<BulkVerifyPage> {
                   label: Text('$place ($count)'),
                   selected: _selectedWorkPlace == place,
                   onSelected: (_) => _selectWorkPlace(place),
-                  selectedColor: Theme.of(context).primaryColor.withOpacity(0.2),
+                  selectedColor: const Color(0x33007A3D),
                   checkmarkColor: Theme.of(context).primaryColor,
                 ),
               );
@@ -1079,7 +1068,7 @@ class _BulkVerifyPageState extends State<BulkVerifyPage> {
     
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      color: _isUnverifyMode ? Colors.orange[50] : Colors.blue[50],
+      color: _isUnverifyMode ? const Color(0xFFFFF3E0) : const Color(0xFFE8EDF4),
       child: Row(
         children: [
           Checkbox(
@@ -1103,7 +1092,7 @@ class _BulkVerifyPageState extends State<BulkVerifyPage> {
                         : '$otherCount already verified or locked',
                     style: TextStyle(
                       fontSize: 12,
-                      color: _isUnverifyMode ? Colors.orange[700] : Colors.grey[600],
+                      color: _isUnverifyMode ? const Color(0xFFE65100) : const Color(0xFF6B7280),
                     ),
                   ),
               ],
@@ -1134,13 +1123,13 @@ class _BulkVerifyPageState extends State<BulkVerifyPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.event_busy, size: 80, color: Colors.grey[400]),
+            Icon(Icons.event_busy, size: 80, color: const Color(0xFF9CA3AF)),
             const SizedBox(height: 16),
             Text(
               _isUnverifyMode 
                   ? 'No verified attendance records found'
                   : 'No attendance records found',
-              style: TextStyle(fontSize: 18, color: Colors.grey[600]),
+              style: TextStyle(fontSize: 18, color: const Color(0xFF6B7280)),
             ),
           ],
         ),
@@ -1159,17 +1148,17 @@ class _BulkVerifyPageState extends State<BulkVerifyPage> {
             return Card(
               margin: const EdgeInsets.only(bottom: 8),
               elevation: 1,
-              color: overtime.isVerified ? Colors.green[50] : Colors.orange[50],
+              color: overtime.isVerified ? const Color(0xFFE8F5EE) : const Color(0xFFFFF3E0),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
                 side: overtime.isVerified
-                    ? BorderSide(color: Colors.green[300]!, width: 1.5)
-                    : BorderSide(color: Colors.orange[300]!, width: 1.5),
+                    ? BorderSide(color: const Color(0xFF66B28A), width: 1.5)
+                    : BorderSide(color: const Color(0xFFFFB74D), width: 1.5),
               ),
               child: ListTile(
                 onTap: () => _showOvertimeDialog(worker),
                 leading: CircleAvatar(
-                  backgroundColor: overtime.isVerified ? Colors.green[700] : Colors.orange[700],
+                  backgroundColor: overtime.isVerified ? const Color(0xFF005C2E) : const Color(0xFFE65100),
                   child: Text(
                     worker.fullName.isNotEmpty ? worker.fullName[0].toUpperCase() : '?',
                     style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
@@ -1186,7 +1175,7 @@ class _BulkVerifyPageState extends State<BulkVerifyPage> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
-                        color: overtime.isVerified ? Colors.green[700] : Colors.orange[700],
+                        color: overtime.isVerified ? const Color(0xFF005C2E) : const Color(0xFFE65100),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Row(
@@ -1235,15 +1224,15 @@ class _BulkVerifyPageState extends State<BulkVerifyPage> {
           margin: const EdgeInsets.only(bottom: 8),
           elevation: isSelected ? 4 : 1,
           color: _isUnverifyMode
-              ? (isSelected ? Colors.orange[50] : Colors.green[50])
+              ? (isSelected ? const Color(0xFFFFF3E0) : const Color(0xFFE8F5EE))
               : (isVerified 
-                  ? Colors.green[50] 
-                  : (isSelected ? Colors.blue[50] : null)),
+                  ? const Color(0xFFE8F5EE) 
+                  : (isSelected ? const Color(0xFFE8EDF4) : null)),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
             side: isSelected
                 ? BorderSide(
-                    color: _isUnverifyMode ? Colors.orange : Theme.of(context).primaryColor, 
+                    color: _isUnverifyMode ? const Color(0xFFE65100) : Theme.of(context).primaryColor, 
                     width: 2
                   )
                 : BorderSide.none,
@@ -1272,7 +1261,7 @@ class _BulkVerifyPageState extends State<BulkVerifyPage> {
                         'ID: ${worker.employeeId}',
                         style: TextStyle(
                           fontSize: 13,
-                          color: Colors.grey[600],
+                          color: const Color(0xFF6B7280),
                         ),
                       ),
                     ],
@@ -1303,7 +1292,7 @@ class _BulkVerifyPageState extends State<BulkVerifyPage> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: _getStatusColor(attendance.status).withOpacity(0.2),
+                      color: Color.fromARGB(51, _getStatusColor(attendance.status).red, _getStatusColor(attendance.status).green, _getStatusColor(attendance.status).blue),
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
                         color: _getStatusColor(attendance.status),
@@ -1324,14 +1313,14 @@ class _BulkVerifyPageState extends State<BulkVerifyPage> {
                       attendance.checkInTime!,
                       style: TextStyle(
                         fontSize: 12,
-                        color: Colors.grey[700],
+                        color: const Color(0xFF374151),
                       ),
                     ),
                   const Spacer(),
                   if (isVerified)
-                    Icon(Icons.verified, size: 20, color: Colors.green[700])
+                    Icon(Icons.verified, size: 20, color: const Color(0xFF005C2E))
                   else
-                    Icon(Icons.pending, size: 20, color: Colors.orange[700]),
+                    Icon(Icons.pending, size: 20, color: const Color(0xFFE65100)),
                 ],
               ),
             ),
@@ -1348,7 +1337,7 @@ class _BulkVerifyPageState extends State<BulkVerifyPage> {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: const Color(0x1A000000),
             blurRadius: 10,
             offset: const Offset(0, -2),
           ),
@@ -1374,7 +1363,7 @@ class _BulkVerifyPageState extends State<BulkVerifyPage> {
                       _isUnverifyMode ? 'Ready to unverify' : 'Ready to verify',
                       style: TextStyle(
                         fontSize: 12,
-                        color: Colors.grey[600],
+                        color: const Color(0xFF6B7280),
                       ),
                     ),
                 ],
@@ -1395,7 +1384,7 @@ class _BulkVerifyPageState extends State<BulkVerifyPage> {
                   : (_isUnverifyMode ? 'Unverify' : 'Verify')),
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                backgroundColor: _isUnverifyMode ? Colors.orange : Theme.of(context).primaryColor,
+                backgroundColor: _isUnverifyMode ? const Color(0xFFE65100) : Theme.of(context).primaryColor,
                 foregroundColor: Colors.white,
               ),
             ),

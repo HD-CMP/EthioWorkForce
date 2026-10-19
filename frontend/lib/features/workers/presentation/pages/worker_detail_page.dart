@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
 import '../../../../core/localization/app_localizations.dart';
@@ -179,7 +179,15 @@ class _WorkerDetailPageState extends State<WorkerDetailPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(newStatus == 'active' ? 'Worker activated' : 'Worker deactivated'),
+            content: Row(children: [
+              const Icon(Icons.check_circle_outline, color: Colors.white, size: 18),
+              const SizedBox(width: 10),
+              Text(newStatus == 'active' ? 'Worker activated' : 'Worker deactivated'),
+            ]),
+            backgroundColor: const Color(0xFF007A3D),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
           ),
         );
       }
@@ -193,9 +201,15 @@ class _WorkerDetailPageState extends State<WorkerDetailPage> {
         }
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(errorMessage),
-            backgroundColor: Colors.red,
+            content: Row(children: [
+              const Icon(Icons.error_outline, color: Colors.white, size: 18),
+              const SizedBox(width: 10),
+              Expanded(child: Text(errorMessage)),
+            ]),
+            backgroundColor: const Color(0xFFB71C1C),
             behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
             action: SnackBarAction(
               label: 'Dismiss',
               textColor: Colors.white,
@@ -242,8 +256,8 @@ class _WorkerDetailPageState extends State<WorkerDetailPage> {
             ),
             const Divider(),
             ListTile(
-              leading: const Icon(Icons.delete, color: Colors.red),
-              title: const Text('Delete Worker', style: TextStyle(color: Colors.red)),
+              leading: const Icon(Icons.delete, color: const Color(0xFFB71C1C)),
+              title: const Text('Delete Worker', style: TextStyle(color: const Color(0xFFB71C1C))),
               onTap: () {
                 Navigator.pop(context);
                 _deleteWorker();
@@ -284,7 +298,7 @@ class _WorkerDetailPageState extends State<WorkerDetailPage> {
                 gradient: LinearGradient(
                   colors: [
                     Theme.of(context).primaryColor,
-                    Theme.of(context).primaryColor.withOpacity(0.7),
+                    const Color(0xB3007A3D),
                   ],
                 ),
               ),
@@ -315,7 +329,7 @@ class _WorkerDetailPageState extends State<WorkerDetailPage> {
                   Text(
                     'ID: ${_worker.employeeId}',
                     style: const TextStyle(
-                      color: Colors.white70,
+                      color: const Color(0xB3FFFFFF),
                       fontSize: 16,
                     ),
                   ),
@@ -327,8 +341,8 @@ class _WorkerDetailPageState extends State<WorkerDetailPage> {
                     ),
                     decoration: BoxDecoration(
                       color: _worker.isActive
-                          ? Colors.green.withOpacity(0.2)
-                          : Colors.grey.withOpacity(0.3),
+                          ? const Color(0x33007A3D)
+                          : const Color(0x4D9CA3AF),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
@@ -370,7 +384,7 @@ class _WorkerDetailPageState extends State<WorkerDetailPage> {
                               borderRadius: BorderRadius.circular(12),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.1),
+                                  color: const Color(0x1A000000),
                                   blurRadius: 8,
                                   offset: const Offset(0, 2),
                                 ),
@@ -396,7 +410,7 @@ class _WorkerDetailPageState extends State<WorkerDetailPage> {
                           Text(
                             'Scan for attendance',
                             style: TextStyle(
-                              color: Colors.grey[600],
+                              color: const Color(0xFF6B7280),
                               fontSize: 14,
                             ),
                           ),
@@ -450,12 +464,12 @@ class _WorkerDetailPageState extends State<WorkerDetailPage> {
                       child: Container(
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
-                            colors: [Colors.amber[50]!, Colors.orange[50]!],
+                            colors: [const Color(0xFFFFF3E0), const Color(0xFFFFF3E0)],
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                           ),
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.amber[200]!),
+                          border: Border.all(color: const Color(0xFFFFB74D)),
                         ),
                         padding: const EdgeInsets.all(16),
                         child: Row(
@@ -463,10 +477,10 @@ class _WorkerDetailPageState extends State<WorkerDetailPage> {
                             Container(
                               padding: const EdgeInsets.all(10),
                               decoration: BoxDecoration(
-                                color: Colors.amber[100],
+                                color: const Color(0xFFFFCC80),
                                 borderRadius: BorderRadius.circular(10),
                               ),
-                              child: Icon(Icons.stars_rounded, color: Colors.amber[800], size: 24),
+                              child: Icon(Icons.stars_rounded, color: const Color(0xFFE65100), size: 24),
                             ),
                             const SizedBox(width: 16),
                             Expanded(
@@ -477,7 +491,7 @@ class _WorkerDetailPageState extends State<WorkerDetailPage> {
                                     'Individual Base Salary',
                                     style: TextStyle(
                                       fontSize: 12,
-                                      color: Colors.amber[800],
+                                      color: const Color(0xFFE65100),
                                       fontWeight: FontWeight.w600,
                                     ),
                                   ),
@@ -487,7 +501,7 @@ class _WorkerDetailPageState extends State<WorkerDetailPage> {
                                     style: TextStyle(
                                       fontSize: 22,
                                       fontWeight: FontWeight.bold,
-                                      color: Colors.amber[900],
+                                      color: const Color(0xFF701700),
                                     ),
                                   ),
                                   const SizedBox(height: 2),
@@ -495,7 +509,7 @@ class _WorkerDetailPageState extends State<WorkerDetailPage> {
                                     'Personal salary — overrides Work Type rate in payroll',
                                     style: TextStyle(
                                       fontSize: 11,
-                                      color: Colors.amber[700],
+                                      color: const Color(0xFFA52800),
                                       fontStyle: FontStyle.italic,
                                     ),
                                   ),
@@ -546,7 +560,7 @@ class _WorkerDetailPageState extends State<WorkerDetailPage> {
                       child: Container(
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
-                            colors: [Colors.green[50]!, Colors.green[100]!],
+                            colors: [const Color(0xFFE8F5EE), const Color(0xFFE8F5EE)],
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                           ),
@@ -563,13 +577,13 @@ class _WorkerDetailPageState extends State<WorkerDetailPage> {
                                     children: [
                                       Row(
                                         children: [
-                                          Icon(Icons.access_time, color: Colors.green[700], size: 20),
+                                          Icon(Icons.access_time, color: const Color(0xFF005C2E), size: 20),
                                           const SizedBox(width: 8),
                                           Text(
                                             'Monthly Hours',
                                             style: TextStyle(
                                               fontSize: 12,
-                                              color: Colors.green[900],
+                                              color: const Color(0xFF003D1F),
                                               fontWeight: FontWeight.w500,
                                             ),
                                           ),
@@ -581,7 +595,7 @@ class _WorkerDetailPageState extends State<WorkerDetailPage> {
                                         style: TextStyle(
                                           fontSize: 18,
                                           fontWeight: FontWeight.bold,
-                                          color: Colors.green[900],
+                                          color: const Color(0xFF003D1F),
                                         ),
                                       ),
                                     ],
@@ -590,7 +604,7 @@ class _WorkerDetailPageState extends State<WorkerDetailPage> {
                                 Container(
                                   width: 1,
                                   height: 40,
-                                  color: Colors.green[300],
+                                  color: const Color(0xFF66B28A),
                                 ),
                                 const SizedBox(width: 16),
                                 Expanded(
@@ -599,13 +613,13 @@ class _WorkerDetailPageState extends State<WorkerDetailPage> {
                                     children: [
                                       Row(
                                         children: [
-                                          Icon(Icons.payments, color: Colors.green[700], size: 20),
+                                          Icon(Icons.payments, color: const Color(0xFF005C2E), size: 20),
                                           const SizedBox(width: 8),
                                           Text(
                                             'Hourly Rate',
                                             style: TextStyle(
                                               fontSize: 12,
-                                              color: Colors.green[900],
+                                              color: const Color(0xFF003D1F),
                                               fontWeight: FontWeight.w500,
                                             ),
                                           ),
@@ -617,7 +631,7 @@ class _WorkerDetailPageState extends State<WorkerDetailPage> {
                                         style: TextStyle(
                                           fontSize: 18,
                                           fontWeight: FontWeight.bold,
-                                          color: Colors.green[900],
+                                          color: const Color(0xFF003D1F),
                                         ),
                                       ),
                                     ],
@@ -629,7 +643,7 @@ class _WorkerDetailPageState extends State<WorkerDetailPage> {
                             Container(
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: Colors.green[700],
+                                color: const Color(0xFF005C2E),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Row(
@@ -643,7 +657,7 @@ class _WorkerDetailPageState extends State<WorkerDetailPage> {
                                         'Monthly Overtime Payment',
                                         style: TextStyle(
                                           fontSize: 11,
-                                          color: Colors.white70,
+                                          color: const Color(0xB3FFFFFF),
                                         ),
                                       ),
                                       const SizedBox(height: 2),
@@ -736,7 +750,7 @@ class _InfoCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: effectiveIconColor.withOpacity(0.1),
+                color: Color.fromARGB(26, effectiveIconColor.red, effectiveIconColor.green, effectiveIconColor.blue),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(
@@ -754,7 +768,7 @@ class _InfoCard extends StatelessWidget {
                     title,
                     style: TextStyle(
                       fontSize: 12,
-                      color: Colors.grey[600],
+                      color: const Color(0xFF6B7280),
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -857,7 +871,7 @@ class _SupervisorCardState extends State<_SupervisorCard> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: effectiveColor.withOpacity(0.1),
+                  color: Color.fromARGB(26, effectiveColor.red, effectiveColor.green, effectiveColor.blue),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(
@@ -875,7 +889,7 @@ class _SupervisorCardState extends State<_SupervisorCard> {
                       'Supervisor / Manager',
                       style: TextStyle(
                         fontSize: 12,
-                        color: Colors.grey,
+                        color: const Color(0xFF9CA3AF),
                       ),
                     ),
                     SizedBox(height: 8),
@@ -909,7 +923,7 @@ class _SupervisorCardState extends State<_SupervisorCard> {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: effectiveColor.withOpacity(0.1),
+                color: Color.fromARGB(26, effectiveColor.red, effectiveColor.green, effectiveColor.blue),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(
@@ -927,7 +941,7 @@ class _SupervisorCardState extends State<_SupervisorCard> {
                     'Supervisor / Manager',
                     style: TextStyle(
                       fontSize: 12,
-                      color: Colors.grey[600],
+                      color: const Color(0xFF6B7280),
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -960,14 +974,14 @@ class _SupervisorCardState extends State<_SupervisorCard> {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
-                              color: effectiveColor.withOpacity(0.1),
+                              color: Color.fromARGB(26, effectiveColor.red, effectiveColor.green, effectiveColor.blue),
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(
                               employeeId,
                               style: TextStyle(
                                 fontSize: 11,
-                                color: effectiveColor.withOpacity(0.8),
+                                color: Color.fromARGB(204, effectiveColor.red, effectiveColor.green, effectiveColor.blue),
                                 fontFamily: 'monospace',
                                 fontWeight: FontWeight.w500,
                               ),
@@ -980,7 +994,7 @@ class _SupervisorCardState extends State<_SupervisorCard> {
                             '•',
                             style: TextStyle(
                               fontSize: 11,
-                              color: Colors.grey[500],
+                              color: const Color(0xFF9CA3AF),
                             ),
                           ),
                           const SizedBox(width: 6),
@@ -991,7 +1005,7 @@ class _SupervisorCardState extends State<_SupervisorCard> {
                               workType,
                               style: TextStyle(
                                 fontSize: 12,
-                                color: Colors.grey[700],
+                                color: const Color(0xFF374151),
                                 fontWeight: FontWeight.w500,
                               ),
                               overflow: TextOverflow.ellipsis,
@@ -1032,12 +1046,12 @@ class _BankInfoCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: Colors.green.withOpacity(0.1),
+                color: const Color(0x1A007A3D),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: const Icon(
                 Icons.account_balance,
-                color: Colors.green,
+                color: const Color(0xFF007A3D),
                 size: 24,
               ),
             ),
@@ -1052,7 +1066,7 @@ class _BankInfoCard extends StatelessWidget {
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: Colors.black87,
+                        color: const Color(0xFF1A1A1A),
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -1061,7 +1075,7 @@ class _BankInfoCard extends StatelessWidget {
                     'Bank Account',
                     style: TextStyle(
                       fontSize: 12,
-                      color: Colors.grey[600],
+                      color: const Color(0xFF6B7280),
                     ),
                   ),
                   const SizedBox(height: 4),

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../domain/entities/attendance.dart';
@@ -269,7 +269,7 @@ class _AttendancePeriodPageState extends State<AttendancePeriodPage> {
               margin: const EdgeInsets.only(right: 8),
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: Colors.orange,
+                color: const Color(0xFFE65100),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Text(
@@ -309,7 +309,7 @@ class _AttendancePeriodPageState extends State<AttendancePeriodPage> {
   Widget _buildSiteSelector() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      color: Theme.of(context).primaryColor.withOpacity(0.1),
+      color: const Color(0x1A007A3D),
       child: Row(
         children: [
           const Icon(Icons.location_on, size: 20),
@@ -348,7 +348,7 @@ class _AttendancePeriodPageState extends State<AttendancePeriodPage> {
         gradient: LinearGradient(
           colors: [
             Theme.of(context).primaryColor,
-            Theme.of(context).primaryColor.withOpacity(0.8),
+            const Color(0xCC007A3D),
           ],
         ),
       ),
@@ -361,7 +361,7 @@ class _AttendancePeriodPageState extends State<AttendancePeriodPage> {
                 const Text(
                   'Payment Period Start',
                   style: TextStyle(
-                    color: Colors.white70,
+                    color: const Color(0xB3FFFFFF),
                     fontSize: 12,
                   ),
                 ),
@@ -392,11 +392,11 @@ class _AttendancePeriodPageState extends State<AttendancePeriodPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.people_outline, size: 80, color: Colors.grey[300]),
+            Icon(Icons.people_outline, size: 80, color: const Color(0xFFD1D5DB)),
             const SizedBox(height: 16),
             Text(
               'No workers found',
-              style: TextStyle(fontSize: 18, color: Colors.grey[600]),
+              style: TextStyle(fontSize: 18, color: const Color(0xFF6B7280)),
             ),
           ],
         ),

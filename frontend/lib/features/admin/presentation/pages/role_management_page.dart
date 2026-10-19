@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 
 import '../../../../core/di/injection.dart';
@@ -197,7 +197,7 @@ class _RoleManagementPageState extends State<RoleManagementPage> {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Theme.of(context).primaryColor.withOpacity(0.1),
+                        color: const Color(0x1A007A3D),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Icon(
@@ -225,7 +225,7 @@ class _RoleManagementPageState extends State<RoleManagementPage> {
                                 : 'Update role information and settings',
                             style: TextStyle(
                               fontSize: 14,
-                              color: Colors.grey[600],
+                              color: const Color(0xFF6B7280),
                             ),
                           ),
                         ],
@@ -326,7 +326,7 @@ class _RoleManagementPageState extends State<RoleManagementPage> {
                         const SizedBox(height: 8),
                         Container(
                           decoration: BoxDecoration(
-                            border: Border.all(color: Colors.grey[300]!),
+                            border: Border.all(color: const Color(0xFFD1D5DB)),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: SwitchListTile(
@@ -337,7 +337,7 @@ class _RoleManagementPageState extends State<RoleManagementPage> {
                                   : 'Role is disabled and cannot be assigned',
                               style: TextStyle(
                                 fontSize: 12,
-                                color: Colors.grey[600],
+                                color: const Color(0xFF6B7280),
                               ),
                             ),
                             value: isActive,
@@ -494,7 +494,7 @@ class _RoleManagementPageState extends State<RoleManagementPage> {
         Text(
           label,
           style: TextStyle(
-            color: Colors.white.withOpacity(0.9),
+            color: const Color(0xE6FFFFFF),
             fontSize: 12,
           ),
         ),
@@ -518,7 +518,7 @@ class _RoleManagementPageState extends State<RoleManagementPage> {
                       Icon(
                         Icons.admin_panel_settings_outlined,
                         size: 80,
-                        color: Colors.grey[300],
+                        color: const Color(0xFFD1D5DB),
                       ),
                       const SizedBox(height: 16),
                       Text(
@@ -526,7 +526,7 @@ class _RoleManagementPageState extends State<RoleManagementPage> {
                         style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.w600,
-                          color: Colors.grey[600],
+                          color: const Color(0xFF6B7280),
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -534,7 +534,7 @@ class _RoleManagementPageState extends State<RoleManagementPage> {
                         'Create custom roles to manage user permissions',
                         style: TextStyle(
                           fontSize: 14,
-                          color: Colors.grey[500],
+                          color: const Color(0xFF9CA3AF),
                         ),
                       ),
                       const SizedBox(height: 24),
@@ -563,7 +563,7 @@ class _RoleManagementPageState extends State<RoleManagementPage> {
                           gradient: LinearGradient(
                             colors: [
                               Theme.of(context).primaryColor,
-                              Theme.of(context).primaryColor.withOpacity(0.8),
+                              const Color(0xCC007A3D),
                             ],
                           ),
                           borderRadius: BorderRadius.circular(12),
@@ -571,7 +571,7 @@ class _RoleManagementPageState extends State<RoleManagementPage> {
                             BoxShadow(
                               color: Theme.of(context)
                                   .primaryColor
-                                  .withOpacity(0.3),
+                                  .withValues(alpha: 0.3),
                               blurRadius: 8,
                               offset: const Offset(0, 4),
                             ),
@@ -589,7 +589,7 @@ class _RoleManagementPageState extends State<RoleManagementPage> {
                             Container(
                               width: 1,
                               height: 40,
-                              color: Colors.white.withOpacity(0.3),
+                              color: const Color(0x4DFFFFFF),
                             ),
                             Expanded(
                               child: _buildStatItem(
@@ -602,7 +602,7 @@ class _RoleManagementPageState extends State<RoleManagementPage> {
                             Container(
                               width: 1,
                               height: 40,
-                              color: Colors.white.withOpacity(0.3),
+                              color: const Color(0x4DFFFFFF),
                             ),
                             Expanded(
                               child: _buildStatItem(
@@ -628,7 +628,7 @@ class _RoleManagementPageState extends State<RoleManagementPage> {
                         decoration: BoxDecoration(
                           color: role.isActive
                               ? Theme.of(context).primaryColor
-                              : Colors.grey,
+                              : const Color(0xFF9CA3AF),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: const Icon(
@@ -653,14 +653,14 @@ class _RoleManagementPageState extends State<RoleManagementPage> {
                                 vertical: 2,
                               ),
                               decoration: BoxDecoration(
-                                color: Colors.blue[50],
+                                color: const Color(0xFFE8EDF4),
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Text(
                                 'SYSTEM',
                                 style: TextStyle(
                                   fontSize: 10,
-                                  color: Colors.blue[700],
+                                  color: const Color(0xFF0A192F),
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
@@ -673,14 +673,14 @@ class _RoleManagementPageState extends State<RoleManagementPage> {
                                 vertical: 2,
                               ),
                               decoration: BoxDecoration(
-                                color: Colors.grey[200],
+                                color: const Color(0xFFE5E7EB),
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Text(
                                 'INACTIVE',
                                 style: TextStyle(
                                   fontSize: 10,
-                                  color: Colors.grey[700],
+                                  color: const Color(0xFF374151),
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
@@ -697,7 +697,7 @@ class _RoleManagementPageState extends State<RoleManagementPage> {
                             'ID: ${role.name}',
                             style: TextStyle(
                               fontSize: 12,
-                              color: Colors.grey[600],
+                              color: const Color(0xFF6B7280),
                             ),
                           ),
                         ],
@@ -709,7 +709,7 @@ class _RoleManagementPageState extends State<RoleManagementPage> {
                                 'Protected',
                                 style: TextStyle(fontSize: 11),
                               ),
-                              backgroundColor: Colors.blue[50],
+                              backgroundColor: const Color(0xFFE8EDF4),
                               side: BorderSide.none,
                             )
                           : Row(
@@ -723,7 +723,7 @@ class _RoleManagementPageState extends State<RoleManagementPage> {
                                 ),
                                 IconButton(
                                   icon: const Icon(Icons.delete),
-                                  color: Colors.red,
+                                  color: const Color(0xFFB71C1C),
                                   tooltip: 'Delete role',
                                   onPressed: () => _deleteRole(role),
                                 ),

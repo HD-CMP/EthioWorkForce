@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
@@ -8,6 +8,7 @@ import '../../../overtime/domain/entities/overtime.dart';
 import '../../../overtime/data/datasources/overtime_remote_datasource.dart';
 import '../../data/datasources/attendance_remote_datasource.dart';
 import '../../../../core/utils/ethiopian_calendar.dart';
+import '../../../../core/utils/app_snackbar.dart';
 
 class MultiDayOvertimeSelector extends StatefulWidget {
   final Worker worker;
@@ -115,10 +116,10 @@ class _MultiDayOvertimeSelectorState extends State<MultiDayOvertimeSelector> {
   void _initializeOvertimeData() {
     if (mounted) {
       setState(() {
-        print('🔧 Initializing overtime data for worker ${widget.worker.id}');
-        print('📋 Existing overtimes: ${widget.existingOvertimes.length}');
+        debugPrint('🔧 Initializing overtime data for worker ${widget.worker.id}');
+        debugPrint('📋 Existing overtimes: ${widget.existingOvertimes.length}');
         for (final ot in widget.existingOvertimes) {
-          print('   - ${ot.overtimeDate.toIso8601String().split('T')[0]}: hours=${ot.hours}h');
+          debugPrint('   - ${ot.overtimeDate.toIso8601String().split('T')[0]}: hours=${ot.hours}h');
         }
         
         _overtimeData.clear();
@@ -128,11 +129,11 @@ class _MultiDayOvertimeSelectorState extends State<MultiDayOvertimeSelector> {
           final overtime = _getOvertime(date);
           
           if (overtime != null && overtime.hours > 0) {
-            print('✨ Found overtime: ${overtime.overtimeDate} = ${overtime.hours}h');
+            debugPrint('✨ Found overtime: ${overtime.overtimeDate} = ${overtime.hours}h');
             _overtimeData[normalizedDate] = overtime.hours;
           }
         }
-        print('📊 Initialized overtime data: ${_overtimeData.length} days');
+        debugPrint('📊 Initialized overtime data: ${_overtimeData.length} days');
       });
     }
   }
@@ -205,26 +206,12 @@ class _MultiDayOvertimeSelectorState extends State<MultiDayOvertimeSelector> {
   Future<void> _confirmAndSave() async {
     if (widget.mode == 'verify') {
       if (_selectedDates.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('No days selected for verification'),
-            backgroundColor: Colors.orange,
-            behavior: SnackBarBehavior.floating,
-            duration: Duration(seconds: 2),
-          ),
-        );
+        AppSnackBar.showWarning(context, 'No days selected for verification');
         return;
       }
     } else {
       if (_overtimeData.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('No overtime hours entered'),
-            backgroundColor: Colors.orange,
-            behavior: SnackBarBehavior.floating,
-            duration: Duration(seconds: 2),
-          ),
-        );
+        AppSnackBar.showWarning(context, 'No overtime hours entered');
         return;
       }
     }
@@ -240,7 +227,7 @@ class _MultiDayOvertimeSelectorState extends State<MultiDayOvertimeSelector> {
           children: [
             Icon(
               widget.mode == 'verify' ? Icons.verified : Icons.access_time,
-              color: widget.mode == 'verify' ? Colors.green[700] : Colors.orange[700],
+              color: widget.mode == 'verify' ? const Color(0xFF005C2E) : const Color(0xFFE65100),
               size: 28,
             ),
             const SizedBox(width: 12),
@@ -263,16 +250,16 @@ class _MultiDayOvertimeSelectorState extends State<MultiDayOvertimeSelector> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.grey[100],
+                color: const Color(0xFFF3F4F6),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.grey[300]!),
+                border: Border.all(color: const Color(0xFFD1D5DB)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.person, size: 18, color: Colors.grey[700]),
+                      Icon(Icons.person, size: 18, color: const Color(0xFF374151)),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
@@ -288,7 +275,7 @@ class _MultiDayOvertimeSelectorState extends State<MultiDayOvertimeSelector> {
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      Icon(Icons.calendar_today, size: 18, color: Colors.grey[700]),
+                      Icon(Icons.calendar_today, size: 18, color: const Color(0xFF374151)),
                       const SizedBox(width: 8),
                       Text(
                         widget.mode == 'verify'
@@ -301,14 +288,14 @@ class _MultiDayOvertimeSelectorState extends State<MultiDayOvertimeSelector> {
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      Icon(Icons.access_time, size: 18, color: Colors.orange[700]),
+                      Icon(Icons.access_time, size: 18, color: const Color(0xFFE65100)),
                       const SizedBox(width: 8),
                       Text(
                         '$totalHours total hours',
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
-                          color: Colors.orange[800],
+                          color: const Color(0xFFBF360C),
                         ),
                       ),
                     ],
@@ -320,17 +307,17 @@ class _MultiDayOvertimeSelectorState extends State<MultiDayOvertimeSelector> {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: widget.mode == 'verify' ? Colors.green[50] : Colors.orange[50],
+                color: widget.mode == 'verify' ? const Color(0xFFE8F5EE) : const Color(0xFFFFF3E0),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                  color: widget.mode == 'verify' ? Colors.green[200]! : Colors.orange[200]!,
+                  color: widget.mode == 'verify' ? const Color(0xFFB2DFCA) : const Color(0xFFFFCC80),
                 ),
               ),
               child: Row(
                 children: [
                   Icon(
                     Icons.info_outline,
-                    color: widget.mode == 'verify' ? Colors.green[700] : Colors.orange[700],
+                    color: widget.mode == 'verify' ? const Color(0xFF005C2E) : const Color(0xFFE65100),
                     size: 20,
                   ),
                   const SizedBox(width: 8),
@@ -341,7 +328,7 @@ class _MultiDayOvertimeSelectorState extends State<MultiDayOvertimeSelector> {
                           : 'Overtime hours will affect payroll calculations. Please verify before confirming.',
                       style: TextStyle(
                         fontSize: 12,
-                        color: widget.mode == 'verify' ? Colors.green[900] : Colors.orange[900],
+                        color: widget.mode == 'verify' ? const Color(0xFF003D1F) : const Color(0xFFBF360C),
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -359,7 +346,7 @@ class _MultiDayOvertimeSelectorState extends State<MultiDayOvertimeSelector> {
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: widget.mode == 'verify' ? Colors.green[600] : Colors.orange[600],
+              backgroundColor: widget.mode == 'verify' ? const Color(0xFF007A3D) : const Color(0xFFE65100),
               foregroundColor: Colors.white,
             ),
             child: Text(widget.mode == 'verify' ? 'Verify' : 'Confirm'),
@@ -411,12 +398,7 @@ class _MultiDayOvertimeSelectorState extends State<MultiDayOvertimeSelector> {
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Error saving overtime: $e'),
-              backgroundColor: Colors.red,
-            ),
-          );
+          AppSnackBar.showError(context, 'Error saving overtime: $e');
         }
       }
     }
@@ -493,7 +475,7 @@ class _MultiDayOvertimeSelectorState extends State<MultiDayOvertimeSelector> {
                       children: [
                         Icon(
                           widget.mode == 'verify' ? Icons.verified : Icons.access_time, 
-                          color: widget.mode == 'verify' ? Colors.green[700] : Colors.orange[700], 
+                          color: widget.mode == 'verify' ? const Color(0xFF005C2E) : const Color(0xFFE65100), 
                           size: 24
                         ),
                         const SizedBox(width: 8),
@@ -511,7 +493,7 @@ class _MultiDayOvertimeSelectorState extends State<MultiDayOvertimeSelector> {
                       widget.worker.fullName,
                       style: TextStyle(
                         fontSize: 16,
-                        color: Colors.grey[700],
+                        color: const Color(0xFF374151),
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -520,7 +502,7 @@ class _MultiDayOvertimeSelectorState extends State<MultiDayOvertimeSelector> {
                       'ID: ${widget.worker.employeeId} • ${widget.worker.workType ?? 'No work type'}',
                       style: TextStyle(
                         fontSize: 13,
-                        color: Colors.grey[600],
+                        color: const Color(0xFF6B7280),
                       ),
                     ),
                   ],
@@ -547,10 +529,10 @@ class _MultiDayOvertimeSelectorState extends State<MultiDayOvertimeSelector> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: widget.mode == 'verify' ? Colors.green[50] : Colors.orange[50],
+              color: widget.mode == 'verify' ? const Color(0xFFE8F5EE) : const Color(0xFFFFF3E0),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: widget.mode == 'verify' ? Colors.green[200]! : Colors.orange[200]!, 
+                color: widget.mode == 'verify' ? const Color(0xFFB2DFCA) : const Color(0xFFFFCC80), 
                 width: 1
               ),
             ),
@@ -558,7 +540,7 @@ class _MultiDayOvertimeSelectorState extends State<MultiDayOvertimeSelector> {
               children: [
                 Icon(
                   Icons.info_outline, 
-                  color: widget.mode == 'verify' ? Colors.green[700] : Colors.orange[700], 
+                  color: widget.mode == 'verify' ? const Color(0xFF005C2E) : const Color(0xFFE65100), 
                   size: 20
                 ),
                 const SizedBox(width: 12),
@@ -569,7 +551,7 @@ class _MultiDayOvertimeSelectorState extends State<MultiDayOvertimeSelector> {
                         : 'Showing $_paymentPeriodDays-day payment period. Click dates to enter overtime (0-24 hours).',
                     style: TextStyle(
                       fontSize: 13,
-                      color: widget.mode == 'verify' ? Colors.green[900] : Colors.orange[900],
+                      color: widget.mode == 'verify' ? const Color(0xFF003D1F) : const Color(0xFFBF360C),
                     ),
                   ),
                 ),
@@ -581,20 +563,20 @@ class _MultiDayOvertimeSelectorState extends State<MultiDayOvertimeSelector> {
               margin: const EdgeInsets.only(top: 8),
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.grey[100],
+                color: const Color(0xFFF3F4F6),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.grey[300]!, width: 1),
+                border: Border.all(color: const Color(0xFFD1D5DB), width: 1),
               ),
               child: Row(
                 children: [
-                  Icon(Icons.warning_amber, color: Colors.grey[600], size: 20),
+                  Icon(Icons.warning_amber, color: const Color(0xFF6B7280), size: 20),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
                       'Future dates (grayed out) cannot be edited. Overtime can only be entered up to today.',
                       style: TextStyle(
                         fontSize: 12,
-                        color: Colors.grey[700],
+                        color: const Color(0xFF374151),
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -614,7 +596,7 @@ class _MultiDayOvertimeSelectorState extends State<MultiDayOvertimeSelector> {
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: widget.mode == 'verify' ? Colors.green[800] : Colors.orange[800],
+                  color: widget.mode == 'verify' ? const Color(0xFF005C2E) : const Color(0xFFBF360C),
                 ),
               ),
               if (widget.mode == 'verify')
@@ -659,7 +641,7 @@ class _MultiDayOvertimeSelectorState extends State<MultiDayOvertimeSelector> {
           Flexible(
             child: Container(
               decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey[300]!),
+                border: Border.all(color: const Color(0xFFD1D5DB)),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: _paymentPeriodDays == 0
@@ -672,7 +654,7 @@ class _MultiDayOvertimeSelectorState extends State<MultiDayOvertimeSelector> {
                             Icon(
                               Icons.event_busy,
                               size: 48,
-                              color: Colors.grey[400],
+                              color: const Color(0xFF9CA3AF),
                             ),
                             const SizedBox(height: 12),
                             Text(
@@ -680,7 +662,7 @@ class _MultiDayOvertimeSelectorState extends State<MultiDayOvertimeSelector> {
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
-                                color: Colors.grey[600],
+                                color: const Color(0xFF6B7280),
                               ),
                             ),
                             const SizedBox(height: 4),
@@ -688,7 +670,7 @@ class _MultiDayOvertimeSelectorState extends State<MultiDayOvertimeSelector> {
                               'No payment period configured',
                               style: TextStyle(
                                 fontSize: 13,
-                                color: Colors.grey[500],
+                                color: const Color(0xFF9CA3AF),
                               ),
                             ),
                           ],
@@ -755,10 +737,10 @@ class _MultiDayOvertimeSelectorState extends State<MultiDayOvertimeSelector> {
                       : (_overtimeData.isEmpty ? null : _confirmAndSave),
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
-                    backgroundColor: widget.mode == 'verify' ? Colors.green[600] : Colors.orange[600],
+                    backgroundColor: widget.mode == 'verify' ? const Color(0xFF007A3D) : const Color(0xFFE65100),
                     foregroundColor: Colors.white,
-                    disabledBackgroundColor: Colors.grey[300],
-                    disabledForegroundColor: Colors.grey[600],
+                    disabledBackgroundColor: const Color(0xFFD1D5DB),
+                    disabledForegroundColor: const Color(0xFF6B7280),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -817,25 +799,25 @@ class _MultiDayOvertimeSelectorState extends State<MultiDayOvertimeSelector> {
     Color textColor;
 
     if (isFutureDate) {
-      borderColor = Colors.grey[200]!;
-      backgroundColor = Colors.grey[100]!;
-      textColor = Colors.grey[400]!;
+      borderColor = const Color(0xFFE5E7EB);
+      backgroundColor = const Color(0xFFF3F4F6);
+      textColor = const Color(0xFF9CA3AF);
     } else if (widget.mode == 'verify' && isSelected) {
-      borderColor = Colors.green[700]!;
-      backgroundColor = Colors.green[100]!;
-      textColor = Colors.green[900]!;
+      borderColor = const Color(0xFF005C2E);
+      backgroundColor = const Color(0xFFE8F5EE);
+      textColor = const Color(0xFF003D1F);
     } else if (overtime?.isVerified == true && overtimeHours > 0) {
-      borderColor = Colors.green[700]!;
-      backgroundColor = Colors.green[50]!;
-      textColor = Colors.green[900]!;
+      borderColor = const Color(0xFF005C2E);
+      backgroundColor = const Color(0xFFE8F5EE);
+      textColor = const Color(0xFF003D1F);
     } else if (overtimeHours > 0) {
-      borderColor = Colors.orange[700]!;
-      backgroundColor = Colors.orange[100]!;
-      textColor = Colors.orange[900]!;
+      borderColor = const Color(0xFFE65100);
+      backgroundColor = const Color(0xFFFFF3E0);
+      textColor = const Color(0xFFBF360C);
     } else {
-      borderColor = Colors.grey[300]!;
+      borderColor = const Color(0xFFD1D5DB);
       backgroundColor = Colors.white;
-      textColor = Colors.grey[800]!;
+      textColor = const Color(0xFF1F2937);
     }
 
     final hasOvertime = overtimeHours > 0;
@@ -871,7 +853,7 @@ class _MultiDayOvertimeSelectorState extends State<MultiDayOvertimeSelector> {
                     height: 6,
                     margin: const EdgeInsets.only(bottom: 2),
                     decoration: BoxDecoration(
-                      color: widget.mode == 'verify' ? Colors.green : Colors.orange,
+                      color: widget.mode == 'verify' ? const Color(0xFF007A3D) : const Color(0xFFE65100),
                       shape: BoxShape.circle,
                     ),
                   ),
@@ -880,7 +862,7 @@ class _MultiDayOvertimeSelectorState extends State<MultiDayOvertimeSelector> {
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w600,
-                    color: textColor.withOpacity(0.7),
+                    color: Color.fromARGB(179, textColor.red, textColor.green, textColor.blue),
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -908,7 +890,7 @@ class _MultiDayOvertimeSelectorState extends State<MultiDayOvertimeSelector> {
                         Icon(
                           Icons.verified,
                           size: 12,
-                          color: Colors.green[700],
+                          color: const Color(0xFF005C2E),
                         ),
                         const SizedBox(width: 2),
                       ],
@@ -917,7 +899,7 @@ class _MultiDayOvertimeSelectorState extends State<MultiDayOvertimeSelector> {
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.bold,
-                          color: widget.mode == 'verify' && isSelected ? Colors.green[800] : Colors.orange[800],
+                          color: widget.mode == 'verify' && isSelected ? const Color(0xFF005C2E) : const Color(0xFFBF360C),
                         ),
                       ),
                     ],
@@ -932,7 +914,7 @@ class _MultiDayOvertimeSelectorState extends State<MultiDayOvertimeSelector> {
                 child: Container(
                   padding: const EdgeInsets.all(2),
                   decoration: BoxDecoration(
-                    color: Colors.green[700],
+                    color: const Color(0xFF005C2E),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
@@ -956,7 +938,7 @@ class _MultiDayOvertimeSelectorState extends State<MultiDayOvertimeSelector> {
       builder: (context) => AlertDialog(
         title: Row(
           children: [
-            Icon(Icons.access_time, color: Colors.orange[700], size: 24),
+            Icon(Icons.access_time, color: const Color(0xFFE65100), size: 24),
             const SizedBox(width: 12),
             const Text('Enter Overtime'),
           ],
@@ -977,7 +959,7 @@ class _MultiDayOvertimeSelectorState extends State<MultiDayOvertimeSelector> {
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: Colors.grey[700],
+                color: const Color(0xFF374151),
               ),
             ),
             const SizedBox(height: 16),
@@ -994,7 +976,7 @@ class _MultiDayOvertimeSelectorState extends State<MultiDayOvertimeSelector> {
                 suffixText: 'hours',
                 border: const OutlineInputBorder(),
                 focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.orange[600]!, width: 2),
+                  borderSide: BorderSide(color: const Color(0xFFE65100), width: 2),
                 ),
               ),
               onSubmitted: (value) {
@@ -1010,7 +992,7 @@ class _MultiDayOvertimeSelectorState extends State<MultiDayOvertimeSelector> {
               'Valid range: 0-24 hours',
               style: TextStyle(
                 fontSize: 12,
-                color: Colors.grey[600],
+                color: const Color(0xFF6B7280),
               ),
             ),
             if (widget.worker.overtimeRatePerHour == null) ...[
@@ -1018,20 +1000,20 @@ class _MultiDayOvertimeSelectorState extends State<MultiDayOvertimeSelector> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: Colors.orange[50],
+                  color: const Color(0xFFFFF3E0),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.orange[300]!),
+                  border: Border.all(color: const Color(0xFFFFB74D)),
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.info_outline, size: 16, color: Colors.orange[800]),
+                    Icon(Icons.info_outline, size: 16, color: const Color(0xFFBF360C)),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         'Overtime rate not configured. Fallback calculation (1.5x base rate) will be used.',
                         style: TextStyle(
                           fontSize: 11,
-                          color: Colors.orange[900],
+                          color: const Color(0xFFBF360C),
                         ),
                       ),
                     ),
@@ -1050,7 +1032,7 @@ class _MultiDayOvertimeSelectorState extends State<MultiDayOvertimeSelector> {
               },
               child: Text(
                 'Clear',
-                style: TextStyle(color: Colors.red[600]),
+                style: TextStyle(color: const Color(0xFFB71C1C)),
               ),
             ),
           TextButton(
@@ -1064,17 +1046,11 @@ class _MultiDayOvertimeSelectorState extends State<MultiDayOvertimeSelector> {
                 _updateOvertimeForDate(date, hours);
                 Navigator.pop(context);
               } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Please enter a value between 0 and 24'),
-                    backgroundColor: Colors.red,
-                    duration: Duration(seconds: 2),
-                  ),
-                );
+                AppSnackBar.showError(context, 'Please enter a value between 0 and 24');
               }
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.orange[600],
+              backgroundColor: const Color(0xFFE65100),
               foregroundColor: Colors.white,
             ),
             child: const Text('Save'),
@@ -1093,9 +1069,9 @@ class _MultiDayOvertimeSelectorState extends State<MultiDayOvertimeSelector> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.grey[50],
+        color: const Color(0xFFF9FAFB),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[300]!),
+        border: Border.all(color: const Color(0xFFD1D5DB)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1125,7 +1101,7 @@ class _MultiDayOvertimeSelectorState extends State<MultiDayOvertimeSelector> {
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: Colors.grey[800],
+                    color: const Color(0xFF1F2937),
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -1151,8 +1127,8 @@ class _MultiDayOvertimeSelectorState extends State<MultiDayOvertimeSelector> {
             icon: const Icon(Icons.chevron_right),
             tooltip: 'Next Period',
             style: IconButton.styleFrom(
-              backgroundColor: canGoNext ? Colors.white : Colors.grey[200],
-              foregroundColor: canGoNext ? Theme.of(context).primaryColor : Colors.grey[400],
+              backgroundColor: canGoNext ? Colors.white : const Color(0xFFE5E7EB),
+              foregroundColor: canGoNext ? Theme.of(context).primaryColor : const Color(0xFF9CA3AF),
               padding: const EdgeInsets.all(12),
             ),
           ),

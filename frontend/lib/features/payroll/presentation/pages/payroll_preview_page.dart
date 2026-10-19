@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/utils/ethiopian_calendar.dart';
@@ -328,7 +328,7 @@ class _PayrollPreviewPageState extends State<PayrollPreviewPage> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
+                        Icon(Icons.error_outline, size: 64, color: const Color(0xFFE57373)),
                         const SizedBox(height: 16),
                         Text(
                           _errorMessage!,
@@ -354,7 +354,7 @@ class _PayrollPreviewPageState extends State<PayrollPreviewPage> {
                         gradient: LinearGradient(
                           colors: [
                             Theme.of(context).primaryColor,
-                            Theme.of(context).primaryColor.withOpacity(0.7),
+                            const Color(0xB3007A3D),
                           ],
                         ),
                       ),
@@ -435,11 +435,11 @@ class _PayrollPreviewPageState extends State<PayrollPreviewPage> {
           _selectedWorkPlace = selected ? workPlace : null;
         });
       },
-      backgroundColor: Colors.grey[200],
-      selectedColor: Theme.of(context).primaryColor.withOpacity(0.2),
+      backgroundColor: const Color(0xFFE5E7EB),
+      selectedColor: const Color(0x33007A3D),
       checkmarkColor: Theme.of(context).primaryColor,
       labelStyle: TextStyle(
-        color: isSelected ? Theme.of(context).primaryColor : Colors.black87,
+        color: isSelected ? Theme.of(context).primaryColor : const Color(0xFF1A1A1A),
         fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
       ),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -465,11 +465,11 @@ class _PayrollPreviewPageState extends State<PayrollPreviewPage> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.people_outline, size: 64, color: Colors.grey[400]),
+                Icon(Icons.people_outline, size: 64, color: const Color(0xFF9CA3AF)),
                 const SizedBox(height: 16),
                 Text(
                   'No workers found',
-                  style: TextStyle(fontSize: 18, color: Colors.grey[600]),
+                  style: TextStyle(fontSize: 18, color: const Color(0xFF6B7280)),
                 ),
               ],
             ),
@@ -531,14 +531,14 @@ class _PayrollPreviewPageState extends State<PayrollPreviewPage> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [Colors.teal[700]!, Colors.teal[500]!],
+            colors: [const Color(0xFF004A25), const Color(0xFF007A3D)],
             begin: Alignment.centerLeft,
             end: Alignment.centerRight,
           ),
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: Colors.teal.withOpacity(0.3),
+              color: const Color(0x4D007A3D),
               blurRadius: 6,
               offset: const Offset(0, 2),
             ),
@@ -555,7 +555,7 @@ class _PayrollPreviewPageState extends State<PayrollPreviewPage> {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
+                color: const Color(0x33FFFFFF),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Icon(
@@ -585,7 +585,7 @@ class _PayrollPreviewPageState extends State<PayrollPreviewPage> {
               child: Text(
                 '$count',
                 style: TextStyle(
-                  color: Colors.teal[700],
+                  color: const Color(0xFF004A25),
                   fontSize: 13,
                   fontWeight: FontWeight.bold,
                 ),
@@ -623,7 +623,7 @@ class _PayrollPreviewPageState extends State<PayrollPreviewPage> {
                 Row(
                   children: [
                     CircleAvatar(
-                      backgroundColor: Theme.of(context).primaryColor.withOpacity(0.2),
+                      backgroundColor: const Color(0x33007A3D),
                       child: Text(
                         worker.fullName.isNotEmpty ? worker.fullName[0].toUpperCase() : 'W',
                         style: TextStyle(
@@ -656,7 +656,7 @@ class _PayrollPreviewPageState extends State<PayrollPreviewPage> {
                             style: TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w600,
-                              color: Colors.green[700],
+                              color: const Color(0xFF005C2E),
                             ),
                           ),
                         ],
@@ -664,7 +664,7 @@ class _PayrollPreviewPageState extends State<PayrollPreviewPage> {
                     ),
                     Icon(
                       isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
-                      color: Colors.grey[600],
+                      color: const Color(0xFF6B7280),
                     ),
                   ],
                 ),
@@ -672,25 +672,25 @@ class _PayrollPreviewPageState extends State<PayrollPreviewPage> {
                 const Divider(height: 24),
                 Row(
                   children: [
-                    Icon(Icons.badge, size: 14, color: Colors.grey[600]),
+                    Icon(Icons.badge, size: 14, color: const Color(0xFF6B7280)),
                     const SizedBox(width: 4),
                     Text(
                       worker.employeeId,
                       style: TextStyle(
                         fontSize: 13,
-                        color: Colors.grey[600],
+                        color: const Color(0xFF6B7280),
                       ),
                     ),
                     if (worker.supervisorName != null) ...[
                       const SizedBox(width: 16),
-                      Icon(Icons.person_outline, size: 14, color: Colors.grey[600]),
+                      Icon(Icons.person_outline, size: 14, color: const Color(0xFF6B7280)),
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(
                           'Reports to: ${worker.supervisorName}',
                           style: TextStyle(
                             fontSize: 13,
-                            color: Colors.grey[600],
+                            color: const Color(0xFF6B7280),
                             fontStyle: FontStyle.italic,
                           ),
                         ),
@@ -728,9 +728,9 @@ class _PayrollPreviewPageState extends State<PayrollPreviewPage> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.green.withOpacity(0.1),
+                    color: const Color(0x1A007A3D),
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.green.withOpacity(0.3)),
+                    border: Border.all(color: const Color(0x4D007A3D)),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -742,7 +742,7 @@ class _PayrollPreviewPageState extends State<PayrollPreviewPage> {
                             'Gross Earnings',
                             style: TextStyle(
                               fontSize: 12,
-                              color: Colors.grey[700],
+                              color: const Color(0xFF374151),
                             ),
                           ),
                           const SizedBox(height: 4),
@@ -751,12 +751,12 @@ class _PayrollPreviewPageState extends State<PayrollPreviewPage> {
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
-                              color: Colors.black87,
+                              color: const Color(0xFF1A1A1A),
                             ),
                           ),
                         ],
                       ),
-                      const Icon(Icons.arrow_forward, size: 20, color: Colors.grey),
+                      const Icon(Icons.arrow_forward, size: 20, color: const Color(0xFF9CA3AF)),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
@@ -764,7 +764,7 @@ class _PayrollPreviewPageState extends State<PayrollPreviewPage> {
                             'Net Pay (Est.)',
                             style: TextStyle(
                               fontSize: 12,
-                              color: Colors.grey[700],
+                              color: const Color(0xFF374151),
                             ),
                           ),
                           const SizedBox(height: 4),
@@ -773,7 +773,7 @@ class _PayrollPreviewPageState extends State<PayrollPreviewPage> {
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
-                              color: Colors.green[700],
+                              color: const Color(0xFF005C2E),
                             ),
                           ),
                         ],
@@ -793,7 +793,7 @@ class _PayrollPreviewPageState extends State<PayrollPreviewPage> {
   Widget _buildInfoItem(String label, String value, IconData icon) {
     return Column(
       children: [
-        Icon(icon, size: 20, color: Colors.grey[600]),
+        Icon(icon, size: 20, color: const Color(0xFF6B7280)),
         const SizedBox(height: 4),
         Text(
           value,
@@ -807,7 +807,7 @@ class _PayrollPreviewPageState extends State<PayrollPreviewPage> {
           label,
           style: TextStyle(
             fontSize: 11,
-            color: Colors.grey[600],
+            color: const Color(0xFF6B7280),
           ),
           textAlign: TextAlign.center,
         ),

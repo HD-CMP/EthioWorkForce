@@ -4,6 +4,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import '../../data/datasources/payroll_remote_datasource.dart';
+import '../../../../core/utils/app_snackbar.dart';
 
 class CashPaymentSheet extends StatefulWidget {
   final int payrollId;
@@ -178,12 +179,7 @@ class _CashPaymentSheetState extends State<CashPaymentSheet> with TickerProvider
       });
       
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to update payment status: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        AppSnackBar.showError(context, 'Failed to update payment status: $e');
       }
     }
   }
@@ -221,12 +217,7 @@ class _CashPaymentSheetState extends State<CashPaymentSheet> with TickerProvider
                 });
                 
                 if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Payroll locked successfully'),
-                      backgroundColor: Colors.green,
-                    ),
-                  );
+                  AppSnackBar.showSuccess(context, 'Payroll locked successfully');
                 }
               } catch (e) {
                 setState(() {
@@ -234,17 +225,12 @@ class _CashPaymentSheetState extends State<CashPaymentSheet> with TickerProvider
                 });
                 
                 if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Failed to lock payroll: $e'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
+                  AppSnackBar.showError(context, 'Failed to lock payroll: $e');
                 }
               }
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green,
+              backgroundColor: const Color(0xFF007A3D),
               foregroundColor: Colors.white,
             ),
             child: const Text('Lock Payroll'),
@@ -346,7 +332,7 @@ class _CashPaymentSheetState extends State<CashPaymentSheet> with TickerProvider
               padding: EdgeInsets.all(8.0),
               child: Chip(
                 label: Text('LOCKED', style: TextStyle(color: Colors.white, fontSize: 12)),
-                backgroundColor: Colors.red,
+                backgroundColor: const Color(0xFFB71C1C),
               ),
             ),
           IconButton(
@@ -358,7 +344,7 @@ class _CashPaymentSheetState extends State<CashPaymentSheet> with TickerProvider
         bottom: TabBar(
           controller: _tabController,
           labelColor: Colors.white,
-          unselectedLabelColor: Colors.white70,
+          unselectedLabelColor: const Color(0xB3FFFFFF),
           indicatorColor: Colors.white,
           indicatorWeight: 3,
           tabs: const [
@@ -382,7 +368,7 @@ class _CashPaymentSheetState extends State<CashPaymentSheet> with TickerProvider
         children: [
           Container(
             padding: const EdgeInsets.all(16),
-            color: Colors.blue.shade50,
+            color: const Color(0xFFE8EDF4),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -411,7 +397,7 @@ class _CashPaymentSheetState extends State<CashPaymentSheet> with TickerProvider
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
-                            color: Colors.green,
+                            color: const Color(0xFF007A3D),
                           ),
                         ),
                         const SizedBox(height: 4),
@@ -435,7 +421,7 @@ class _CashPaymentSheetState extends State<CashPaymentSheet> with TickerProvider
                   elevation: 2,
                   child: ListTile(
                     leading: CircleAvatar(
-                      backgroundColor: isSigned ? Colors.green : Colors.grey,
+                      backgroundColor: isSigned ? const Color(0xFF007A3D) : const Color(0xFF9CA3AF),
                       child: Text(
                         '${index + 1}',
                         style: const TextStyle(color: Colors.white),
@@ -453,7 +439,7 @@ class _CashPaymentSheetState extends State<CashPaymentSheet> with TickerProvider
                           Text(
                             'Signed: ${record.signedAt?.toString().split(' ')[0]}',
                             style: const TextStyle(
-                              color: Colors.green,
+                              color: const Color(0xFF007A3D),
                               fontSize: 12,
                             ),
                           ),
@@ -473,7 +459,7 @@ class _CashPaymentSheetState extends State<CashPaymentSheet> with TickerProvider
                         const SizedBox(height: 4),
                         Icon(
                           isSigned ? Icons.check_circle : Icons.edit,
-                          color: isSigned ? Colors.green : Colors.blue,
+                          color: isSigned ? const Color(0xFF007A3D) : const Color(0xFF1E3A5F),
                           size: 20,
                         ),
                       ],
@@ -490,7 +476,7 @@ class _CashPaymentSheetState extends State<CashPaymentSheet> with TickerProvider
               color: Colors.white,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.grey.shade300,
+                  color: const Color(0xFFD1D5DB),
                   blurRadius: 5,
                   offset: const Offset(0, -2),
                 ),
@@ -505,7 +491,7 @@ class _CashPaymentSheetState extends State<CashPaymentSheet> with TickerProvider
                     label: const Text('Complete Payment'),
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
-                      backgroundColor: Colors.green,
+                      backgroundColor: const Color(0xFF007A3D),
                       foregroundColor: Colors.white,
                     ),
                   ),
@@ -542,13 +528,13 @@ class _CashPaymentSheetState extends State<CashPaymentSheet> with TickerProvider
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [Colors.green.shade700, Colors.green.shade500],
+              colors: [const Color(0xFF004A25), const Color(0xFF007A3D)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.green.shade200,
+                color: const Color(0xFF80C4A8),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -575,7 +561,7 @@ class _CashPaymentSheetState extends State<CashPaymentSheet> with TickerProvider
                         widget.period,
                         style: TextStyle(
                           fontSize: 13,
-                          color: Colors.white.withOpacity(0.9),
+                          color: const Color(0xE6FFFFFF),
                         ),
                       ),
                     ],
@@ -595,7 +581,7 @@ class _CashPaymentSheetState extends State<CashPaymentSheet> with TickerProvider
                         'Paid',
                         style: TextStyle(
                           fontSize: 12,
-                          color: Colors.white.withOpacity(0.9),
+                          color: const Color(0xE6FFFFFF),
                         ),
                       ),
                     ],
@@ -611,7 +597,7 @@ class _CashPaymentSheetState extends State<CashPaymentSheet> with TickerProvider
                       amount: paidAmount,
                       icon: Icons.check_circle,
                       color: Colors.white,
-                      backgroundColor: Colors.white.withOpacity(0.2),
+                      backgroundColor: const Color(0x33FFFFFF),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -621,7 +607,7 @@ class _CashPaymentSheetState extends State<CashPaymentSheet> with TickerProvider
                       amount: unpaidAmount,
                       icon: Icons.pending,
                       color: Colors.white,
-                      backgroundColor: Colors.white.withOpacity(0.2),
+                      backgroundColor: const Color(0x33FFFFFF),
                     ),
                   ),
                 ],
@@ -630,13 +616,13 @@ class _CashPaymentSheetState extends State<CashPaymentSheet> with TickerProvider
           ),
         ),
         Container(
-          color: Colors.grey.shade100,
+          color: const Color(0xFFF3F4F6),
           child: TabBar(
             controller: _workTypeTabController,
             isScrollable: true,
-            labelColor: Colors.green.shade700,
-            unselectedLabelColor: Colors.grey.shade600,
-            indicatorColor: Colors.green.shade700,
+            labelColor: const Color(0xFF004A25),
+            unselectedLabelColor: const Color(0xFF6B7280),
+            indicatorColor: const Color(0xFF004A25),
             indicatorWeight: 3,
             labelStyle: const TextStyle(
               fontWeight: FontWeight.bold,
@@ -662,8 +648,8 @@ class _CashPaymentSheetState extends State<CashPaymentSheet> with TickerProvider
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                       decoration: BoxDecoration(
                         color: _selectedWorkType == workType 
-                            ? Colors.green.shade700 
-                            : Colors.grey.shade400,
+                            ? const Color(0xFF004A25) 
+                            : const Color(0xFF9CA3AF),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(
@@ -687,13 +673,13 @@ class _CashPaymentSheetState extends State<CashPaymentSheet> with TickerProvider
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.people_outline, size: 64, color: Colors.grey.shade400),
+                      Icon(Icons.people_outline, size: 64, color: const Color(0xFF9CA3AF)),
                       const SizedBox(height: 16),
                       Text(
                         'No workers in this category',
                         style: TextStyle(
                           fontSize: 16,
-                          color: Colors.grey.shade600,
+                          color: const Color(0xFF6B7280),
                         ),
                       ),
                     ],
@@ -712,18 +698,18 @@ class _CashPaymentSheetState extends State<CashPaymentSheet> with TickerProvider
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                         side: BorderSide(
-                          color: record.isPaid ? Colors.green.shade200 : Colors.grey.shade200,
+                          color: record.isPaid ? const Color(0xFF80C4A8) : const Color(0xFFE5E7EB),
                           width: 1,
                         ),
                       ),
-                      color: record.isPaid ? Colors.green.shade50 : Colors.white,
+                      color: record.isPaid ? const Color(0xFFE8F5EE) : Colors.white,
                       child: ListTile(
                         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                         leading: Stack(
                           children: [
                             CircleAvatar(
                               radius: 24,
-                              backgroundColor: record.isPaid ? Colors.green : Colors.grey.shade600,
+                              backgroundColor: record.isPaid ? const Color(0xFF007A3D) : const Color(0xFF6B7280),
                               child: Text(
                                 '${actualIndex + 1}',
                                 style: const TextStyle(
@@ -745,7 +731,7 @@ class _CashPaymentSheetState extends State<CashPaymentSheet> with TickerProvider
                                   ),
                                   child: Icon(
                                     Icons.check_circle,
-                                    color: Colors.green.shade700,
+                                    color: const Color(0xFF004A25),
                                     size: 16,
                                   ),
                                 ),
@@ -765,11 +751,11 @@ class _CashPaymentSheetState extends State<CashPaymentSheet> with TickerProvider
                             const SizedBox(height: 4),
                             Row(
                               children: [
-                                Icon(Icons.badge, size: 12, color: Colors.grey.shade600),
+                                Icon(Icons.badge, size: 12, color: const Color(0xFF6B7280)),
                                 const SizedBox(width: 4),
                                 Text(
                                   record.employeeId,
-                                  style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
+                                  style: TextStyle(fontSize: 12, color: const Color(0xFF4B5563)),
                                 ),
                               ],
                             ),
@@ -777,12 +763,12 @@ class _CashPaymentSheetState extends State<CashPaymentSheet> with TickerProvider
                               const SizedBox(height: 2),
                               Row(
                                 children: [
-                                  Icon(Icons.access_time, size: 12, color: Colors.green.shade600),
+                                  Icon(Icons.access_time, size: 12, color: const Color(0xFF005C2E)),
                                   const SizedBox(width: 4),
                                   Text(
                                     'Paid: ${record.paidAt?.toString().split(' ')[0]}',
                                     style: TextStyle(
-                                      color: Colors.green.shade700,
+                                      color: const Color(0xFF004A25),
                                       fontSize: 11,
                                       fontWeight: FontWeight.w600,
                                     ),
@@ -804,14 +790,14 @@ class _CashPaymentSheetState extends State<CashPaymentSheet> with TickerProvider
                                   style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
-                                    color: record.isPaid ? Colors.green.shade700 : Colors.black87,
+                                    color: record.isPaid ? const Color(0xFF004A25) : const Color(0xFF1A1A1A),
                                   ),
                                 ),
                                 Text(
                                   'ETB',
                                   style: TextStyle(
                                     fontSize: 11,
-                                    color: Colors.grey.shade600,
+                                    color: const Color(0xFF6B7280),
                                   ),
                                 ),
                               ],
@@ -822,8 +808,8 @@ class _CashPaymentSheetState extends State<CashPaymentSheet> with TickerProvider
                               child: Switch(
                                 value: record.isPaid,
                                 onChanged: _isLocked ? null : (_) => _togglePayment(actualIndex),
-                                activeColor: Colors.green.shade700,
-                                activeTrackColor: Colors.green.shade200,
+                                activeThumbColor: const Color(0xFF004A25),
+                                activeTrackColor: const Color(0xFF80C4A8),
                               ),
                             ),
                           ],
@@ -839,7 +825,7 @@ class _CashPaymentSheetState extends State<CashPaymentSheet> with TickerProvider
             color: Colors.white,
             boxShadow: [
               BoxShadow(
-                color: Colors.grey.shade300,
+                color: const Color(0xFFD1D5DB),
                 blurRadius: 5,
                 offset: const Offset(0, -2),
               ),
@@ -852,13 +838,13 @@ class _CashPaymentSheetState extends State<CashPaymentSheet> with TickerProvider
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
-                  color: Colors.blue.shade50,
+                  color: const Color(0xFFE8EDF4),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.blue.shade200),
+                  border: Border.all(color: const Color(0xFF9AAFCA)),
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.info_outline, size: 20, color: Colors.blue.shade700),
+                    Icon(Icons.info_outline, size: 20, color: const Color(0xFF0A192F)),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
@@ -867,7 +853,7 @@ class _CashPaymentSheetState extends State<CashPaymentSheet> with TickerProvider
                           : 'Payment changes are saved automatically',
                         style: TextStyle(
                           fontSize: 13,
-                          color: Colors.blue.shade700,
+                          color: const Color(0xFF0A192F),
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -878,7 +864,7 @@ class _CashPaymentSheetState extends State<CashPaymentSheet> with TickerProvider
                         height: 16,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.blue.shade700),
+                          valueColor: AlwaysStoppedAnimation<Color>(const Color(0xFF0A192F)),
                         ),
                       ),
                   ],
@@ -894,7 +880,7 @@ class _CashPaymentSheetState extends State<CashPaymentSheet> with TickerProvider
                   label: Text(_isLocked ? 'Payroll Locked' : 'Lock Payroll'),
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
-                    backgroundColor: _isLocked ? Colors.grey : Colors.green,
+                    backgroundColor: _isLocked ? const Color(0xFF9CA3AF) : const Color(0xFF007A3D),
                     foregroundColor: Colors.white,
                   ),
                 ),
@@ -929,7 +915,7 @@ class _AmountCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: backgroundColor,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: Color.fromARGB(77, color.red, color.green, color.blue)),
       ),
       child: Row(
         children: [
@@ -942,7 +928,7 @@ class _AmountCard extends StatelessWidget {
                 Text(
                   title,
                   style: TextStyle(
-                    color: color.withOpacity(0.9),
+                    color: Color.fromARGB(230, color.red, color.green, color.blue),
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
                   ),
@@ -999,13 +985,13 @@ class _SignatureDialog extends StatelessWidget {
               style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: Colors.green,
+                color: const Color(0xFF007A3D),
               ),
             ),
             const SizedBox(height: 24),
             Container(
               decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey),
+                border: Border.all(color: const Color(0xFF9CA3AF)),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: ClipRRect(
@@ -1013,7 +999,7 @@ class _SignatureDialog extends StatelessWidget {
                 child: Signature(
                   controller: controller,
                   height: 200,
-                  backgroundColor: Colors.grey.shade100,
+                  backgroundColor: const Color(0xFFF3F4F6),
                 ),
               ),
             ),
@@ -1031,7 +1017,7 @@ class _SignatureDialog extends StatelessWidget {
                   icon: const Icon(Icons.check),
                   label: const Text('Save'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
+                    backgroundColor: const Color(0xFF007A3D),
                     foregroundColor: Colors.white,
                   ),
                 ),

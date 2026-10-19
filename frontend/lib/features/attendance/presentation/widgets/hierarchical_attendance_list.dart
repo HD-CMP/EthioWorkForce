@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 import '../../domain/entities/attendance.dart';
 import '../../../workers/domain/entities/worker.dart';
@@ -152,11 +152,11 @@ class _HierarchicalAttendanceListState extends State<HierarchicalAttendanceList>
         .where((a) => a.workerId == worker.id)
         .toList();
         
-    print("DEBUG: _showMultiDayVerificationSelector called for worker ${worker.id}");
-    print("DEBUG: widget.attendances length = ${widget.attendances.length}");
-    print("DEBUG: workerAttendances length = ${workerAttendances.length}");
+    debugPrint("DEBUG: _showMultiDayVerificationSelector called for worker ${worker.id}");
+    debugPrint("DEBUG: widget.attendances length = ${widget.attendances.length}");
+    debugPrint("DEBUG: workerAttendances length = ${workerAttendances.length}");
     for (var a in workerAttendances) {
-      print("DEBUG: Attendance found for date ${a.attendanceDate} (isVerified: ${a.isVerified})");
+      debugPrint("DEBUG: Attendance found for date ${a.attendanceDate} (isVerified: ${a.isVerified})");
     }
 
     showModalBottomSheet(
@@ -188,10 +188,10 @@ class _HierarchicalAttendanceListState extends State<HierarchicalAttendanceList>
         .where((o) => o.workerId == worker.id)
         .toList();
     
-    print('📂 Opening overtime modal for worker ${worker.id}');
-    print('📂 Worker overtimes passed to modal: ${workerOvertimes.length}');
+    debugPrint('📂 Opening overtime modal for worker ${worker.id}');
+    debugPrint('📂 Worker overtimes passed to modal: ${workerOvertimes.length}');
     for (final o in workerOvertimes.where((o) => o.hours > 0)) {
-      print('   📂 Overtime: ${o.overtimeDate} = ${o.hours}h');
+      debugPrint('   📂 Overtime: ${o.overtimeDate} = ${o.hours}h');
     }
 
     showModalBottomSheet(
@@ -224,19 +224,19 @@ class _HierarchicalAttendanceListState extends State<HierarchicalAttendanceList>
   Color _getStatusColor(String status) {
     switch (status) {
       case 'present':
-        return Colors.green;
+        return const Color(0xFF007A3D);
       case 'absent':
-        return Colors.red;
+        return const Color(0xFFB71C1C);
       case 'late':
-        return Colors.orange;
+        return const Color(0xFFE65100);
       case 'excused':
-        return Colors.blue;
+        return const Color(0xFF1E3A5F);
       case 'leave':
-        return Colors.purple;
+        return const Color(0xFF0A192F);
       case 'half_day':
-        return Colors.amber;
+        return const Color(0xFFE65100);
       default:
-        return Colors.grey;
+        return const Color(0xFF9CA3AF);
     }
   }
 
@@ -270,13 +270,13 @@ class _HierarchicalAttendanceListState extends State<HierarchicalAttendanceList>
   Color _getRoleBadgeColor(String roleLabel) {
     switch (roleLabel) {
       case 'Site Manager':
-        return Colors.blue;
+        return const Color(0xFF1E3A5F);
       case 'Supervisor':
-        return Colors.green;
+        return const Color(0xFF007A3D);
       case 'Engineer':
-        return Colors.purple;
+        return const Color(0xFF0A192F);
       default:
-        return Colors.grey;
+        return const Color(0xFF9CA3AF);
     }
   }
 
@@ -348,14 +348,14 @@ class _HierarchicalAttendanceListState extends State<HierarchicalAttendanceList>
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [Colors.teal[700]!, Colors.teal[500]!],
+            colors: [const Color(0xFF005C2E), const Color(0xFF007A3D)],
             begin: Alignment.centerLeft,
             end: Alignment.centerRight,
           ),
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: Colors.teal.withOpacity(0.3),
+              color: const Color(0x4D007A3D),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -372,7 +372,7 @@ class _HierarchicalAttendanceListState extends State<HierarchicalAttendanceList>
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
+                color: const Color(0x33FFFFFF),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Icon(
@@ -401,7 +401,7 @@ class _HierarchicalAttendanceListState extends State<HierarchicalAttendanceList>
                       const SizedBox(width: 8),
                       Icon(
                         Icons.supervisor_account,
-                        color: Colors.white.withOpacity(0.9),
+                        color: const Color(0xE6FFFFFF),
                         size: 14,
                       ),
                       const SizedBox(width: 4),
@@ -409,7 +409,7 @@ class _HierarchicalAttendanceListState extends State<HierarchicalAttendanceList>
                         child: Text(
                           managerName,
                           style: TextStyle(
-                            color: Colors.white.withOpacity(0.9),
+                            color: const Color(0xE6FFFFFF),
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
                           ),
@@ -423,7 +423,7 @@ class _HierarchicalAttendanceListState extends State<HierarchicalAttendanceList>
                 Text(
                   '$workerCount ${workerCount == 1 ? 'worker' : 'workers'}',
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.9),
+                    color: const Color(0xE6FFFFFF),
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
                   ),
@@ -440,7 +440,7 @@ class _HierarchicalAttendanceListState extends State<HierarchicalAttendanceList>
             child: Text(
               '$workerCount',
               style: TextStyle(
-                color: Colors.teal[700],
+                color: const Color(0xFF005C2E),
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
               ),
@@ -459,16 +459,16 @@ class _HierarchicalAttendanceListState extends State<HierarchicalAttendanceList>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.people_outline, size: 80, color: Colors.grey[300]),
+            Icon(Icons.people_outline, size: 80, color: const Color(0xFFD1D5DB)),
             const SizedBox(height: 16),
             Text(
               'No workers registered',
-              style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+              style: TextStyle(fontSize: 16, color: const Color(0xFF6B7280)),
             ),
             const SizedBox(height: 8),
             Text(
               'Add workers to this site first',
-              style: TextStyle(fontSize: 13, color: Colors.grey[500]),
+              style: TextStyle(fontSize: 13, color: const Color(0xFF9CA3AF)),
             ),
           ],
         ),
@@ -518,10 +518,10 @@ class _HierarchicalAttendanceListState extends State<HierarchicalAttendanceList>
           side: isSelected
               ? BorderSide(color: Theme.of(context).primaryColor, width: 2)
               : isManager
-                  ? BorderSide(color: Colors.grey[300]!, width: 1.5)
+                  ? BorderSide(color: const Color(0xFFD1D5DB), width: 1.5)
                   : BorderSide.none,
         ),
-        color: isManager ? Colors.blue[50] : Colors.white,
+        color: isManager ? const Color(0xFFE8EDF4) : Colors.white,
         child: ListTile(
           contentPadding: const EdgeInsets.only(
             left: 12,
@@ -538,7 +538,7 @@ class _HierarchicalAttendanceListState extends State<HierarchicalAttendanceList>
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
-                color: Colors.grey[700],
+                color: const Color(0xFF374151),
               ),
             ),
           ),
@@ -564,14 +564,14 @@ class _HierarchicalAttendanceListState extends State<HierarchicalAttendanceList>
                       child: Container(
                         padding: const EdgeInsets.all(4),
                         decoration: BoxDecoration(
-                          color: Colors.blue[50],
+                          color: const Color(0xFFE8EDF4),
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.blue[200]!, width: 1),
+                          border: Border.all(color: const Color(0xFF90CAF9), width: 1),
                         ),
                         child: Icon(
                           Icons.calendar_month,
                           size: 18,
-                          color: Colors.blue[700],
+                          color: const Color(0xFF0A192F),
                         ),
                       ),
                     ),
@@ -584,14 +584,14 @@ class _HierarchicalAttendanceListState extends State<HierarchicalAttendanceList>
                       child: Container(
                         padding: const EdgeInsets.all(4),
                         decoration: BoxDecoration(
-                          color: Colors.green[50],
+                          color: const Color(0xFFE8F5EE),
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.green[200]!, width: 1),
+                          border: Border.all(color: const Color(0xFFB2DFCA), width: 1),
                         ),
                         child: Icon(
                           Icons.verified_outlined,
                           size: 18,
-                          color: Colors.green[700],
+                          color: const Color(0xFF005C2E),
                         ),
                       ),
                     ),
@@ -604,14 +604,14 @@ class _HierarchicalAttendanceListState extends State<HierarchicalAttendanceList>
                       child: Container(
                         padding: const EdgeInsets.all(4),
                         decoration: BoxDecoration(
-                          color: Colors.orange[50],
+                          color: const Color(0xFFFFF3E0),
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.orange[200]!, width: 1),
+                          border: Border.all(color: const Color(0xFFFFCC80), width: 1),
                         ),
                         child: Icon(
                           Icons.access_time,
                           size: 18,
-                          color: Colors.orange[700],
+                          color: const Color(0xFFE65100),
                         ),
                       ),
                     ),
@@ -624,7 +624,7 @@ class _HierarchicalAttendanceListState extends State<HierarchicalAttendanceList>
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                                   decoration: BoxDecoration(
-                                    color: _getStatusColor(todayAttendance.status).withOpacity(0.15),
+                                    color: Color.fromARGB(38, _getStatusColor(todayAttendance.status).red, _getStatusColor(todayAttendance.status).green, _getStatusColor(todayAttendance.status).blue),
                                     borderRadius: BorderRadius.circular(8),
                                     border: Border.all(color: _getStatusColor(todayAttendance.status), width: 1),
                                   ),
@@ -647,7 +647,7 @@ class _HierarchicalAttendanceListState extends State<HierarchicalAttendanceList>
                                       ),
                                       if (todayAttendance.isVerified) ...[
                                         const SizedBox(width: 4),
-                                        const Icon(Icons.verified, size: 12, color: Colors.green),
+                                        const Icon(Icons.verified, size: 12, color: const Color(0xFF007A3D)),
                                       ],
                                     ],
                                   ),
@@ -675,7 +675,7 @@ class _HierarchicalAttendanceListState extends State<HierarchicalAttendanceList>
                   Text(
                     'ID: ${worker.employeeId}',
                     style: TextStyle(
-                      color: Colors.grey[600],
+                      color: const Color(0xFF6B7280),
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
                     ),
@@ -688,7 +688,7 @@ class _HierarchicalAttendanceListState extends State<HierarchicalAttendanceList>
             padding: const EdgeInsets.only(top: 6),
             child: Text(
               '${worker.workType ?? 'No work type'}${worker.phoneNumber != null ? ' • ${worker.phoneNumber}' : ''}',
-              style: TextStyle(color: Colors.grey[600], fontSize: 13),
+              style: TextStyle(color: const Color(0xFF6B7280), fontSize: 13),
             ),
           ),
           ),

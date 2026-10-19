@@ -6,6 +6,7 @@ import '../../domain/entities/payment_period.dart';
 import '../../../workers/domain/entities/worker.dart';
 import '../../data/datasources/attendance_remote_datasource.dart';
 import '../../../../core/utils/ethiopian_calendar.dart';
+import '../../../../core/utils/app_snackbar.dart';
 
 class MultiDayAttendanceSelector extends StatefulWidget {
   final Worker worker;
@@ -115,19 +116,19 @@ class _MultiDayAttendanceSelectorState extends State<MultiDayAttendanceSelector>
   Color _getStatusColor(String status) {
     switch (status) {
       case 'present':
-        return Colors.green;
+        return const Color(0xFF007A3D);
       case 'absent':
-        return Colors.red;
+        return const Color(0xFFB71C1C);
       case 'late':
-        return Colors.orange;
+        return const Color(0xFFE65100);
       case 'excused':
-        return Colors.blue;
+        return const Color(0xFF1E3A5F);
       case 'leave':
-        return Colors.purple;
+        return const Color(0xFF0A192F);
       case 'half_day':
-        return Colors.amber;
+        return const Color(0xFFE65100);
       default:
-        return Colors.grey;
+        return const Color(0xFF9CA3AF);
     }
   }
 
@@ -172,17 +173,12 @@ class _MultiDayAttendanceSelectorState extends State<MultiDayAttendanceSelector>
     
     final futureDates = _selectedDates.where((date) => date.isAfter(todayNormalized)).toList();
     if (futureDates.isNotEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            widget.mode == 'verify'
-                ? 'Future dates (grayed out) cannot be selected. Attendance can only be verified up to today for payroll accuracy.'
-                : 'Future dates (grayed out) cannot be selected. Attendance can only be marked up to today for payroll accuracy.',
-          ),
-          backgroundColor: Colors.orange,
-          behavior: SnackBarBehavior.floating,
-          duration: const Duration(seconds: 4),
-        ),
+      AppSnackBar.showWarning(
+        context,
+        widget.mode == 'verify'
+            ? 'Future dates (grayed out) cannot be selected. Attendance can only be verified up to today for payroll accuracy.'
+            : 'Future dates (grayed out) cannot be selected. Attendance can only be marked up to today for payroll accuracy.',
+        duration: const Duration(seconds: 4),
       );
       return false;
     }
@@ -205,8 +201,8 @@ class _MultiDayAttendanceSelectorState extends State<MultiDayAttendanceSelector>
                   ? Icons.delete_outline 
                   : (widget.mode == 'verify' ? Icons.verified : Icons.warning_amber_rounded),
               color: _isUnmarkMode 
-                  ? Colors.red[700] 
-                  : (widget.mode == 'verify' ? Colors.green[700] : Colors.orange[700]),
+                  ? const Color(0xFFB71C1C) 
+                  : (widget.mode == 'verify' ? const Color(0xFF005C2E) : const Color(0xFFE65100)),
               size: 28,
             ),
             const SizedBox(width: 12),
@@ -227,23 +223,23 @@ class _MultiDayAttendanceSelectorState extends State<MultiDayAttendanceSelector>
                       : 'You are about to mark attendance for:',
               style: TextStyle(
                 fontSize: 15,
-                color: Colors.grey[800],
+                color: const Color(0xFF1F2937),
               ),
             ),
             const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.grey[100],
+                color: const Color(0xFFF3F4F6),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.grey[300]!),
+                border: Border.all(color: const Color(0xFFD1D5DB)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.person, size: 18, color: Colors.grey[700]),
+                      Icon(Icons.person, size: 18, color: const Color(0xFF374151)),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
@@ -259,7 +255,7 @@ class _MultiDayAttendanceSelectorState extends State<MultiDayAttendanceSelector>
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      Icon(Icons.calendar_today, size: 18, color: Colors.grey[700]),
+                      Icon(Icons.calendar_today, size: 18, color: const Color(0xFF374151)),
                       const SizedBox(width: 8),
                       Text(
                         '${_selectedDates.length} day${_selectedDates.length != 1 ? 's' : ''}',
@@ -296,13 +292,13 @@ class _MultiDayAttendanceSelectorState extends State<MultiDayAttendanceSelector>
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
                 color: _isUnmarkMode 
-                    ? Colors.red[50] 
-                    : (widget.mode == 'verify' ? Colors.green[50] : Colors.red[50]),
+                    ? const Color(0xFFFFEBEE) 
+                    : (widget.mode == 'verify' ? const Color(0xFFE8F5EE) : const Color(0xFFFFEBEE)),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
                   color: _isUnmarkMode 
-                      ? Colors.red[200]! 
-                      : (widget.mode == 'verify' ? Colors.green[200]! : Colors.red[200]!),
+                      ? const Color(0xFFEF9A9A) 
+                      : (widget.mode == 'verify' ? const Color(0xFFB2DFCA) : const Color(0xFFEF9A9A)),
                 ),
               ),
               child: Row(
@@ -310,8 +306,8 @@ class _MultiDayAttendanceSelectorState extends State<MultiDayAttendanceSelector>
                   Icon(
                     Icons.info_outline,
                     color: _isUnmarkMode 
-                        ? Colors.red[700] 
-                        : (widget.mode == 'verify' ? Colors.green[700] : Colors.red[700]),
+                        ? const Color(0xFFB71C1C) 
+                        : (widget.mode == 'verify' ? const Color(0xFF005C2E) : const Color(0xFFB71C1C)),
                     size: 20,
                   ),
                   const SizedBox(width: 8),
@@ -325,8 +321,8 @@ class _MultiDayAttendanceSelectorState extends State<MultiDayAttendanceSelector>
                       style: TextStyle(
                         fontSize: 12,
                         color: _isUnmarkMode 
-                            ? Colors.red[900] 
-                            : (widget.mode == 'verify' ? Colors.green[900] : Colors.red[900]),
+                            ? const Color(0xFF7F0000) 
+                            : (widget.mode == 'verify' ? const Color(0xFF003D1F) : const Color(0xFF7F0000)),
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -453,7 +449,7 @@ class _MultiDayAttendanceSelectorState extends State<MultiDayAttendanceSelector>
                       widget.worker.fullName,
                       style: TextStyle(
                         fontSize: 16,
-                        color: Colors.grey[700],
+                        color: const Color(0xFF374151),
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -462,7 +458,7 @@ class _MultiDayAttendanceSelectorState extends State<MultiDayAttendanceSelector>
                       'ID: ${widget.worker.employeeId} • ${widget.worker.workType ?? 'No work type'}',
                       style: TextStyle(
                         fontSize: 13,
-                        color: Colors.grey[600],
+                        color: const Color(0xFF6B7280),
                       ),
                     ),
                   ],
@@ -491,7 +487,7 @@ class _MultiDayAttendanceSelectorState extends State<MultiDayAttendanceSelector>
               margin: const EdgeInsets.only(bottom: 12),
               padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
-                color: Colors.grey[200],
+                color: const Color(0xFFE5E7EB),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Row(
@@ -510,7 +506,7 @@ class _MultiDayAttendanceSelectorState extends State<MultiDayAttendanceSelector>
                           color: !_isUnmarkMode ? Colors.white : Colors.transparent,
                           borderRadius: BorderRadius.circular(10),
                           boxShadow: !_isUnmarkMode
-                              ? [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 4, offset: Offset(0, 2))]
+                              ? [BoxShadow(color: const Color(0x1A000000), blurRadius: 4, offset: Offset(0, 2))]
                               : null,
                         ),
                         child: Row(
@@ -519,7 +515,7 @@ class _MultiDayAttendanceSelectorState extends State<MultiDayAttendanceSelector>
                             Icon(
                               Icons.add_circle_outline,
                               size: 18,
-                              color: !_isUnmarkMode ? Colors.green : Colors.grey[600],
+                              color: !_isUnmarkMode ? const Color(0xFF007A3D) : const Color(0xFF6B7280),
                             ),
                             const SizedBox(width: 6),
                             Text(
@@ -527,7 +523,7 @@ class _MultiDayAttendanceSelectorState extends State<MultiDayAttendanceSelector>
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: !_isUnmarkMode ? FontWeight.bold : FontWeight.normal,
-                                color: !_isUnmarkMode ? Colors.green : Colors.grey[600],
+                                color: !_isUnmarkMode ? const Color(0xFF007A3D) : const Color(0xFF6B7280),
                               ),
                             ),
                           ],
@@ -550,7 +546,7 @@ class _MultiDayAttendanceSelectorState extends State<MultiDayAttendanceSelector>
                           color: _isUnmarkMode ? Colors.white : Colors.transparent,
                           borderRadius: BorderRadius.circular(10),
                           boxShadow: _isUnmarkMode
-                              ? [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 4, offset: Offset(0, 2))]
+                              ? [BoxShadow(color: const Color(0x1A000000), blurRadius: 4, offset: Offset(0, 2))]
                               : null,
                         ),
                         child: Row(
@@ -559,7 +555,7 @@ class _MultiDayAttendanceSelectorState extends State<MultiDayAttendanceSelector>
                             Icon(
                               Icons.remove_circle_outline,
                               size: 18,
-                              color: _isUnmarkMode ? Colors.red : Colors.grey[600],
+                              color: _isUnmarkMode ? const Color(0xFFB71C1C) : const Color(0xFF6B7280),
                             ),
                             const SizedBox(width: 6),
                             Text(
@@ -567,7 +563,7 @@ class _MultiDayAttendanceSelectorState extends State<MultiDayAttendanceSelector>
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: _isUnmarkMode ? FontWeight.bold : FontWeight.normal,
-                                color: _isUnmarkMode ? Colors.red : Colors.grey[600],
+                                color: _isUnmarkMode ? const Color(0xFFB71C1C) : const Color(0xFF6B7280),
                               ),
                             ),
                           ],
@@ -583,13 +579,13 @@ class _MultiDayAttendanceSelectorState extends State<MultiDayAttendanceSelector>
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: _isUnmarkMode ? Colors.red[50] : Colors.blue[50],
+              color: _isUnmarkMode ? const Color(0xFFFFEBEE) : const Color(0xFFE8EDF4),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: _isUnmarkMode ? Colors.red[200]! : Colors.blue[200]!, width: 1),
+              border: Border.all(color: _isUnmarkMode ? const Color(0xFFEF9A9A) : const Color(0xFF90CAF9), width: 1),
             ),
             child: Row(
               children: [
-                Icon(Icons.info_outline, color: _isUnmarkMode ? Colors.red[700] : Colors.blue[700], size: 20),
+                Icon(Icons.info_outline, color: _isUnmarkMode ? const Color(0xFFB71C1C) : const Color(0xFF0A192F), size: 20),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
@@ -600,7 +596,7 @@ class _MultiDayAttendanceSelectorState extends State<MultiDayAttendanceSelector>
                             : 'Showing $_paymentPeriodDays-day payment period. Select unmarked dates to mark attendance.',
                     style: TextStyle(
                       fontSize: 13,
-                      color: _isUnmarkMode ? Colors.red[900] : Colors.blue[900],
+                      color: _isUnmarkMode ? const Color(0xFF7F0000) : const Color(0xFF0A192F),
                     ),
                   ),
                 ),
@@ -651,7 +647,7 @@ class _MultiDayAttendanceSelectorState extends State<MultiDayAttendanceSelector>
           
           Container(
             decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey[300]!),
+              border: Border.all(color: const Color(0xFFD1D5DB)),
               borderRadius: BorderRadius.circular(12),
             ),
             child: _paymentPeriodDays == 0
@@ -664,7 +660,7 @@ class _MultiDayAttendanceSelectorState extends State<MultiDayAttendanceSelector>
                           Icon(
                             Icons.event_busy,
                             size: 48,
-                            color: Colors.grey[400],
+                            color: const Color(0xFF9CA3AF),
                           ),
                           const SizedBox(height: 12),
                           Text(
@@ -672,7 +668,7 @@ class _MultiDayAttendanceSelectorState extends State<MultiDayAttendanceSelector>
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
-                              color: Colors.grey[600],
+                              color: const Color(0xFF6B7280),
                             ),
                           ),
                           const SizedBox(height: 4),
@@ -680,7 +676,7 @@ class _MultiDayAttendanceSelectorState extends State<MultiDayAttendanceSelector>
                             'No payment period configured',
                             style: TextStyle(
                               fontSize: 13,
-                              color: Colors.grey[500],
+                              color: const Color(0xFF9CA3AF),
                             ),
                           ),
                         ],
@@ -734,12 +730,12 @@ class _MultiDayAttendanceSelectorState extends State<MultiDayAttendanceSelector>
               spacing: 8,
               runSpacing: 8,
               children: [
-                _buildStatusChip('present', 'Present', Icons.check_circle, Colors.green),
-                _buildStatusChip('absent', 'Absent', Icons.cancel, Colors.red),
-                _buildStatusChip('late', 'Late', Icons.access_time, Colors.orange),
-                _buildStatusChip('excused', 'Excused', Icons.event_available, Colors.blue),
-                _buildStatusChip('leave', 'Leave', Icons.beach_access, Colors.purple),
-                _buildStatusChip('half_day', 'Half Day', Icons.schedule, Colors.amber),
+                _buildStatusChip('present', 'Present', Icons.check_circle, const Color(0xFF007A3D)),
+                _buildStatusChip('absent', 'Absent', Icons.cancel, const Color(0xFFB71C1C)),
+                _buildStatusChip('late', 'Late', Icons.access_time, const Color(0xFFE65100)),
+                _buildStatusChip('excused', 'Excused', Icons.event_available, const Color(0xFF1E3A5F)),
+                _buildStatusChip('leave', 'Leave', Icons.beach_access, const Color(0xFF0A192F)),
+                _buildStatusChip('half_day', 'Half Day', Icons.schedule, const Color(0xFFE65100)),
               ],
             ),
             const SizedBox(height: 20),
@@ -773,11 +769,11 @@ class _MultiDayAttendanceSelectorState extends State<MultiDayAttendanceSelector>
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     backgroundColor: _isUnmarkMode 
-                        ? Colors.red 
-                        : (widget.mode == 'verify' ? Colors.green : _getStatusColor(_selectedStatus)),
+                        ? const Color(0xFFB71C1C) 
+                        : (widget.mode == 'verify' ? const Color(0xFF007A3D) : _getStatusColor(_selectedStatus)),
                     foregroundColor: Colors.white,
-                    disabledBackgroundColor: Colors.grey[300],
-                    disabledForegroundColor: Colors.grey[600],
+                    disabledBackgroundColor: const Color(0xFFD1D5DB),
+                    disabledForegroundColor: const Color(0xFF6B7280),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -826,9 +822,9 @@ class _MultiDayAttendanceSelectorState extends State<MultiDayAttendanceSelector>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.grey[50],
+        color: const Color(0xFFF9FAFB),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[300]!),
+        border: Border.all(color: const Color(0xFFD1D5DB)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -858,7 +854,7 @@ class _MultiDayAttendanceSelectorState extends State<MultiDayAttendanceSelector>
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: Colors.grey[800],
+                    color: const Color(0xFF1F2937),
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -884,8 +880,8 @@ class _MultiDayAttendanceSelectorState extends State<MultiDayAttendanceSelector>
             icon: const Icon(Icons.chevron_right),
             tooltip: 'Next Period',
             style: IconButton.styleFrom(
-              backgroundColor: canGoNext ? Colors.white : Colors.grey[200],
-              foregroundColor: canGoNext ? Theme.of(context).primaryColor : Colors.grey[400],
+              backgroundColor: canGoNext ? Colors.white : const Color(0xFFE5E7EB),
+              foregroundColor: canGoNext ? Theme.of(context).primaryColor : const Color(0xFF9CA3AF),
               padding: const EdgeInsets.all(12),
             ),
           ),
@@ -921,37 +917,37 @@ class _MultiDayAttendanceSelectorState extends State<MultiDayAttendanceSelector>
             : (!hasAttendance && !isFutureDate);
 
     if (isFutureDate) {
-      borderColor = Colors.grey[200]!;
-      backgroundColor = Colors.grey[100]!;
-      textColor = Colors.grey[400]!;
+      borderColor = const Color(0xFFE5E7EB);
+      backgroundColor = const Color(0xFFF3F4F6);
+      textColor = const Color(0xFF9CA3AF);
     } else if (widget.mode == 'verify' && hasAttendance && attendance != null) {
       if (attendance.isVerified) {
-        borderColor = Colors.green[700]!;
-        backgroundColor = Colors.green[50]!;
-        textColor = Colors.green[800]!;
+        borderColor = const Color(0xFF005C2E);
+        backgroundColor = const Color(0xFFE8F5EE);
+        textColor = const Color(0xFF005C2E);
       } else if (isSelected) {
-        borderColor = Colors.blue[700]!;
-        backgroundColor = Colors.blue[100]!;
-        textColor = Colors.blue[900]!;
+        borderColor = const Color(0xFF0A192F);
+        backgroundColor = const Color(0xFFE8EDF4);
+        textColor = const Color(0xFF0A192F);
       } else {
         final statusColor = _getStatusColor(attendance.status);
         borderColor = statusColor;
-        backgroundColor = statusColor.withOpacity(0.15);
-        textColor = statusColor.withOpacity(0.9);
+        backgroundColor = Color.fromARGB(38, statusColor.red, statusColor.green, statusColor.blue);
+        textColor = Color.fromARGB(230, statusColor.red, statusColor.green, statusColor.blue);
       }
     } else if (hasAttendance) {
       final statusColor = _getStatusColor(attendance!.status);
       borderColor = statusColor;
-      backgroundColor = statusColor.withOpacity(0.15);
-      textColor = statusColor.withOpacity(0.9);
+      backgroundColor = Color.fromARGB(38, statusColor.red, statusColor.green, statusColor.blue);
+      textColor = Color.fromARGB(230, statusColor.red, statusColor.green, statusColor.blue);
     } else if (isSelected) {
       borderColor = Theme.of(context).primaryColor;
-      backgroundColor = Theme.of(context).primaryColor.withOpacity(0.1);
+      backgroundColor = const Color(0x1A007A3D);
       textColor = Theme.of(context).primaryColor;
     } else {
-      borderColor = Colors.grey[300]!;
+      borderColor = const Color(0xFFD1D5DB);
       backgroundColor = Colors.white;
-      textColor = Colors.grey[800]!;
+      textColor = const Color(0xFF1F2937);
     }
 
     final dateStr = _showEthiopianCalendar
@@ -1002,7 +998,7 @@ class _MultiDayAttendanceSelectorState extends State<MultiDayAttendanceSelector>
             boxShadow: isSelected 
                 ? [
                     BoxShadow(
-                      color: borderColor.withOpacity(0.4),
+                      color: Color.fromARGB(102, borderColor.red, borderColor.green, borderColor.blue),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -1018,7 +1014,7 @@ class _MultiDayAttendanceSelectorState extends State<MultiDayAttendanceSelector>
                   height: 6,
                   margin: const EdgeInsets.only(bottom: 2),
                   decoration: BoxDecoration(
-                    color: Colors.orange,
+                    color: const Color(0xFFE65100),
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -1027,7 +1023,7 @@ class _MultiDayAttendanceSelectorState extends State<MultiDayAttendanceSelector>
                 style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.w600,
-                  color: textColor.withOpacity(0.7),
+                  color: Color.fromARGB(179, textColor.red, textColor.green, textColor.blue),
                 ),
               ),
               const SizedBox(height: 2),
@@ -1098,11 +1094,11 @@ class _MultiDayAttendanceSelectorState extends State<MultiDayAttendanceSelector>
           _selectedStatus = status;
         });
       },
-      backgroundColor: color.withOpacity(0.1),
+      backgroundColor: Color.fromARGB(26, color.red, color.green, color.blue),
       selectedColor: color,
       checkmarkColor: Colors.white,
       side: BorderSide(
-        color: isSelected ? color : color.withOpacity(0.3),
+        color: isSelected ? color : Color.fromARGB(77, color.red, color.green, color.blue),
         width: 1.5,
       ),
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),

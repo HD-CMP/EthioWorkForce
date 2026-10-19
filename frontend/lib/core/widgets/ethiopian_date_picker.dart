@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../utils/ethiopian_calendar.dart';
 
@@ -231,7 +231,7 @@ class _EthiopianDatePickerDialogState extends State<_EthiopianDatePickerDialog> 
                 Text(
                   'Select date',
                   style: TextStyle(
-                    color: colorScheme.onPrimary.withOpacity(0.8),
+                    color: colorScheme.onPrimary.withValues(alpha: 0.8),
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
                   ),
@@ -471,7 +471,7 @@ class _EthiopianDatePickerDialogState extends State<_EthiopianDatePickerDialog> 
                               color: isSelected
                                   ? colorScheme.onPrimary
                                   : isDisabled
-                                      ? colorScheme.onSurface.withOpacity(0.38)
+                                      ? colorScheme.onSurface.withValues(alpha: 0.38)
                                       : isToday
                                           ? colorScheme.primary
                                           : colorScheme.onSurface,
@@ -593,9 +593,9 @@ class _EthiopianDatePickerDialogState extends State<_EthiopianDatePickerDialog> 
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: colorScheme.surfaceVariant.withOpacity(0.5),
+              color: colorScheme.surfaceVariant.withValues(alpha: 0.5),
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: colorScheme.outline.withOpacity(0.5)),
+              border: Border.all(color: colorScheme.outline.withValues(alpha: 0.5)),
             ),
             child: Row(
               children: [

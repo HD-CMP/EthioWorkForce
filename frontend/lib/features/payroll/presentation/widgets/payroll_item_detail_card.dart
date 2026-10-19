@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../../domain/entities/payroll_item.dart';
 
 class PayrollItemDetailCard extends StatelessWidget {
@@ -21,7 +21,7 @@ class PayrollItemDetailCard extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [Colors.blue[700]!, Colors.blue[500]!],
+                colors: [const Color(0xFF0A192F), const Color(0xFF1E3A5F)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -49,7 +49,7 @@ class PayrollItemDetailCard extends StatelessWidget {
                       Text(
                         'ID: ${item.employeeId}',
                         style: const TextStyle(
-                          color: Colors.white70,
+                          color: const Color(0xB3FFFFFF),
                           fontSize: 14,
                         ),
                       ),
@@ -58,7 +58,7 @@ class PayrollItemDetailCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: const Color(0x33FFFFFF),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Column(
@@ -66,7 +66,7 @@ class PayrollItemDetailCard extends StatelessWidget {
                       const Text(
                         'Net Salary',
                         style: TextStyle(
-                          color: Colors.white70,
+                          color: const Color(0xB3FFFFFF),
                           fontSize: 11,
                         ),
                       ),
@@ -94,7 +94,7 @@ class PayrollItemDetailCard extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: Colors.green,
+                    color: const Color(0xFF007A3D),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -108,36 +108,36 @@ class PayrollItemDetailCard extends StatelessWidget {
                     label: 'Overtime Pay (Attendance)',
                     value: item.overtimePay!,
                     icon: Icons.access_time,
-                    color: Colors.blue,
+                    color: const Color(0xFF1E3A5F),
                   ),
                 if (item.allocatedOvertimePay != null && item.allocatedOvertimePay! > 0)
                   _DetailRow(
                     label: 'Allocated Overtime Pay',
                     value: item.allocatedOvertimePay!,
                     icon: Icons.schedule,
-                    color: Colors.purple,
+                    color: const Color(0xFF0A192F),
                   ),
                 if ((item.overtimePay ?? 0) > 0 || (item.allocatedOvertimePay ?? 0) > 0)
                   Container(
                     margin: const EdgeInsets.only(top: 8, bottom: 8),
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.blue.shade50,
+                      color: const Color(0xFFE8EDF4),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.blue.shade200),
+                      border: Border.all(color: const Color(0xFF9AAFCA)),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Row(
                           children: [
-                            Icon(Icons.calculate, color: Colors.blue[700], size: 20),
+                            Icon(Icons.calculate, color: const Color(0xFF0A192F), size: 20),
                             const SizedBox(width: 8),
                             Text(
                               'Total Overtime',
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
-                                color: Colors.blue[900],
+                                color: const Color(0xFF0A192F),
                               ),
                             ),
                           ],
@@ -147,7 +147,7 @@ class PayrollItemDetailCard extends StatelessWidget {
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 16,
-                            color: Colors.blue[800],
+                            color: const Color(0xFF0A192F),
                           ),
                         ),
                       ],
@@ -175,7 +175,7 @@ class PayrollItemDetailCard extends StatelessWidget {
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: Colors.green,
+                        color: const Color(0xFF007A3D),
                       ),
                     ),
                   ],
@@ -186,7 +186,7 @@ class PayrollItemDetailCard extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: Colors.red,
+                    color: const Color(0xFFB71C1C),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -216,17 +216,17 @@ class PayrollItemDetailCard extends StatelessWidget {
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      colors: [Colors.green[50]!, Colors.green[100]!],
+                      colors: [const Color(0xFFE8F5EE), const Color(0xFFE8F5EE)],
                     ),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.green[300]!),
+                    border: Border.all(color: const Color(0xFF66B28A)),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Row(
                         children: [
-                          Icon(Icons.payments, color: Colors.green[800], size: 24),
+                          Icon(Icons.payments, color: const Color(0xFF005C2E), size: 24),
                           const SizedBox(width: 12),
                           const Text(
                             'Net Salary',
@@ -242,7 +242,7 @@ class PayrollItemDetailCard extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
-                          color: Colors.green[800],
+                          color: const Color(0xFF005C2E),
                         ),
                       ),
                     ],
@@ -252,19 +252,19 @@ class PayrollItemDetailCard extends StatelessWidget {
                   const SizedBox(height: 16),
                   Row(
                     children: [
-                      const Icon(Icons.calendar_today, size: 16, color: Colors.grey),
+                      const Icon(Icons.calendar_today, size: 16, color: const Color(0xFF9CA3AF)),
                       const SizedBox(width: 8),
                       Text(
                         'Days Worked: ${item.daysWorked}',
-                        style: const TextStyle(color: Colors.grey),
+                        style: const TextStyle(color: const Color(0xFF9CA3AF)),
                       ),
                       if (item.hoursWorked != null) ...[
                         const SizedBox(width: 16),
-                        const Icon(Icons.schedule, size: 16, color: Colors.grey),
+                        const Icon(Icons.schedule, size: 16, color: const Color(0xFF9CA3AF)),
                         const SizedBox(width: 8),
                         Text(
                           'Hours: ${item.hoursWorked!.toStringAsFixed(1)}',
-                          style: const TextStyle(color: Colors.grey),
+                          style: const TextStyle(color: const Color(0xFF9CA3AF)),
                         ),
                       ],
                     ],
@@ -296,7 +296,7 @@ class _DetailRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final rowColor = color ?? (isDeduction ? Colors.red : Colors.green);
+    final rowColor = color ?? (isDeduction ? const Color(0xFFB71C1C) : const Color(0xFF007A3D));
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),

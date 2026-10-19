@@ -77,8 +77,10 @@ class _PayrollDetailPageState extends State<PayrollDetailPage> {
                 Expanded(child: Text('Downloaded $filename')),
               ],
             ),
-            backgroundColor: const Color(0xFF2E7D32),
+            backgroundColor: const Color(0xFF007A3D),
             behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
           ),
         );
       }
@@ -87,9 +89,15 @@ class _PayrollDetailPageState extends State<PayrollDetailPage> {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Export failed: $e'),
-            backgroundColor: Colors.red[700],
+            content: Row(children: [
+              const Icon(Icons.error_outline, color: Colors.white, size: 18),
+              const SizedBox(width: 10),
+              Expanded(child: Text('Export failed: $e')),
+            ]),
+            backgroundColor: const Color(0xFFB71C1C),
             behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
           ),
         );
       }
@@ -231,7 +239,7 @@ class _PayrollDetailPageState extends State<PayrollDetailPage> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('You are about to permanently delete:', style: TextStyle(color: Colors.grey[700])),
+            Text('You are about to permanently delete:', style: TextStyle(color: const Color(0xFF374151))),
             const SizedBox(height: 8),
             Container(
               width: double.infinity,
@@ -329,7 +337,7 @@ class _PayrollDetailPageState extends State<PayrollDetailPage> {
               ),
               Text(
                 widget.payrollCode,
-                style: const TextStyle(fontSize: 11, color: Colors.white70),
+                style: const TextStyle(fontSize: 11, color: const Color(0xB3FFFFFF)),
                 overflow: TextOverflow.ellipsis,
               ),
             ],
@@ -403,7 +411,7 @@ class _PayrollDetailPageState extends State<PayrollDetailPage> {
                       const SizedBox(height: 8),
                       Text(
                         state.message,
-                        style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                        style: TextStyle(color: const Color(0xFF6B7280), fontSize: 13),
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 24),
@@ -437,7 +445,7 @@ class _PayrollDetailPageState extends State<PayrollDetailPage> {
                 gradient: LinearGradient(
                   colors: [
                     Theme.of(context).primaryColor,
-                    Theme.of(context).primaryColor.withOpacity(0.7),
+                    const Color(0xB3007A3D),
                   ],
                 ),
               ),
@@ -456,7 +464,7 @@ class _PayrollDetailPageState extends State<PayrollDetailPage> {
                   Text(
                     payroll.formattedPeriod,
                     style: const TextStyle(
-                      color: Colors.white70,
+                      color: const Color(0xB3FFFFFF),
                       fontSize: 16,
                     ),
                   ),
@@ -505,7 +513,7 @@ class _PayrollDetailPageState extends State<PayrollDetailPage> {
                           ElevatedButton.icon(
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFFFFD54F),
-                              foregroundColor: Colors.black87,
+                              foregroundColor: const Color(0xFF1A1A1A),
                               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                             ),
                             icon: const Icon(Icons.lock_outline, size: 18),
@@ -536,7 +544,7 @@ class _PayrollDetailPageState extends State<PayrollDetailPage> {
                       'This payroll includes workers with different payment cycles',
                       style: TextStyle(
                         fontSize: 14,
-                        color: Colors.grey[600],
+                        color: const Color(0xFF6B7280),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -555,7 +563,7 @@ class _PayrollDetailPageState extends State<PayrollDetailPage> {
                     'Workers are organized by their work type',
                     style: TextStyle(
                       fontSize: 14,
-                      color: Colors.grey[600],
+                      color: const Color(0xFF6B7280),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -576,19 +584,19 @@ class _PayrollDetailPageState extends State<PayrollDetailPage> {
                       _ExportButton(
                         label: localizations?.exportToCBE ?? 'Export to CBE',
                         icon: Icons.download,
-                        color: Colors.blue,
+                        color: const Color(0xFF1E3A5F),
                         onTap: () => _handleExport(context, () => _dataSource.exportPayrollCBE(widget.payrollId)),
                       ),
                       _ExportButton(
                         label: localizations?.exportToDashen ?? 'Export to Dashen Bank',
                         icon: Icons.download,
-                        color: Colors.green,
+                        color: const Color(0xFF007A3D),
                         onTap: () => _handleExport(context, () => _dataSource.exportPayrollDashen(widget.payrollId)),
                       ),
                       _ExportButton(
                         label: localizations?.exportToAwash ?? 'Export to Awash Bank',
                         icon: Icons.download,
-                        color: Colors.orange,
+                        color: const Color(0xFFE65100),
                         onTap: () => _handleExport(context, () => _dataSource.exportPayrollAwash(widget.payrollId)),
                       ),
                     ],
@@ -601,13 +609,13 @@ class _PayrollDetailPageState extends State<PayrollDetailPage> {
                       _ExportButton(
                         label: localizations?.exportToTelebirr ?? 'Export to Telebirr',
                         icon: Icons.download,
-                        color: Colors.purple,
+                        color: const Color(0xFF0A192F),
                         onTap: () => _handleExport(context, () => _dataSource.exportPayrollTelebirr(widget.payrollId)),
                       ),
                       _ExportButton(
                         label: 'Export to M-Pesa',
                         icon: Icons.download,
-                        color: Colors.red,
+                        color: const Color(0xFFB71C1C),
                         onTap: () => _handleExport(context, () async {
                           final dio = await DioClient.createDio();
                           final fn = 'MPesa_Payroll_${widget.payrollId}.csv';
@@ -629,19 +637,19 @@ class _PayrollDetailPageState extends State<PayrollDetailPage> {
                       _ExportButton(
                         label: localizations?.pensionDeclaration ?? 'Pension Declaration (Excel)',
                         icon: Icons.file_present,
-                        color: Colors.teal,
+                        color: const Color(0xFF007A3D),
                         onTap: () => _handleExport(context, () => _dataSource.exportPensionReport(widget.payrollId, 'excel')),
                       ),
                       _ExportButton(
                         label: 'Pension Declaration (PDF)',
                         icon: Icons.picture_as_pdf,
-                        color: Colors.red,
+                        color: const Color(0xFFB71C1C),
                         onTap: () => _handleExport(context, () => _dataSource.exportPensionReport(widget.payrollId, 'pdf')),
                       ),
                       _ExportButton(
                         label: localizations?.cashPaymentSheet ?? 'Cash Payment Sheet',
                         icon: Icons.attach_money,
-                        color: Colors.green,
+                        color: const Color(0xFF007A3D),
                         onTap: () async {
                           final paymentRecords = items.map((item) => PaymentRecord(
                             itemId: item.id!,
@@ -699,7 +707,7 @@ class _InfoChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.2),
+        color: const Color(0x33FFFFFF),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
@@ -787,7 +795,7 @@ class _ExportButton extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              border: Border.all(color: color.withOpacity(0.3)),
+              border: Border.all(color: Color.fromARGB(77, color.red, color.green, color.blue)),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
@@ -795,7 +803,7 @@ class _ExportButton extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: color.withOpacity(0.1),
+                    color: Color.fromARGB(26, color.red, color.green, color.blue),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(icon, color: color, size: 20),
@@ -810,7 +818,7 @@ class _ExportButton extends StatelessWidget {
                     ),
                   ),
                 ),
-                Icon(Icons.chevron_right, color: Colors.grey[400]),
+                Icon(Icons.chevron_right, color: const Color(0xFF9CA3AF)),
               ],
             ),
           ),
@@ -866,7 +874,7 @@ class _PeriodBreakdownCard extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: periodColor.withOpacity(0.1),
+                    color: Color.fromARGB(26, periodColor.red, periodColor.green, periodColor.blue),
                     borderRadius: BorderRadius.circular(8),
                     border: Border(
                       left: BorderSide(color: periodColor, width: 4),
@@ -877,7 +885,7 @@ class _PeriodBreakdownCard extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: periodColor.withOpacity(0.2),
+                          color: Color.fromARGB(51, periodColor.red, periodColor.green, periodColor.blue),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Icon(periodIcon, color: periodColor, size: 20),
@@ -916,7 +924,7 @@ class _PeriodBreakdownCard extends StatelessWidget {
                                   '$workerCount workers',
                                   style: TextStyle(
                                     fontSize: 12,
-                                    color: Colors.grey[700],
+                                    color: const Color(0xFF374151),
                                   ),
                                 ),
                                 if (proratedCount > 0)
@@ -924,7 +932,7 @@ class _PeriodBreakdownCard extends StatelessWidget {
                                     '$proratedCount prorated',
                                     style: TextStyle(
                                       fontSize: 12,
-                                      color: Colors.orange[700],
+                                      color: const Color(0xFFE65100),
                                       fontStyle: FontStyle.italic,
                                     ),
                                   ),
@@ -947,17 +955,17 @@ class _PeriodBreakdownCard extends StatelessWidget {
   Color _getPeriodColor(String periodType) {
     switch (periodType.toLowerCase()) {
       case 'daily':
-        return Colors.blue;
+        return const Color(0xFF1E3A5F);
       case 'hourly':
         return Colors.cyan;
       case 'weekly':
-        return Colors.green;
+        return const Color(0xFF007A3D);
       case 'bi-weekly':
-        return Colors.teal;
+        return const Color(0xFF007A3D);
       case 'monthly':
-        return Colors.purple;
+        return const Color(0xFF0A192F);
       default:
-        return Colors.orange;
+        return const Color(0xFFE65100);
     }
   }
 
@@ -1072,7 +1080,7 @@ class _WorkTypeExpansionTile extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey.shade300),
+        border: Border.all(color: const Color(0xFFD1D5DB)),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Theme(
@@ -1085,10 +1093,10 @@ class _WorkTypeExpansionTile extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.green.shade100,
+                  color: const Color(0xFFB2DFCA),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(Icons.work_outline, color: Colors.green.shade700, size: 20),
+                child: Icon(Icons.work_outline, color: const Color(0xFF004A25), size: 20),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -1107,7 +1115,7 @@ class _WorkTypeExpansionTile extends StatelessWidget {
                       '${sortedItems.length} workers',
                       style: TextStyle(
                         fontSize: 12,
-                        color: Colors.grey[600],
+                        color: const Color(0xFF6B7280),
                       ),
                     ),
                   ],
@@ -1121,14 +1129,14 @@ class _WorkTypeExpansionTile extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
-                      color: Colors.green.shade700,
+                      color: const Color(0xFF004A25),
                     ),
                   ),
                   Text(
                     'Net Total',
                     style: TextStyle(
                       fontSize: 11,
-                      color: Colors.grey[600],
+                      color: const Color(0xFF6B7280),
                     ),
                   ),
                 ],
@@ -1149,7 +1157,7 @@ class _WorkTypeExpansionTile extends StatelessWidget {
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                   leading: CircleAvatar(
                     radius: 18,
-                    backgroundColor: Colors.grey.shade300,
+                    backgroundColor: const Color(0xFFD1D5DB),
                     child: Text(
                       '${index + 1}',
                       style: const TextStyle(
@@ -1169,7 +1177,7 @@ class _WorkTypeExpansionTile extends StatelessWidget {
                     item.employeeId ?? 'N/A',
                     style: TextStyle(
                       fontSize: 12,
-                      color: Colors.grey[600],
+                      color: const Color(0xFF6B7280),
                     ),
                   ),
                   trailing: Column(
@@ -1181,14 +1189,14 @@ class _WorkTypeExpansionTile extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
-                          color: Colors.green.shade700,
+                          color: const Color(0xFF004A25),
                         ),
                       ),
                       Text(
                         'Net',
                         style: TextStyle(
                           fontSize: 10,
-                          color: Colors.grey[600],
+                          color: const Color(0xFF6B7280),
                         ),
                       ),
                     ],
@@ -1199,8 +1207,8 @@ class _WorkTypeExpansionTile extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.green.shade50,
-                border: Border(top: BorderSide(color: Colors.grey.shade300)),
+                color: const Color(0xFFE8F5EE),
+                border: Border(top: BorderSide(color: const Color(0xFFD1D5DB))),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1210,7 +1218,7 @@ class _WorkTypeExpansionTile extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
-                      color: Colors.grey[700],
+                      color: const Color(0xFF374151),
                     ),
                   ),
                   Text(
@@ -1218,7 +1226,7 @@ class _WorkTypeExpansionTile extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.bold,
-                      color: Colors.grey[800],
+                      color: const Color(0xFF1F2937),
                     ),
                   ),
                 ],

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../domain/entities/site.dart';
@@ -69,9 +69,12 @@ class _SiteDetailPageState extends State<SiteDetailPage> {
             onPressed: () => Navigator.pop(context, false),
             child: const Text('Cancel'),
           ),
-          TextButton(
+          ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFB71C1C),
+              foregroundColor: Colors.white,
+            ),
             child: const Text('Delete'),
           ),
         ],
@@ -83,7 +86,17 @@ class _SiteDetailPageState extends State<SiteDetailPage> {
         await _datasource.deleteWorkPlace(workPlace.id!);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Work place deleted successfully')),
+            SnackBar(
+              content: Row(children: [
+                const Icon(Icons.check_circle_outline, color: Colors.white, size: 18),
+                const SizedBox(width: 10),
+                Text('"${workPlace.name}" deleted successfully'),
+              ]),
+              backgroundColor: const Color(0xFF007A3D),
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              margin: const EdgeInsets.all(16),
+            ),
           );
           _loadWorkPlaces();
         }
@@ -91,8 +104,15 @@ class _SiteDetailPageState extends State<SiteDetailPage> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(e is ApiException ? e.displayMessage : 'Failed to delete work place'),
-              backgroundColor: Colors.red,
+              content: Row(children: [
+                const Icon(Icons.error_outline, color: Colors.white, size: 18),
+                const SizedBox(width: 10),
+                Expanded(child: Text(e is ApiException ? e.displayMessage : 'Failed to delete work place')),
+              ]),
+              backgroundColor: const Color(0xFFB71C1C),
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              margin: const EdgeInsets.all(16),
             ),
           );
         }
@@ -103,7 +123,7 @@ class _SiteDetailPageState extends State<SiteDetailPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: const Color(0xFFF9FAFB),
       appBar: AppBar(
         title: const Text('Site Details'),
         elevation: 0,
@@ -112,7 +132,7 @@ class _SiteDetailPageState extends State<SiteDetailPage> {
             margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              color: widget.site.isActive ? Colors.green : Colors.grey,
+              color: widget.site.isActive ? const Color(0xFF007A3D) : const Color(0xFF9CA3AF),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Row(
@@ -172,8 +192,8 @@ class _SiteDetailPageState extends State<SiteDetailPage> {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: widget.site.isActive
-              ? [Colors.green[600]!, Colors.green[800]!]
-              : [Colors.grey[600]!, Colors.grey[800]!],
+              ? [const Color(0xFF007A3D), const Color(0xFF005C2E)]
+              : [const Color(0xFF6B7280), const Color(0xFF1F2937)],
         ),
       ),
       child: Column(
@@ -181,7 +201,7 @@ class _SiteDetailPageState extends State<SiteDetailPage> {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+              color: const Color(0x33FFFFFF),
               shape: BoxShape.circle,
             ),
             child: const Icon(Icons.location_city, size: 60, color: Colors.white),
@@ -200,7 +220,7 @@ class _SiteDetailPageState extends State<SiteDetailPage> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+              color: const Color(0x33FFFFFF),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
@@ -223,26 +243,26 @@ class _SiteDetailPageState extends State<SiteDetailPage> {
       context,
       title: 'Basic Information',
       icon: Icons.info_outline,
-      iconColor: Colors.blue,
+      iconColor: const Color(0xFF1E3A5F),
       children: [
         if (widget.site.description != null && widget.site.description!.isNotEmpty)
           _buildFullWidthInfoTile(
             icon: Icons.description,
             label: 'Description',
             value: widget.site.description!,
-            iconColor: Colors.blue[700]!,
+            iconColor: const Color(0xFF0A192F),
           ),
         _buildInfoTile(
           icon: Icons.code,
           label: 'Site Code',
           value: widget.site.code,
-          iconColor: Colors.purple[700]!,
+          iconColor: const Color(0xFF0A192F),
         ),
         _buildInfoTile(
           icon: Icons.toggle_on,
           label: 'Status',
           value: widget.site.isActive ? 'Active' : 'Inactive',
-          iconColor: widget.site.isActive ? Colors.green[700]! : Colors.grey[700]!,
+          iconColor: widget.site.isActive ? const Color(0xFF005C2E) : const Color(0xFF374151),
         ),
       ],
     );
@@ -253,21 +273,21 @@ class _SiteDetailPageState extends State<SiteDetailPage> {
       context,
       title: 'Location Information',
       icon: Icons.place,
-      iconColor: Colors.red,
+      iconColor: const Color(0xFFB71C1C),
       children: [
         if (widget.site.locationAddress != null)
           _buildInfoTile(
             icon: Icons.location_on,
             label: 'Address',
             value: widget.site.locationAddress!,
-            iconColor: Colors.red[700]!,
+            iconColor: const Color(0xFFB71C1C),
           ),
         if (widget.site.latitude != null)
           _buildInfoTile(
             icon: Icons.map,
             label: 'Coordinates',
             value: '${widget.site.latitude!.toStringAsFixed(6)}, ${widget.site.longitude!.toStringAsFixed(6)}',
-            iconColor: Colors.orange[700]!,
+            iconColor: const Color(0xFFE65100),
           ),
       ],
     );
@@ -281,7 +301,7 @@ class _SiteDetailPageState extends State<SiteDetailPage> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: const Color(0x0D000000),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -293,7 +313,7 @@ class _SiteDetailPageState extends State<SiteDetailPage> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.indigo.withOpacity(0.1),
+              color: const Color(0x1A0A192F),
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(16),
                 topRight: Radius.circular(16),
@@ -304,14 +324,14 @@ class _SiteDetailPageState extends State<SiteDetailPage> {
               children: [
                 Row(
                   children: [
-                    Icon(Icons.business, color: Colors.indigo, size: 24),
+                    Icon(Icons.business, color: const Color(0xFF0A192F), size: 24),
                     const SizedBox(width: 12),
                     Text(
                       'Work Places',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: Colors.indigo,
+                        color: const Color(0xFF0A192F),
                       ),
                     ),
                   ],
@@ -319,7 +339,7 @@ class _SiteDetailPageState extends State<SiteDetailPage> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: Colors.indigo,
+                    color: const Color(0xFF0A192F),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
@@ -344,13 +364,13 @@ class _SiteDetailPageState extends State<SiteDetailPage> {
               child: Center(
                 child: Column(
                   children: [
-                    Icon(Icons.business_outlined, size: 64, color: Colors.grey[300]),
+                    Icon(Icons.business_outlined, size: 64, color: const Color(0xFFD1D5DB)),
                     const SizedBox(height: 16),
                     Text(
                       'No Work Places',
                       style: TextStyle(
                         fontSize: 16,
-                        color: Colors.grey[600],
+                        color: const Color(0xFF6B7280),
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -359,7 +379,7 @@ class _SiteDetailPageState extends State<SiteDetailPage> {
                       'Add work places to organize this site',
                       style: TextStyle(
                         fontSize: 14,
-                        color: Colors.grey[500],
+                        color: const Color(0xFF9CA3AF),
                       ),
                     ),
                   ],
@@ -378,10 +398,10 @@ class _SiteDetailPageState extends State<SiteDetailPage> {
                 return Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: workPlace.isActive ? Colors.indigo[50] : Colors.grey[100],
+                    color: workPlace.isActive ? const Color(0xFFE8EDF4) : const Color(0xFFF3F4F6),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: workPlace.isActive ? Colors.indigo[200]! : Colors.grey[300]!,
+                      color: workPlace.isActive ? const Color(0xFF9AAFCA) : const Color(0xFFD1D5DB),
                     ),
                   ),
                   child: Column(
@@ -392,7 +412,7 @@ class _SiteDetailPageState extends State<SiteDetailPage> {
                           Container(
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
-                              color: workPlace.isActive ? Colors.indigo : Colors.grey,
+                              color: workPlace.isActive ? const Color(0xFF0A192F) : const Color(0xFF9CA3AF),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: const Icon(Icons.business, color: Colors.white, size: 20),
@@ -413,21 +433,21 @@ class _SiteDetailPageState extends State<SiteDetailPage> {
                                   'Code: ${workPlace.code}',
                                   style: TextStyle(
                                     fontSize: 13,
-                                    color: Colors.grey[600],
+                                    color: const Color(0xFF6B7280),
                                   ),
                                 ),
                                 if (workPlace.supervisorName != null) ...[
                                   const SizedBox(height: 4),
                                   Row(
                                     children: [
-                                      Icon(Icons.supervisor_account, size: 14, color: Colors.blue[700]),
+                                      Icon(Icons.supervisor_account, size: 14, color: const Color(0xFF0A192F)),
                                       const SizedBox(width: 4),
                                       Expanded(
                                         child: Text(
                                           'Manager: ${workPlace.supervisorName}',
                                           style: TextStyle(
                                             fontSize: 12,
-                                            color: Colors.blue[700],
+                                            color: const Color(0xFF0A192F),
                                             fontWeight: FontWeight.w600,
                                           ),
                                           overflow: TextOverflow.ellipsis,
@@ -444,7 +464,7 @@ class _SiteDetailPageState extends State<SiteDetailPage> {
                             onPressed: () => _showWorkPlaceDialog(workPlace),
                           ),
                           IconButton(
-                            icon: const Icon(Icons.delete, color: Colors.red, size: 20),
+                            icon: const Icon(Icons.delete, color: const Color(0xFFB71C1C), size: 20),
                             onPressed: () => _deleteWorkPlace(workPlace),
                           ),
                         ],
@@ -453,14 +473,14 @@ class _SiteDetailPageState extends State<SiteDetailPage> {
                         const SizedBox(height: 8),
                         Row(
                           children: [
-                            Icon(Icons.location_on, size: 16, color: Colors.grey[600]),
+                            Icon(Icons.location_on, size: 16, color: const Color(0xFF6B7280)),
                             const SizedBox(width: 4),
                             Expanded(
                               child: Text(
                                 workPlace.locationAddress!,
                                 style: TextStyle(
                                   fontSize: 13,
-                                  color: Colors.grey[700],
+                                  color: const Color(0xFF374151),
                                 ),
                               ),
                             ),
@@ -484,21 +504,21 @@ class _SiteDetailPageState extends State<SiteDetailPage> {
       context,
       title: 'Record Information',
       icon: Icons.history,
-      iconColor: Colors.grey,
+      iconColor: const Color(0xFF9CA3AF),
       children: [
         if (widget.site.createdAt != null)
           _buildInfoTile(
             icon: Icons.add_circle_outline,
             label: 'Created At',
             value: dateFormat.format(widget.site.createdAt!),
-            iconColor: Colors.green[700]!,
+            iconColor: const Color(0xFF005C2E),
           ),
         if (widget.site.updatedAt != null)
           _buildInfoTile(
             icon: Icons.update,
             label: 'Last Updated',
             value: dateFormat.format(widget.site.updatedAt!),
-            iconColor: Colors.orange[700]!,
+            iconColor: const Color(0xFFE65100),
           ),
       ],
     );
@@ -518,7 +538,7 @@ class _SiteDetailPageState extends State<SiteDetailPage> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: const Color(0x0D000000),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -530,7 +550,7 @@ class _SiteDetailPageState extends State<SiteDetailPage> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: iconColor.withOpacity(0.1),
+              color: Color.fromARGB(26, iconColor.red, iconColor.green, iconColor.blue),
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(16),
                 topRight: Radius.circular(16),
@@ -577,7 +597,7 @@ class _SiteDetailPageState extends State<SiteDetailPage> {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: iconColor.withOpacity(0.1),
+              color: Color.fromARGB(26, iconColor.red, iconColor.green, iconColor.blue),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(icon, color: iconColor, size: 20),
@@ -591,7 +611,7 @@ class _SiteDetailPageState extends State<SiteDetailPage> {
                   label,
                   style: TextStyle(
                     fontSize: 13,
-                    color: Colors.grey[600],
+                    color: const Color(0xFF6B7280),
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -601,7 +621,7 @@ class _SiteDetailPageState extends State<SiteDetailPage> {
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
-                    color: Colors.black87,
+                    color: const Color(0xFF1A1A1A),
                   ),
                 ),
                 if (subtitle != null) ...[
@@ -610,7 +630,7 @@ class _SiteDetailPageState extends State<SiteDetailPage> {
                     subtitle,
                     style: TextStyle(
                       fontSize: 12,
-                      color: Colors.grey[500],
+                      color: const Color(0xFF9CA3AF),
                       fontStyle: FontStyle.italic,
                     ),
                   ),
@@ -639,7 +659,7 @@ class _SiteDetailPageState extends State<SiteDetailPage> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: iconColor.withOpacity(0.1),
+                  color: Color.fromARGB(26, iconColor.red, iconColor.green, iconColor.blue),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(icon, color: iconColor, size: 20),
@@ -649,7 +669,7 @@ class _SiteDetailPageState extends State<SiteDetailPage> {
                 label,
                 style: TextStyle(
                   fontSize: 13,
-                  color: Colors.grey[600],
+                  color: const Color(0xFF6B7280),
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -660,15 +680,15 @@ class _SiteDetailPageState extends State<SiteDetailPage> {
             padding: const EdgeInsets.all(12),
             width: double.infinity,
             decoration: BoxDecoration(
-              color: Colors.grey[50],
+              color: const Color(0xFFF9FAFB),
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.grey[200]!),
+              border: Border.all(color: const Color(0xFFE5E7EB)),
             ),
             child: Text(
               value,
               style: const TextStyle(
                 fontSize: 14,
-                color: Colors.black87,
+                color: const Color(0xFF1A1A1A),
                 height: 1.5,
               ),
             ),

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:dio/dio.dart';
 
@@ -677,19 +677,19 @@ class _AttendancePageNewState extends State<AttendancePageNew> {
   Color _getStatusColor(String status) {
     switch (status) {
       case 'present':
-        return Colors.green;
+        return const Color(0xFF007A3D);
       case 'absent':
-        return Colors.red;
+        return const Color(0xFFB71C1C);
       case 'late':
-        return Colors.orange;
+        return const Color(0xFFE65100);
       case 'excused':
-        return Colors.blue;
+        return const Color(0xFF1E3A5F);
       case 'leave':
-        return Colors.purple;
+        return const Color(0xFF0A192F);
       case 'half_day':
-        return Colors.amber;
+        return const Color(0xFFE65100);
       default:
-        return Colors.grey;
+        return const Color(0xFF9CA3AF);
     }
   }
 
@@ -806,7 +806,7 @@ class _AttendancePageNewState extends State<AttendancePageNew> {
         gradient: LinearGradient(
           colors: [
             Theme.of(context).primaryColor,
-            Theme.of(context).primaryColor.withOpacity(0.8),
+            const Color(0xCC007A3D),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -834,7 +834,7 @@ class _AttendancePageNewState extends State<AttendancePageNew> {
                   Text(
                     '$_calendarType Calendar',
                     style: const TextStyle(
-                      color: Colors.white70,
+                      color: const Color(0xB3FFFFFF),
                       fontSize: 12,
                     ),
                   ),
@@ -972,14 +972,14 @@ class _AttendancePageNewState extends State<AttendancePageNew> {
                     Icon(
                       Icons.check_circle_outline,
                       size: 20,
-                      color: _currentTabIndex == 0 ? Theme.of(context).primaryColor : Colors.grey,
+                      color: _currentTabIndex == 0 ? Theme.of(context).primaryColor : const Color(0xFF9CA3AF),
                     ),
                     const SizedBox(width: 8),
                     Text(
                       'Attendance ($_uniqueWorkersWithAttendance)',
                       style: TextStyle(
                         fontWeight: _currentTabIndex == 0 ? FontWeight.bold : FontWeight.normal,
-                        color: _currentTabIndex == 0 ? Theme.of(context).primaryColor : Colors.grey,
+                        color: _currentTabIndex == 0 ? Theme.of(context).primaryColor : const Color(0xFF9CA3AF),
                       ),
                     ),
                   ],
@@ -1006,14 +1006,14 @@ class _AttendancePageNewState extends State<AttendancePageNew> {
                     Icon(
                       Icons.people_outline,
                       size: 20,
-                      color: _currentTabIndex == 1 ? Theme.of(context).primaryColor : Colors.grey,
+                      color: _currentTabIndex == 1 ? Theme.of(context).primaryColor : const Color(0xFF9CA3AF),
                     ),
                     const SizedBox(width: 8),
                     Text(
                       'Workers (${_workers.length})',
                       style: TextStyle(
                         fontWeight: _currentTabIndex == 1 ? FontWeight.bold : FontWeight.normal,
-                        color: _currentTabIndex == 1 ? Theme.of(context).primaryColor : Colors.grey,
+                        color: _currentTabIndex == 1 ? Theme.of(context).primaryColor : const Color(0xFF9CA3AF),
                       ),
                     ),
                   ],
@@ -1039,10 +1039,10 @@ class _AttendancePageNewState extends State<AttendancePageNew> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? color : Colors.grey[200],
+          color: isSelected ? color : const Color(0xFFE5E7EB),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? color.withOpacity(0.5) : Colors.transparent,
+            color: isSelected ? Color.fromARGB(128, color.red, color.green, color.blue) : Colors.transparent,
           ),
         ),
         child: Row(
@@ -1051,13 +1051,13 @@ class _AttendancePageNewState extends State<AttendancePageNew> {
             Icon(
               icon,
               size: 16,
-              color: isSelected ? Colors.white : Colors.grey[600],
+              color: isSelected ? Colors.white : const Color(0xFF6B7280),
             ),
             const SizedBox(width: 6),
             Text(
               label,
               style: TextStyle(
-                color: isSelected ? Colors.white : Colors.grey[700],
+                color: isSelected ? Colors.white : const Color(0xFF374151),
                 fontSize: 13,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
               ),
@@ -1076,7 +1076,7 @@ class _AttendancePageNewState extends State<AttendancePageNew> {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.05),
+            color: const Color(0x0D9CA3AF),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -1096,15 +1096,15 @@ class _AttendancePageNewState extends State<AttendancePageNew> {
                   children: [
                     _buildStatusFilterChip('All', 'all', Icons.all_inclusive, Theme.of(context).primaryColor),
                     const SizedBox(width: 8),
-                    _buildStatusFilterChip('Present', 'present', Icons.check_circle, Colors.green),
+                    _buildStatusFilterChip('Present', 'present', Icons.check_circle, const Color(0xFF007A3D)),
                     const SizedBox(width: 8),
-                    _buildStatusFilterChip('Absent', 'absent', Icons.cancel, Colors.red),
+                    _buildStatusFilterChip('Absent', 'absent', Icons.cancel, const Color(0xFFB71C1C)),
                     const SizedBox(width: 8),
-                    _buildStatusFilterChip('Late', 'late', Icons.access_time, Colors.orange),
+                    _buildStatusFilterChip('Late', 'late', Icons.access_time, const Color(0xFFE65100)),
                     const SizedBox(width: 8),
-                    _buildStatusFilterChip('Excused', 'excused', Icons.event_available, Colors.blue),
+                    _buildStatusFilterChip('Excused', 'excused', Icons.event_available, const Color(0xFF1E3A5F)),
                     const SizedBox(width: 12),
-                    Container(height: 24, width: 1, color: Colors.grey[300]),
+                    Container(height: 24, width: 1, color: const Color(0xFFD1D5DB)),
                     const SizedBox(width: 12),
                     InkWell(
                       onTap: () {
@@ -1115,10 +1115,10 @@ class _AttendancePageNewState extends State<AttendancePageNew> {
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                         decoration: BoxDecoration(
-                          color: _showOnlyUnverified ? Colors.purple[700] : Colors.grey[200],
+                          color: _showOnlyUnverified ? const Color(0xFF005C2E) : const Color(0xFFE5E7EB),
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
-                            color: _showOnlyUnverified ? Colors.purple[700]!.withOpacity(0.5) : Colors.transparent,
+                            color: _showOnlyUnverified ? const Color(0x801E3A5F) : Colors.transparent,
                           ),
                         ),
                         child: Row(
@@ -1127,13 +1127,13 @@ class _AttendancePageNewState extends State<AttendancePageNew> {
                             Icon(
                               _showOnlyUnverified ? Icons.verified_user : Icons.gpp_maybe,
                               size: 16,
-                              color: _showOnlyUnverified ? Colors.white : Colors.grey[600],
+                              color: _showOnlyUnverified ? Colors.white : const Color(0xFF6B7280),
                             ),
                             const SizedBox(width: 6),
                             Text(
                               'Unverified Only',
                               style: TextStyle(
-                                color: _showOnlyUnverified ? Colors.white : Colors.grey[700],
+                                color: _showOnlyUnverified ? Colors.white : const Color(0xFF374151),
                                 fontSize: 13,
                                 fontWeight: _showOnlyUnverified ? FontWeight.w600 : FontWeight.w500,
                               ),
@@ -1175,7 +1175,7 @@ class _AttendancePageNewState extends State<AttendancePageNew> {
                   title: 'Present',
                   value: '$presentCount',
                   icon: Icons.check_circle,
-                  color: Colors.green,
+                  color: const Color(0xFF007A3D),
                 ),
               ),
               const SizedBox(width: 12),
@@ -1184,7 +1184,7 @@ class _AttendancePageNewState extends State<AttendancePageNew> {
                   title: 'Absent',
                   value: '$absentCount',
                   icon: Icons.cancel,
-                  color: Colors.red,
+                  color: const Color(0xFFB71C1C),
                 ),
               ),
               const SizedBox(width: 12),
@@ -1193,7 +1193,7 @@ class _AttendancePageNewState extends State<AttendancePageNew> {
                   title: 'Late',
                   value: '$lateCount',
                   icon: Icons.access_time,
-                  color: Colors.orange,
+                  color: const Color(0xFFE65100),
                 ),
               ),
             ],
@@ -1209,7 +1209,7 @@ class _AttendancePageNewState extends State<AttendancePageNew> {
     
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      color: Theme.of(context).primaryColor.withOpacity(0.1),
+      color: const Color(0x1A007A3D),
       child: Row(
         children: [
           Text(
@@ -1246,14 +1246,14 @@ class _AttendancePageNewState extends State<AttendancePageNew> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.location_off, size: 80, color: Colors.grey[300]),
+              Icon(Icons.location_off, size: 80, color: const Color(0xFFD1D5DB)),
               const SizedBox(height: 16),
               Text('No site selected',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.grey[700])),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: const Color(0xFF374151))),
               const SizedBox(height: 8),
               Text('Please select a site from the dropdown above,\nor ask an admin to create one.',
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 14, color: Colors.grey[500])),
+                  style: TextStyle(fontSize: 14, color: const Color(0xFF9CA3AF))),
             ],
           ),
         ),
@@ -1266,12 +1266,12 @@ class _AttendancePageNewState extends State<AttendancePageNew> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.event_busy, size: 80, color: Colors.grey[400]),
+              Icon(Icons.event_busy, size: 80, color: const Color(0xFF9CA3AF)),
               const SizedBox(height: 16),
-              Text('No workers found', style: TextStyle(fontSize: 18, color: Colors.grey[600])),
+              Text('No workers found', style: TextStyle(fontSize: 18, color: const Color(0xFF6B7280))),
               const SizedBox(height: 8),
               Text('Add workers to start marking attendance',
-                  style: TextStyle(fontSize: 14, color: Colors.grey[500])),
+                  style: TextStyle(fontSize: 14, color: const Color(0xFF9CA3AF))),
             ],
           ),
         ),
@@ -1395,14 +1395,14 @@ class _AttendancePageNewState extends State<AttendancePageNew> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.location_off, size: 80, color: Colors.grey[300]),
+              Icon(Icons.location_off, size: 80, color: const Color(0xFFD1D5DB)),
               const SizedBox(height: 16),
               Text('No site selected',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.grey[700])),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: const Color(0xFF374151))),
               const SizedBox(height: 8),
               Text('Please select a site from the dropdown above,\nor ask an admin to create one.',
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 14, color: Colors.grey[500])),
+                  style: TextStyle(fontSize: 14, color: const Color(0xFF9CA3AF))),
             ],
           ),
         ),
@@ -1419,7 +1419,7 @@ class _AttendancePageNewState extends State<AttendancePageNew> {
         if (_selectedWorkerIds.isNotEmpty)
           Container(
             padding: const EdgeInsets.all(12),
-            color: Theme.of(context).primaryColor.withOpacity(0.1),
+            color: const Color(0x1A007A3D),
             child: Row(
               children: [
                 Expanded(
@@ -1606,7 +1606,7 @@ class _AttendancePageNewState extends State<AttendancePageNew> {
               try {
                 setState(() => _isLoading = true);
                 
-                print('💼 Overtime saved for worker ${worker.id}: ${overtimeData.length} days');
+                debugPrint('💼 Overtime saved for worker ${worker.id}: ${overtimeData.length} days');
                 
                 // MultiDayOvertimeSelector already makes the API calls.
                 // We just need to reload data and show feedback.
@@ -1646,7 +1646,7 @@ class _AttendancePageNewState extends State<AttendancePageNew> {
                       child: const Text('Cancel'),
                     ),
                     ElevatedButton(
-                      style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                      style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFB71C1C)),
                       onPressed: () => Navigator.pop(context, true),
                       child: const Text('Delete'),
                     ),
@@ -1758,7 +1758,7 @@ class _AttendancePageNewState extends State<AttendancePageNew> {
             Icon(
               Icons.warning_amber_rounded,
               size: 80,
-              color: Colors.orange[700],
+              color: const Color(0xFFE65100),
             ),
             const SizedBox(height: 24),
             Text(
@@ -1766,27 +1766,27 @@ class _AttendancePageNewState extends State<AttendancePageNew> {
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
-                color: Colors.grey[800],
+                color: const Color(0xFF1F2937),
               ),
             ),
             const SizedBox(height: 16),
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Colors.orange[50],
+                color: const Color(0xFFFFF3E0),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.orange[200]!, width: 2),
+                border: Border.all(color: const Color(0xFFFFCC80), width: 2),
               ),
               child: Column(
                 children: [
-                  Icon(Icons.info_outline, color: Colors.orange[800], size: 32),
+                  Icon(Icons.info_outline, color: const Color(0xFFBF360C), size: 32),
                   const SizedBox(height: 12),
                   Text(
                     'You need to be assigned to a workplace to view and manage data.',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 16,
-                      color: Colors.grey[800],
+                      color: const Color(0xFF1F2937),
                       height: 1.5,
                     ),
                   ),
@@ -1796,7 +1796,7 @@ class _AttendancePageNewState extends State<AttendancePageNew> {
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 14,
-                      color: Colors.grey[600],
+                      color: const Color(0xFF6B7280),
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -1807,14 +1807,14 @@ class _AttendancePageNewState extends State<AttendancePageNew> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
-                color: Colors.blue[50],
+                color: const Color(0xFFE8EDF4),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.blue[200]!),
+                border: Border.all(color: const Color(0xFF90CAF9)),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.lightbulb_outline, color: Colors.blue[700], size: 20),
+                  Icon(Icons.lightbulb_outline, color: const Color(0xFF0A192F), size: 20),
                   const SizedBox(width: 8),
                   Flexible(
                     child: Text(
@@ -1822,7 +1822,7 @@ class _AttendancePageNewState extends State<AttendancePageNew> {
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 13,
-                        color: Colors.blue[900],
+                        color: const Color(0xFF0A192F),
                       ),
                     ),
                   ),
@@ -1874,9 +1874,9 @@ class _StatCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: Color.fromARGB(26, color.red, color.green, color.blue),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3), width: 1),
+        border: Border.all(color: Color.fromARGB(77, color.red, color.green, color.blue), width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1896,7 +1896,7 @@ class _StatCard extends StatelessWidget {
             title,
             style: TextStyle(
               fontSize: 12,
-              color: Colors.grey[700],
+              color: const Color(0xFF374151),
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -1925,13 +1925,13 @@ class _WorkTypeFilterChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? Colors.green[700] : Colors.grey[200],
+          color: isSelected ? const Color(0xFF005C2E) : const Color(0xFFE5E7EB),
           borderRadius: BorderRadius.circular(20),
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: isSelected ? Colors.white : Colors.grey[700],
+            color: isSelected ? Colors.white : const Color(0xFF374151),
             fontSize: 13,
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
           ),

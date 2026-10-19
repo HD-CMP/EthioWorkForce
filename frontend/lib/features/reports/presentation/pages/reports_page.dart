@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import 'package:intl/intl.dart';
 
@@ -248,8 +248,10 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
                 Expanded(child: Text('$message ($filename)')),
               ],
             ),
-            backgroundColor: const Color(0xFF2E7D32),
+            backgroundColor: const Color(0xFF007A3D),
             behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
             duration: const Duration(seconds: 4),
           ),
         );
@@ -258,9 +260,15 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Download failed: $e'),
-            backgroundColor: Colors.red[700],
+            content: Row(children: [
+              const Icon(Icons.error_outline, color: Colors.white, size: 18),
+              const SizedBox(width: 10),
+              Expanded(child: Text('Download failed: $e')),
+            ]),
+            backgroundColor: const Color(0xFFB71C1C),
             behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
           ),
         );
       }
@@ -323,7 +331,7 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
             margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
             padding: const EdgeInsets.symmetric(horizontal: 10),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.15),
+              color: const Color(0x26FFFFFF),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(color: Colors.white24),
             ),
@@ -333,7 +341,7 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
                 dropdownColor: const Color(0xFF007A3D),
                 icon: const Icon(Icons.arrow_drop_down, color: Colors.white, size: 18),
                 style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
-                hint: const Text('All Sites', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                hint: const Text('All Sites', style: TextStyle(color: const Color(0xB3FFFFFF), fontSize: 12)),
                 isExpanded: true,
                 items: [
                   const DropdownMenuItem<int?>(
@@ -380,7 +388,7 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
         indicatorColor: const Color(0xFFFFD54F),
         indicatorWeight: 3,
         labelColor: const Color(0xFFFFD54F),
-        unselectedLabelColor: Colors.white60,
+        unselectedLabelColor: const Color(0x99FFFFFF),
         labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
         unselectedLabelStyle: const TextStyle(fontSize: 12),
         tabs: const [
@@ -396,7 +404,7 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
 
   Widget _buildDownloadOverlay() {
     return Container(
-      color: Colors.black45,
+      color: const Color(0xFF737373),
       child: Center(
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
@@ -417,7 +425,7 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
               const SizedBox(height: 6),
               Text(
                 _downloadingFileName ?? 'Preparing file download',
-                style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                style: TextStyle(color: const Color(0xFF6B7280), fontSize: 13),
               ),
             ],
           ),
@@ -433,7 +441,7 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline_rounded, color: Colors.red, size: 64),
+            const Icon(Icons.error_outline_rounded, color: const Color(0xFFB71C1C), size: 64),
             const SizedBox(height: 16),
             Text(
               _errorMessage ?? 'An error occurred loading reports',
@@ -566,7 +574,7 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
                             ),
                             Text(
                               'Total: ${att['total_records'] ?? 0} logs',
-                              style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                              style: TextStyle(color: const Color(0xFF6B7280), fontSize: 12),
                             ),
                           ],
                         ),
@@ -615,7 +623,7 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
                             ),
                             const SizedBox(height: 16),
                             if (sitesDist.isEmpty)
-                              const Text('No site data available', style: TextStyle(color: Colors.grey))
+                              const Text('No site data available', style: TextStyle(color: const Color(0xFF9CA3AF)))
                             else
                               ...sitesDist.map((s) => _buildDistributionItem(
                                     label: s['site_name'] ?? 'Site',
@@ -656,7 +664,7 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
                             ),
                             const SizedBox(height: 16),
                             if (wtDist.isEmpty)
-                              const Text('No work types defined', style: TextStyle(color: Colors.grey))
+                              const Text('No work types defined', style: TextStyle(color: const Color(0xFF9CA3AF)))
                             else
                               ...wtDist.map((wt) => _buildDistributionItem(
                                     label: '${wt['name']} (${(wt['payment_mode'] ?? '').replaceAll('_', ' ')})',
@@ -699,7 +707,7 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
                   ),
                   const SizedBox(height: 16),
                   if (recentPayrolls.isEmpty)
-                    const Text('No recent payroll records found', style: TextStyle(color: Colors.grey))
+                    const Text('No recent payroll records found', style: TextStyle(color: const Color(0xFF9CA3AF)))
                   else
                     ...recentPayrolls.map((p) => ListTile(
                           contentPadding: EdgeInsets.zero,
@@ -713,7 +721,7 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
                           ),
                           subtitle: Text(
                             'Period: ${p['period_start']} to ${p['period_end']} | ${p['employee_count']} Workers',
-                            style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                            style: TextStyle(color: const Color(0xFF6B7280), fontSize: 12),
                           ),
                           trailing: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -725,7 +733,7 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
                               ),
                               Text(
                                 'Gross: ETB ${_currencyFormat.format(p['total_gross_amount'] ?? 0)}',
-                                style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+                                style: TextStyle(fontSize: 11, color: const Color(0xFF6B7280)),
                               ),
                             ],
                           ),
@@ -781,7 +789,7 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
               ],
             ),
             const SizedBox(height: 14),
-            Text(title, style: TextStyle(color: Colors.grey[600], fontSize: 13, fontWeight: FontWeight.w500)),
+            Text(title, style: TextStyle(color: const Color(0xFF6B7280), fontSize: 13, fontWeight: FontWeight.w500)),
             const SizedBox(height: 4),
             FittedBox(
               fit: BoxFit.scaleDown,
@@ -792,7 +800,7 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
               ),
             ),
             const SizedBox(height: 4),
-            Text(subtitle, style: TextStyle(color: Colors.grey[500], fontSize: 11)),
+            Text(subtitle, style: TextStyle(color: const Color(0xFF9CA3AF), fontSize: 11)),
           ],
         ),
       ),
@@ -826,7 +834,7 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
                 if (absent > 0)
                   Expanded(flex: absent, child: Container(color: const Color(0xFFD32F2F))),
                 if (total == 0)
-                  Expanded(child: Container(color: Colors.grey[300])),
+                  Expanded(child: Container(color: const Color(0xFFD1D5DB))),
               ],
             ),
           ),
@@ -854,7 +862,7 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
         Container(width: 10, height: 10, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
         const SizedBox(width: 6),
         Text('$label: ', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-        Text('$count', style: TextStyle(fontSize: 12, color: Colors.grey[700])),
+        Text('$count', style: TextStyle(fontSize: 12, color: const Color(0xFF374151))),
       ],
     );
   }
@@ -883,7 +891,7 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
               ),
               Text(
                 '$count workers (${(pct * 100).toStringAsFixed(1)}%)',
-                style: TextStyle(color: Colors.grey[600], fontSize: 12, fontWeight: FontWeight.bold),
+                style: TextStyle(color: const Color(0xFF6B7280), fontSize: 12, fontWeight: FontWeight.bold),
               ),
             ],
           ),
@@ -1261,7 +1269,7 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
                   ],
                 ),
                 const SizedBox(height: 4),
-                const Text('ERCA & POESSA', style: TextStyle(color: Colors.white60, fontSize: 12)),
+                const Text('ERCA & POESSA', style: TextStyle(color: const Color(0x99FFFFFF), fontSize: 12)),
                 const SizedBox(height: 16),
                 Wrap(
                   spacing: 12,
@@ -1414,7 +1422,7 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
                     DataCell(Text('ETB ${_currencyFormat.format(item['employee_pension'] ?? 0)}')),
                     DataCell(Text('ETB ${_currencyFormat.format(item['taxable_income'] ?? 0)}')),
                     DataCell(Text('${item['tax_rule_applied'] ?? 'standard'}')),
-                    DataCell(Text('ETB ${_currencyFormat.format(item['income_tax'] ?? 0)}', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.indigo))),
+                    DataCell(Text('ETB ${_currencyFormat.format(item['income_tax'] ?? 0)}', style: const TextStyle(fontWeight: FontWeight.bold, color: const Color(0xFF0A192F)))),
                     DataCell(Text('ETB ${_currencyFormat.format(item['employer_pension'] ?? 0)}')),
                     DataCell(Text('ETB ${_currencyFormat.format(item['total_remittance'] ?? 0)}', style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF2E7D32)))),
                   ]);
@@ -1430,7 +1438,7 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(color: Colors.white70, fontSize: 11)),
+        Text(label, style: const TextStyle(color: const Color(0xB3FFFFFF), fontSize: 11)),
         const SizedBox(height: 4),
         Text(
           'ETB ${_currencyFormat.format(floatOrZero(value))}',
@@ -1608,11 +1616,11 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
                     DataCell(Text('${r['half_day_count']}')),
                     DataCell(Text('${r['leave_count']}')),
                     DataCell(Text('${r['absent_count']}')),
-                    DataCell(Text('${r['days_worked']}', style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF1B5E20)))),
+                    DataCell(Text('${r['days_worked']}', style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF007A3D)))),
                     DataCell(Text('${r['regular_hours']}')),
-                    DataCell(Text('${r['overtime_hours']}', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.orange))),
+                    DataCell(Text('${r['overtime_hours']}', style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFE65100)))),
                     DataCell(Text('ETB ${_currencyFormat.format(r['overtime_rate'] ?? 0)}')),
-                    DataCell(Text('ETB ${_currencyFormat.format(r['overtime_pay'] ?? 0)}', style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF2E7D32)))),
+                    DataCell(Text('ETB ${_currencyFormat.format(r['overtime_pay'] ?? 0)}', style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF007A3D)))),
                   ]);
                 }).toList(),
               ),
@@ -1647,21 +1655,20 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
           elevation: 1,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           child: Padding(
-            padding: const EdgeInsets.all(18),
-            child: Wrap(
-              spacing: 16,
-              runSpacing: 12,
-              crossAxisAlignment: WrapCrossAlignment.center,
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Status Filter Chips
                 Wrap(
                   spacing: 8,
+                  runSpacing: 8,
                   children: ['all', 'active', 'inactive', 'terminated', 'suspended'].map((st) {
                     final isSelected = _censusStatusFilter == st;
                     return ChoiceChip(
-                      label: Text(st.toUpperCase(), style: TextStyle(fontSize: 12, color: isSelected ? Colors.white : Colors.black87)),
+                      label: Text(st.toUpperCase(), style: TextStyle(fontSize: 11, color: isSelected ? Colors.white : const Color(0xFF1A1A1A))),
                       selected: isSelected,
-                      selectedColor: const Color(0xFF1B5E20),
+                      selectedColor: const Color(0xFF007A3D),
                       onSelected: (val) {
                         if (val) {
                           setState(() => _censusStatusFilter = st);
@@ -1671,42 +1678,50 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
                     );
                   }).toList(),
                 ),
-                const SizedBox(width: 8),
-
-                // Work Type Dropdown
-                DropdownButton<int?>(
-                  value: _censusWorkTypeId,
-                  hint: const Text('All Work Types', style: TextStyle(fontSize: 13)),
-                  items: [
-                    const DropdownMenuItem<int?>(value: null, child: Text('All Work Types')),
-                    ..._workTypes.map((wt) => DropdownMenuItem<int?>(
-                          value: wt['id'] as int,
-                          child: Text(wt['name'] ?? '', style: const TextStyle(fontSize: 13)),
-                        )),
-                  ],
-                  onChanged: (val) {
-                    setState(() => _censusWorkTypeId = val);
-                    _loadCensusData();
-                  },
-                ),
-                const Spacer(),
-
-                // Export Full Census Excel
-                ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF1976D2)),
-                  icon: const Icon(Icons.download_rounded, color: Colors.white),
-                  label: const Text('Export Census Register (Excel)'),
-                  onPressed: () {
-                    _downloadFile(
-                      urlPath: '/reports/worker-census/excel',
-                      filename: 'Workforce_Census_${DateFormat('yyyyMMdd').format(DateTime.now())}.xlsx',
-                      queryParams: {
-                        if (_selectedSiteId != null) 'site_id': _selectedSiteId,
-                        if (_censusWorkTypeId != null) 'work_type_id': _censusWorkTypeId,
-                        if (_censusStatusFilter != 'all') 'status': _censusStatusFilter,
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    // Work Type Dropdown
+                    Expanded(
+                      child: DropdownButton<int?>(
+                        value: _censusWorkTypeId,
+                        isExpanded: true,
+                        hint: const Text('All Work Types', style: TextStyle(fontSize: 13)),
+                        items: [
+                          const DropdownMenuItem<int?>(value: null, child: Text('All Work Types')),
+                          ..._workTypes.map((wt) => DropdownMenuItem<int?>(
+                                value: wt['id'] as int,
+                                child: Text(wt['name'] ?? '', style: const TextStyle(fontSize: 13)),
+                              )),
+                        ],
+                        onChanged: (val) {
+                          setState(() => _censusWorkTypeId = val);
+                          _loadCensusData();
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    // Export Full Census Excel
+                    ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF0A192F),
+                        foregroundColor: Colors.white,
+                      ),
+                      icon: const Icon(Icons.download_rounded, color: Colors.white, size: 16),
+                      label: const Text('Export', style: TextStyle(fontSize: 12)),
+                      onPressed: () {
+                        _downloadFile(
+                          urlPath: '/reports/worker-census/excel',
+                          filename: 'Workforce_Census_${DateFormat('yyyyMMdd').format(DateTime.now())}.xlsx',
+                          queryParams: {
+                            if (_selectedSiteId != null) 'site_id': _selectedSiteId,
+                            if (_censusWorkTypeId != null) 'work_type_id': _censusWorkTypeId,
+                            if (_censusStatusFilter != 'all') 'status': _censusStatusFilter,
+                          },
+                        );
                       },
-                    );
-                  },
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -1714,20 +1729,24 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
         ),
         const SizedBox(height: 20),
 
-        // Search Bar & Table Header
+        // Section title + Search bar
         Row(
           children: [
-            Text(
-              'Census Master List (${_censusWorkers.length} workers registered)',
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            Expanded(
+              child: Text(
+                'Census Master List (${_censusWorkers.length} workers)',
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
-            const Spacer(),
+            const SizedBox(width: 8),
             SizedBox(
-              width: 250,
-              height: 40,
+              width: 170,
+              height: 38,
               child: TextField(
                 decoration: InputDecoration(
-                  hintText: 'Search employee...',
+                  hintText: 'Search...',
                   hintStyle: const TextStyle(fontSize: 12),
                   prefixIcon: const Icon(Icons.search, size: 18),
                   contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
@@ -1792,7 +1811,7 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
                     DataCell(Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
-                        color: isAct ? Colors.green[50] : Colors.red[50],
+                        color: isAct ? const Color(0xFFE8F5E9) : const Color(0xFFFFEBEE),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
@@ -1800,7 +1819,7 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.bold,
-                          color: isAct ? Colors.green[800] : Colors.red[800],
+                          color: isAct ? const Color(0xFF007A3D) : const Color(0xFFB71C1C),
                         ),
                       ),
                     )),
@@ -1865,7 +1884,7 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
                 const SizedBox(height: 4),
                 Text(
                   subtitle,
-                  style: TextStyle(color: Colors.grey[600], fontSize: 11),
+                  style: TextStyle(color: const Color(0xFF6B7280), fontSize: 11),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),

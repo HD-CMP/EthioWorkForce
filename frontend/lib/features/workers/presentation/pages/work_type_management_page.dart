@@ -106,7 +106,7 @@ class _WorkTypeManagementPageState extends State<WorkTypeManagementPage> with Si
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            style: TextButton.styleFrom(foregroundColor: const Color(0xFFB71C1C)),
             child: const Text('Delete'),
           ),
         ],
@@ -136,8 +136,15 @@ class _WorkTypeManagementPageState extends State<WorkTypeManagementPage> with Si
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(e is ApiException ? e.displayMessage : 'Failed to delete work type'),
-              backgroundColor: Colors.red,
+              content: Row(children: [
+                const Icon(Icons.error_outline, color: Colors.white, size: 18),
+                const SizedBox(width: 10),
+                Expanded(child: Text(e is ApiException ? e.displayMessage : 'Failed to delete work type')),
+              ]),
+              backgroundColor: const Color(0xFFB71C1C),
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              margin: const EdgeInsets.all(16),
             ),
           );
         }
@@ -154,7 +161,7 @@ class _WorkTypeManagementPageState extends State<WorkTypeManagementPage> with Si
         bottom: TabBar(
           controller: _tabController,
           labelColor: Colors.white,
-          unselectedLabelColor: Colors.white70,
+          unselectedLabelColor: const Color(0xB3FFFFFF),
           indicatorColor: Colors.white,
           indicatorWeight: 3,
           tabs: const [
@@ -208,7 +215,7 @@ class _WorkTypeManagementPageState extends State<WorkTypeManagementPage> with Si
             leading: CircleAvatar(
               backgroundColor: workType.isActive
                   ? const Color(0xFF007A3D)
-                  : Colors.grey[400],
+                  : const Color(0xFF9CA3AF),
               child: const Icon(Icons.work, color: Colors.white),
             ),
             title: Text(
@@ -226,7 +233,7 @@ class _WorkTypeManagementPageState extends State<WorkTypeManagementPage> with Si
                   Text(
                     'Code: ${workType.code}',
                     style: TextStyle(
-                      color: Colors.grey[600],
+                      color: const Color(0xFF6B7280),
                       fontSize: 13,
                     ),
                   ),
@@ -236,7 +243,7 @@ class _WorkTypeManagementPageState extends State<WorkTypeManagementPage> with Si
                         ? '${workType.paymentMode.displayName} • ETB ${workType.baseRate.toStringAsFixed(2)}'
                         : '${workType.paymentMode.displayName} • ⭐ Per Worker',
                     style: TextStyle(
-                      color: workType.hierarchyLevel >= 5 ? Colors.grey[700] : Colors.amber[800],
+                      color: workType.hierarchyLevel >= 5 ? const Color(0xFF374151) : const Color(0xFFE65100),
                       fontWeight: FontWeight.w500,
                       fontSize: 13,
                     ),
@@ -251,13 +258,13 @@ class _WorkTypeManagementPageState extends State<WorkTypeManagementPage> with Si
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: workType.isActive 
-                        ? Colors.green[50] 
-                        : Colors.grey[200],
+                        ? const Color(0xFFE8F5EE) 
+                        : const Color(0xFFE5E7EB),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: workType.isActive 
-                          ? Colors.green[300]! 
-                          : Colors.grey[400]!,
+                          ? const Color(0xFF66B28A) 
+                          : const Color(0xFF9CA3AF),
                     ),
                   ),
                   child: Text(
@@ -266,8 +273,8 @@ class _WorkTypeManagementPageState extends State<WorkTypeManagementPage> with Si
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
                       color: workType.isActive 
-                          ? Colors.green[900] 
-                          : Colors.grey[700],
+                          ? const Color(0xFF003D1F) 
+                          : const Color(0xFF374151),
                     ),
                   ),
                 ),
@@ -278,7 +285,7 @@ class _WorkTypeManagementPageState extends State<WorkTypeManagementPage> with Si
                   tooltip: 'Edit',
                 ),
                 IconButton(
-                  icon: const Icon(Icons.delete_outline, color: Colors.red, size: 20),
+                  icon: const Icon(Icons.delete_outline, color: const Color(0xFFB71C1C), size: 20),
                   onPressed: () => _deleteWorkType(workType),
                   tooltip: 'Delete',
                 ),
@@ -296,20 +303,20 @@ class _WorkTypeManagementPageState extends State<WorkTypeManagementPage> with Si
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.work_outline, size: 80, color: Colors.grey[300]),
+            Icon(Icons.work_outline, size: 80, color: const Color(0xFFD1D5DB)),
             const SizedBox(height: 16),
             Text(
               'No Work Types Available',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
-                color: Colors.grey[600],
+                color: const Color(0xFF6B7280),
               ),
             ),
             const SizedBox(height: 8),
             Text(
               'Create work types in the Manage tab',
-              style: TextStyle(color: Colors.grey[500]),
+              style: TextStyle(color: const Color(0xFF9CA3AF)),
             ),
           ],
         ),
@@ -362,11 +369,11 @@ class _WorkTypeManagementPageState extends State<WorkTypeManagementPage> with Si
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
-            color: workType.isActive ? Colors.white : Colors.grey[100],
+            color: workType.isActive ? Colors.white : const Color(0xFFF3F4F6),
             border: Border.all(
               color: workType.isActive
-                  ? const Color(0xFF007A3D).withOpacity(0.15)
-                  : Colors.grey.shade300,
+                  ? const Color(0x26007A3D)
+                  : const Color(0xFFD1D5DB),
               width: 1.5,
             ),
           ),
@@ -378,7 +385,7 @@ class _WorkTypeManagementPageState extends State<WorkTypeManagementPage> with Si
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: workType.isActive ? const Color(0xFF007A3D) : Colors.grey[500],
+                      color: workType.isActive ? const Color(0xFF007A3D) : const Color(0xFF9CA3AF),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Icon(Icons.work, color: Colors.white, size: 24),
@@ -387,7 +394,7 @@ class _WorkTypeManagementPageState extends State<WorkTypeManagementPage> with Si
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: workType.isActive ? const Color(0xFF007A3D) : Colors.grey[600],
+                      color: workType.isActive ? const Color(0xFF007A3D) : const Color(0xFF6B7280),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
@@ -407,7 +414,7 @@ class _WorkTypeManagementPageState extends State<WorkTypeManagementPage> with Si
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
-                  color: Colors.black87,
+                  color: const Color(0xFF1A1A1A),
                 ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
@@ -416,7 +423,7 @@ class _WorkTypeManagementPageState extends State<WorkTypeManagementPage> with Si
               Text(
                 workType.code,
                 style: TextStyle(
-                  color: Colors.grey[700],
+                  color: const Color(0xFF374151),
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
                 ),
@@ -425,14 +432,14 @@ class _WorkTypeManagementPageState extends State<WorkTypeManagementPage> with Si
               const Divider(height: 16),
               Row(
                 children: [
-                  Icon(Icons.payments, size: 16, color: Colors.grey[600]),
+                  Icon(Icons.payments, size: 16, color: const Color(0xFF6B7280)),
                   const SizedBox(width: 4),
                   Expanded(
                     child: Text(
                       workType.paymentMode.displayName,
                       style: TextStyle(
                         fontSize: 11,
-                        color: Colors.grey[700],
+                        color: const Color(0xFF374151),
                         fontWeight: FontWeight.w500,
                       ),
                       overflow: TextOverflow.ellipsis,
@@ -443,7 +450,7 @@ class _WorkTypeManagementPageState extends State<WorkTypeManagementPage> with Si
               const SizedBox(height: 6),
               Row(
                 children: [
-                  Icon(Icons.attach_money, size: 16, color: Colors.grey[600]),
+                  Icon(Icons.attach_money, size: 16, color: const Color(0xFF6B7280)),
                   const SizedBox(width: 4),
                   Text(
                     workType.hierarchyLevel >= 5
@@ -452,8 +459,8 @@ class _WorkTypeManagementPageState extends State<WorkTypeManagementPage> with Si
                     style: TextStyle(
                       fontSize: 12,
                       color: workType.hierarchyLevel >= 5
-                          ? Colors.grey[800]
-                          : Colors.amber[800],
+                          ? const Color(0xFF1F2937)
+                          : const Color(0xFFE65100),
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -462,14 +469,14 @@ class _WorkTypeManagementPageState extends State<WorkTypeManagementPage> with Si
               const SizedBox(height: 6),
               Row(
                 children: [
-                  Icon(Icons.stairs, size: 16, color: Colors.grey[600]),
+                  Icon(Icons.stairs, size: 16, color: const Color(0xFF6B7280)),
                   const SizedBox(width: 4),
                   Expanded(
                     child: Text(
                       getHierarchyLabel(workType.hierarchyLevel),
                       style: TextStyle(
                         fontSize: 11,
-                        color: Colors.grey[700],
+                        color: const Color(0xFF374151),
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -493,13 +500,13 @@ class _WorkTypeManagementPageState extends State<WorkTypeManagementPage> with Si
             Container(
               padding: const EdgeInsets.all(32),
               decoration: BoxDecoration(
-                color: Colors.blue[50],
+                color: const Color(0xFFE8EDF4),
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 Icons.work_outline,
                 size: 80,
-                color: Colors.blue[300],
+                color: const Color(0xFF64B5F6),
               ),
             ),
             const SizedBox(height: 24),
@@ -507,7 +514,7 @@ class _WorkTypeManagementPageState extends State<WorkTypeManagementPage> with Si
               'No Work Types Yet',
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.bold,
-                color: Colors.grey[800],
+                color: const Color(0xFF1F2937),
               ),
             ),
             const SizedBox(height: 12),
@@ -516,7 +523,7 @@ class _WorkTypeManagementPageState extends State<WorkTypeManagementPage> with Si
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14,
-                color: Colors.grey[600],
+                color: const Color(0xFF6B7280),
                 height: 1.5,
               ),
             ),
@@ -551,13 +558,13 @@ class _WorkTypeManagementPageState extends State<WorkTypeManagementPage> with Si
             Container(
               padding: const EdgeInsets.all(32),
               decoration: BoxDecoration(
-                color: isNoDataError ? Colors.blue[50] : Colors.red[50],
+                color: isNoDataError ? const Color(0xFFE8EDF4) : const Color(0xFFFFEBEE),
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 isNoDataError ? Icons.info_outline : Icons.error_outline,
                 size: 80,
-                color: isNoDataError ? Colors.blue[300] : Colors.red[300],
+                color: isNoDataError ? const Color(0xFF64B5F6) : const Color(0xFFE57373),
               ),
             ),
             const SizedBox(height: 24),
@@ -565,23 +572,23 @@ class _WorkTypeManagementPageState extends State<WorkTypeManagementPage> with Si
               isNoDataError ? 'No Work Types Found' : 'Unable to Load Work Types',
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.bold,
-                color: Colors.grey[800],
+                color: const Color(0xFF1F2937),
               ),
             ),
             const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.grey[100],
+                color: const Color(0xFFF3F4F6),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.grey[300]!),
+                border: Border.all(color: const Color(0xFFD1D5DB)),
               ),
               child: Text(
                 _errorMessage!,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 14,
-                  color: Colors.grey[700],
+                  color: const Color(0xFF374151),
                 ),
               ),
             ),
@@ -749,9 +756,19 @@ class _WorkTypeFormDialogState extends State<WorkTypeFormDialog> {
         Navigator.pop(context, true);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(widget.workType == null 
-                ? 'Work type created successfully' 
-                : 'Work type updated successfully'),
+            content: Row(children: [
+              const Icon(Icons.check_circle_outline, color: Colors.white, size: 18),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(widget.workType == null 
+                    ? 'Work type created successfully' 
+                    : 'Work type updated successfully'),
+              ),
+            ]),
+            backgroundColor: const Color(0xFF007A3D),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
           ),
         );
       }
@@ -760,8 +777,15 @@ class _WorkTypeFormDialogState extends State<WorkTypeFormDialog> {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e is ApiException ? e.displayMessage : 'Failed to save work type'),
-            backgroundColor: Colors.red,
+            content: Row(children: [
+              const Icon(Icons.error_outline, color: Colors.white, size: 18),
+              const SizedBox(width: 10),
+              Expanded(child: Text(e is ApiException ? e.displayMessage : 'Failed to save work type')),
+            ]),
+            backgroundColor: const Color(0xFFB71C1C),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
           ),
         );
       }
@@ -771,9 +795,12 @@ class _WorkTypeFormDialogState extends State<WorkTypeFormDialog> {
   @override
   Widget build(BuildContext context) {
     return Dialog(
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Container(
-        width: 700,
+        width: double.infinity,
         constraints: BoxConstraints(
+          maxWidth: 600,
           maxHeight: MediaQuery.of(context).size.height * 0.9,
         ),
         child: Column(
@@ -783,11 +810,15 @@ class _WorkTypeFormDialogState extends State<WorkTypeFormDialog> {
               padding: const EdgeInsets.all(16),
               child: Row(
                 children: [
-                  Text(
-                    widget.workType == null ? 'Add New Work Type' : 'Edit Work Type',
-                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  Expanded(
+                    child: Text(
+                      widget.workType == null ? 'Add New Work Type' : 'Edit Work Type',
+                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
-                  const Spacer(),
+                  const SizedBox(width: 8),
                   IconButton(
                     icon: const Icon(Icons.close),
                     onPressed: () => Navigator.pop(context),
@@ -860,7 +891,7 @@ class _WorkTypeFormDialogState extends State<WorkTypeFormDialog> {
                       const SizedBox(height: 4),
                       Text(
                         'Select the hierarchy level first — it determines how salary is configured.',
-                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                        style: TextStyle(fontSize: 12, color: const Color(0xFF6B7280)),
                       ),
                       const SizedBox(height: 16),
                       DropdownButtonFormField<int>(
@@ -902,20 +933,20 @@ class _WorkTypeFormDialogState extends State<WorkTypeFormDialog> {
                                 Container(
                                   padding: const EdgeInsets.all(12),
                                   decoration: BoxDecoration(
-                                    color: Colors.blue[50],
+                                    color: const Color(0xFFE8EDF4),
                                     borderRadius: BorderRadius.circular(10),
-                                    border: Border.all(color: Colors.blue[200]!),
+                                    border: Border.all(color: const Color(0xFF90CAF9)),
                                   ),
                                   child: Row(
                                     children: [
-                                      Icon(Icons.group_outlined, color: Colors.blue[700], size: 20),
+                                      Icon(Icons.group_outlined, color: const Color(0xFF0A192F), size: 20),
                                       const SizedBox(width: 8),
                                       Expanded(
                                         child: Text(
                                           _hierarchyLevel == 5
                                             ? 'Operational workers share this base rate. All workers with this Work Type are paid the same rate.'
                                             : 'Trainee / Apprentice workers share this base rate. All workers with this Work Type are paid the same rate.',
-                                          style: TextStyle(fontSize: 12, color: Colors.blue[900], fontWeight: FontWeight.w500),
+                                          style: TextStyle(fontSize: 12, color: const Color(0xFF0A192F), fontWeight: FontWeight.w500),
                                         ),
                                       ),
                                     ],
@@ -975,23 +1006,23 @@ class _WorkTypeFormDialogState extends State<WorkTypeFormDialog> {
                                   padding: const EdgeInsets.all(14),
                                   decoration: BoxDecoration(
                                     gradient: LinearGradient(
-                                      colors: [Colors.amber[50]!, Colors.orange[50]!],
+                                      colors: [const Color(0xFFFFF3E0), const Color(0xFFFFF3E0)],
                                     ),
                                     borderRadius: BorderRadius.circular(10),
-                                    border: Border.all(color: Colors.amber[300]!),
+                                    border: Border.all(color: const Color(0xFFFFB74D)),
                                   ),
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Row(
                                         children: [
-                                          Icon(Icons.stars_rounded, color: Colors.amber[700], size: 22),
+                                          Icon(Icons.stars_rounded, color: const Color(0xFFA52800), size: 22),
                                           const SizedBox(width: 8),
                                           Text(
                                             'Individual Salary Role',
                                             style: TextStyle(
                                               fontWeight: FontWeight.bold,
-                                              color: Colors.amber[900],
+                                              color: const Color(0xFF701700),
                                               fontSize: 14,
                                             ),
                                           ),
@@ -1000,12 +1031,12 @@ class _WorkTypeFormDialogState extends State<WorkTypeFormDialog> {
                                       const SizedBox(height: 8),
                                       Text(
                                         'This role is Hierarchy Level $_hierarchyLevel. Each worker registered under this Work Type will have their own individual base salary specified during registration.',
-                                        style: TextStyle(fontSize: 12, color: Colors.amber[900], height: 1.4),
+                                        style: TextStyle(fontSize: 12, color: const Color(0xFF701700), height: 1.4),
                                       ),
                                       const SizedBox(height: 6),
                                       Text(
                                         'No shared base rate is needed here.',
-                                        style: TextStyle(fontSize: 12, color: Colors.amber[800], fontWeight: FontWeight.w600),
+                                        style: TextStyle(fontSize: 12, color: const Color(0xFFE65100), fontWeight: FontWeight.w600),
                                       ),
                                     ],
                                   ),
@@ -1089,7 +1120,7 @@ class _WorkTypeFormDialogState extends State<WorkTypeFormDialog> {
                                     : '${_paymentPeriodStartDate!.day.toString().padLeft(2, '0')}/${_paymentPeriodStartDate!.month.toString().padLeft(2, '0')}/${_paymentPeriodStartDate!.year}'
                                 : 'Not set (will use dynamic periods)',
                             style: TextStyle(
-                              color: _paymentPeriodStartDate != null ? Colors.black : Colors.grey[600],
+                              color: _paymentPeriodStartDate != null ? Colors.black : const Color(0xFF6B7280),
                             ),
                           ),
                         ),

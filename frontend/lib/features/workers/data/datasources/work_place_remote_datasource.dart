@@ -1,4 +1,4 @@
-import 'package:dio/dio.dart';
+﻿import 'package:dio/dio.dart';
 
 import '../../domain/entities/work_place.dart';
 import '../../../../core/network/dio_client.dart';

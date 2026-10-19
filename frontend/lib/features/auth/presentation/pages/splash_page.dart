@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/router/app_router.dart';
@@ -60,13 +60,13 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
               // Decorative circles
               Positioned(top: -80, right: -60,
                 child: Container(width: 280, height: 280,
-                  decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.white.withOpacity(0.06)))),
+                  decoration: BoxDecoration(shape: BoxShape.circle, color: const Color(0x0FFFFFFF)))),
               Positioned(bottom: -80, left: -60,
                 child: Container(width: 240, height: 240,
-                  decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.white.withOpacity(0.05)))),
+                  decoration: BoxDecoration(shape: BoxShape.circle, color: const Color(0x0DFFFFFF)))),
               Positioned(top: 120, left: -40,
                 child: Container(width: 120, height: 120,
-                  decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.white.withOpacity(0.04)))),
+                  decoration: BoxDecoration(shape: BoxShape.circle, color: const Color(0x0AFFFFFF)))),
               // Center content
               Center(
                 child: FadeTransition(
@@ -80,7 +80,7 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
                           width: 110, height: 110,
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(28),
-                            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.3), blurRadius: 32, offset: const Offset(0, 12))],
+                            boxShadow: [BoxShadow(color: const Color(0x4D000000), blurRadius: 32, offset: const Offset(0, 12))],
                           ),
                           clipBehavior: Clip.antiAlias,
                           child: Image.asset(
@@ -88,9 +88,9 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
                             fit: BoxFit.cover,
                             errorBuilder: (context, error, stackTrace) => Container(
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.15),
+                                color: const Color(0x26FFFFFF),
                                 shape: BoxShape.circle,
-                                border: Border.all(color: Colors.white.withOpacity(0.3), width: 2.5),
+                                border: Border.all(color: const Color(0x4DFFFFFF), width: 2.5),
                               ),
                               child: const Icon(Icons.business_center_rounded, color: Colors.white, size: 52),
                             ),
@@ -104,20 +104,20 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
                         const SizedBox(height: 8),
                         Text(
                           'Workforce Management Platform',
-                          style: TextStyle(color: Colors.white.withOpacity(0.75), fontSize: 14, letterSpacing: 0.3),
+                          style: TextStyle(color: const Color(0xBFFFFFFF), fontSize: 14, letterSpacing: 0.3),
                         ),
                         const SizedBox(height: 64),
                         SizedBox(
                           width: 28, height: 28,
                           child: CircularProgressIndicator(
                             strokeWidth: 2.5,
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white.withOpacity(0.85)),
+                            valueColor: const AlwaysStoppedAnimation<Color>(Color(0xD9FFFFFF)),
                           ),
                         ),
                         const SizedBox(height: 16),
                         Text(
                           'Loading…',
-                          style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 12),
+                          style: TextStyle(color: const Color(0x99FFFFFF), fontSize: 12),
                         ),
                       ],
                     ),
@@ -132,7 +132,7 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
                   child: Text(
                     '© 2026 EthioWorkforce',
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 11),
+                    style: TextStyle(color: const Color(0x66FFFFFF), fontSize: 11),
                   ),
                 ),
               ),

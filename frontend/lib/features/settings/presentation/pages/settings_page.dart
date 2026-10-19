@@ -1,4 +1,4 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:dio/dio.dart';
@@ -83,7 +83,7 @@ class _SettingsPageState extends State<SettingsPage> {
             const SizedBox(height: 8),
             const Text(
               'Default: http://localhost:8000/api/v1',
-              style: TextStyle(fontSize: 12, color: Colors.grey),
+              style: TextStyle(fontSize: 12, color: const Color(0xFF9CA3AF)),
             ),
             const SizedBox(height: 16),
             TextField(
@@ -146,7 +146,7 @@ class _SettingsPageState extends State<SettingsPage> {
               'This creates an offline data backup containing all active workers, '
               'sites, work types, and attendance records. Ideal for transporting data '
               'from remote project sites to central office.',
-              style: TextStyle(fontSize: 13, color: Colors.black87),
+              style: TextStyle(fontSize: 13, color: const Color(0xFF1A1A1A)),
             ),
             const SizedBox(height: 16),
             TextField(
@@ -243,9 +243,11 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                 ],
               ),
-              backgroundColor: const Color(0xFF2E7D32),
+              backgroundColor: const Color(0xFF007A3D),
               duration: const Duration(seconds: 5),
               behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              margin: const EdgeInsets.all(16),
             ),
           );
         }
@@ -254,9 +256,15 @@ class _SettingsPageState extends State<SettingsPage> {
           Navigator.pop(context);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('USB Export failed: $e'),
-              backgroundColor: Colors.red[700],
+              content: Row(children: [
+                const Icon(Icons.error_outline, color: Colors.white, size: 18),
+                const SizedBox(width: 10),
+                Expanded(child: Text('USB Export failed: $e')),
+              ]),
+              backgroundColor: const Color(0xFFB71C1C),
               behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              margin: const EdgeInsets.all(16),
             ),
           );
         }
@@ -391,9 +399,15 @@ class _SettingsPageState extends State<SettingsPage> {
             Navigator.pop(context);
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Import failed: $e'),
-                backgroundColor: Colors.red[700],
+                content: Row(children: [
+                  const Icon(Icons.error_outline, color: Colors.white, size: 18),
+                  const SizedBox(width: 10),
+                  Expanded(child: Text('Import failed: $e')),
+                ]),
+                backgroundColor: const Color(0xFFB71C1C),
                 behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                margin: const EdgeInsets.all(16),
               ),
             );
           }
@@ -422,7 +436,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 gradient: LinearGradient(
                   colors: [
                     Theme.of(context).primaryColor,
-                    Theme.of(context).primaryColor.withOpacity(0.7),
+                    const Color(0xB3007A3D),
                   ],
                 ),
               ),
@@ -441,7 +455,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   Text(
                     'Configure app preferences',
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.9),
+                      color: const Color(0xE6FFFFFF),
                       fontSize: 14,
                     ),
                   ),
@@ -456,7 +470,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   leading: Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF007A3D).withOpacity(0.1),
+                      color: const Color(0x1A007A3D),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: const Icon(Icons.account_circle, color: Color(0xFF007A3D)),
@@ -505,17 +519,17 @@ class _SettingsPageState extends State<SettingsPage> {
                     leading: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: Colors.purple.withOpacity(0.1),
+                        color: const Color(0x1A0A192F),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const Icon(Icons.settings_ethernet, color: Colors.purple),
+                      child: const Icon(Icons.settings_ethernet, color: const Color(0xFF0A192F)),
                     ),
                     title: const Text('Backend API URL'),
                     subtitle: Text(
                       _backendUrl.isEmpty ? 'Not configured' : _backendUrl,
                       style: TextStyle(
                         fontSize: 12,
-                        color: _backendUrl.isEmpty ? Colors.red : Colors.grey[600],
+                        color: _backendUrl.isEmpty ? const Color(0xFFB71C1C) : const Color(0xFF6B7280),
                       ),
                     ),
                     trailing: const Icon(Icons.edit),
@@ -525,7 +539,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     leading: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF0A192F).withOpacity(0.1),
+                        color: const Color(0x1A0A192F),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: const Icon(Icons.refresh, color: Color(0xFF0A192F)),
@@ -565,7 +579,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     leading: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF007A3D).withOpacity(0.1),
+                        color: const Color(0x1A007A3D),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: const Icon(Icons.upload, color: Color(0xFF007A3D)),
@@ -579,7 +593,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     leading: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF0A192F).withOpacity(0.1),
+                        color: const Color(0x1A0A192F),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: const Icon(Icons.download, color: Color(0xFF0A192F)),

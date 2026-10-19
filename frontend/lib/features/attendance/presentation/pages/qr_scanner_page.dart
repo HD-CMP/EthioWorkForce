@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '../../../../core/services/audio_feedback_service.dart';
@@ -126,7 +126,7 @@ class _QRScannerPageState extends State<QRScannerPage> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                 decoration: BoxDecoration(
-                  color: Colors.black87,
+                  color: const Color(0xFF1A1A1A),
                   borderRadius: BorderRadius.circular(24),
                 ),
                 child: Text(
@@ -142,7 +142,7 @@ class _QRScannerPageState extends State<QRScannerPage> {
           ),
           if (_isProcessing)
             Container(
-              color: Colors.black54,
+              color: const Color(0xFF6B7280),
               child: const Center(
                 child: CircularProgressIndicator(
                   valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
@@ -159,7 +159,7 @@ class _ScannerOverlayPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.black54
+      ..color = const Color(0xFF6B7280)
       ..style = PaintingStyle.fill;
 
     final scanAreaSize = size.width * 0.7;

@@ -14,6 +14,7 @@ import 'payroll_detail_page.dart';
 import 'payroll_calculation_page.dart';
 import 'payroll_preview_page.dart';
 import '../../data/datasources/payroll_remote_datasource.dart';
+import '../../../../core/utils/app_snackbar.dart';
 
 class PayrollListPage extends StatelessWidget {
   const PayrollListPage({super.key});
@@ -78,19 +79,7 @@ class _PayrollListViewState extends State<_PayrollListView> {
     } catch (e) {
       if (mounted) {
         setState(() => _isLoadingSites = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(children: [
-              const Icon(Icons.error_outline, color: Colors.white, size: 18),
-              const SizedBox(width: 10),
-              Expanded(child: Text('Unable to load sites. Please try again.')),
-            ]),
-            backgroundColor: const Color(0xFFB71C1C),
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            margin: const EdgeInsets.all(16),
-          ),
-        );
+        AppSnackBar.showError(context, 'Unable to load sites. Please try again.');
       }
     }
   }
@@ -98,9 +87,7 @@ class _PayrollListViewState extends State<_PayrollListView> {
   void _showSiteSelector() {
     try {
       if (_sites.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No sites available')),
-        );
+        AppSnackBar.showInfo(context, 'No sites available');
         return;
       }
       
@@ -122,7 +109,7 @@ class _PayrollListViewState extends State<_PayrollListView> {
                   return ListTile(
                     leading: Icon(
                       isSelected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
-                      color: isSelected ? Theme.of(context).primaryColor : null,
+                      color: isSelected ? const Color(0xFF007A3D) : null,
                     ),
                     title: Text(site.name),
                     subtitle: Text(site.code),
@@ -161,17 +148,27 @@ class _PayrollListViewState extends State<_PayrollListView> {
     final localizations = AppLocalizations.of(context);
 
     return Scaffold(
+      backgroundColor: const Color(0xFFF4F7F4),
       appBar: AppBar(
-        title: Text(localizations?.payroll ?? 'Payroll'),
+        backgroundColor: const Color(0xFF0A192F),
+        foregroundColor: Colors.white,
         elevation: 0,
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(localizations?.payroll ?? 'Payroll', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 18)),
+            if (_selectedSite != null)
+              Text(_selectedSite!.name, style: const TextStyle(color: Color(0xFF9CA3AF), fontSize: 12, fontWeight: FontWeight.w400)),
+          ],
+        ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.location_on),
+            icon: const Icon(Icons.location_on_rounded, color: Colors.white),
             onPressed: _showSiteSelector,
             tooltip: 'Select Site',
           ),
           IconButton(
-            icon: const Icon(Icons.preview),
+            icon: const Icon(Icons.preview_rounded, color: Colors.white),
             tooltip: 'Real-Time Preview',
             onPressed: _selectedSite != null
                 ? () {
@@ -184,7 +181,7 @@ class _PayrollListViewState extends State<_PayrollListView> {
                 : null,
           ),
           IconButton(
-            icon: const Icon(Icons.refresh),
+            icon: const Icon(Icons.refresh_rounded, color: Colors.white),
             onPressed: _selectedSite != null
                 ? () {
                     context.read<PayrollBloc>().add(
@@ -196,6 +193,7 @@ class _PayrollListViewState extends State<_PayrollListView> {
         ],
       ),
       body: RefreshIndicator(
+              color: const Color(0xFF007A3D),
               onRefresh: () async {
                 if (_selectedSite != null) {
                   context.read<PayrollBloc>().add(
@@ -208,12 +206,25 @@ class _PayrollListViewState extends State<_PayrollListView> {
                 builder: (context, state) {
                   if (_isLoadingSites) {
                     return const Center(
-                      child: CircularProgressIndicator(),
+                      child: CircularProgressIndicator(color: Color(0xFF007A3D)),
                     );
                   }
                   if (_sites.isEmpty) {
-                    return const Center(
-                      child: Text('No sites available'),
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            width: 72, height: 72,
+                            decoration: const BoxDecoration(color: Color(0xFFE8EDF4), shape: BoxShape.circle),
+                            child: const Icon(Icons.location_off_rounded, size: 36, color: Color(0xFF0A192F)),
+                          ),
+                          const SizedBox(height: 16),
+                          const Text('No sites available', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Color(0xFF1A1A1A))),
+                          const SizedBox(height: 8),
+                          const Text('Contact your administrator', style: TextStyle(color: Color(0xFF6B7280))),
+                        ],
+                      ),
                     );
                   }
                   if (state is PayrollLoading) {
@@ -237,7 +248,20 @@ class _PayrollListViewState extends State<_PayrollListView> {
                           : null,
                     );
                   }
-                  return const Center(child: Text('Select a site to view payrolls'));
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          width: 72, height: 72,
+                          decoration: const BoxDecoration(color: Color(0xFFE8EDF4), shape: BoxShape.circle),
+                          child: const Icon(Icons.payments_rounded, size: 36, color: Color(0xFF0A192F)),
+                        ),
+                        const SizedBox(height: 16),
+                        const Text('Select a site to view payrolls', style: TextStyle(fontSize: 16, color: Color(0xFF6B7280))),
+                      ],
+                    ),
+                  );
                 },
               ),
             ),
@@ -254,7 +278,9 @@ class _PayrollListViewState extends State<_PayrollListView> {
                       );
                 });
               },
-              icon: const Icon(Icons.calculate),
+              backgroundColor: const Color(0xFF007A3D),
+              foregroundColor: Colors.white,
+              icon: const Icon(Icons.calculate_rounded),
               label: Text(localizations?.calculatePayroll ?? 'Calculate Payroll'),
             )
           : null,
@@ -274,12 +300,9 @@ class _LoadingView extends StatelessWidget {
         Container(
           width: double.infinity,
           padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: [
-                Theme.of(context).primaryColor,
-                Theme.of(context).primaryColor.withOpacity(0.7),
-              ],
+              colors: [Color(0xFF0A192F), Color(0xFF1E3A5F)],
             ),
           ),
           child: Column(
@@ -299,26 +322,26 @@ class _LoadingView extends StatelessWidget {
                     ? 'Loading payroll data for ${selectedSite!.name}...'
                     : 'Loading payroll data...',
                 style: const TextStyle(
-                  color: Colors.white70,
+                  color: Color(0xB3FFFFFF),
                   fontSize: 14,
                 ),
               ),
             ],
           ),
         ),
-        Expanded(
+        const Expanded(
           child: Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 CircularProgressIndicator(
-                  color: Theme.of(context).primaryColor,
+                  color: Color(0xFF007A3D),
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: 16),
                 Text(
                   'Loading payrolls...',
                   style: TextStyle(
-                    color: Colors.grey[600],
+                    color: Color(0xFF607D8B),
                     fontSize: 16,
                   ),
                 ),
@@ -347,12 +370,9 @@ class _ErrorView extends StatelessWidget {
         Container(
           width: double.infinity,
           padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: [
-                Theme.of(context).primaryColor,
-                Theme.of(context).primaryColor.withOpacity(0.7),
-              ],
+              colors: [Color(0xFF005C2E), Color(0xFF007A3D)],
             ),
           ),
           child: const Column(
@@ -374,10 +394,10 @@ class _ErrorView extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  Icons.error_outline,
-                  size: 64,
-                  color: Colors.red[300],
+                Container(
+                  width: 80, height: 80,
+                  decoration: const BoxDecoration(color: Color(0xFFFFEBEE), shape: BoxShape.circle),
+                  child: const Icon(Icons.error_outline_rounded, size: 40, color: Color(0xFFB71C1C)),
                 ),
                 const SizedBox(height: 16),
                 Padding(
@@ -387,20 +407,20 @@ class _ErrorView extends StatelessWidget {
                     textAlign: TextAlign.center,
                     style: const TextStyle(
                       fontSize: 16,
-                      color: Colors.black87,
+                      color: Color(0xFF1A1A1A),
                     ),
                   ),
                 ),
                 const SizedBox(height: 24),
                 ElevatedButton.icon(
                   onPressed: onRetry,
-                  icon: const Icon(Icons.refresh),
+                  icon: const Icon(Icons.refresh_rounded),
                   label: const Text('Retry'),
                   style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 32,
-                      vertical: 12,
-                    ),
+                    backgroundColor: const Color(0xFF007A3D),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
                 ),
               ],
@@ -442,7 +462,7 @@ class _PayrollLoadedView extends StatelessWidget {
               gradient: LinearGradient(
                 colors: [
                   Theme.of(context).primaryColor,
-                  Theme.of(context).primaryColor.withOpacity(0.7),
+                  const Color(0xB3007A3D),
                 ],
               ),
             ),
@@ -463,7 +483,7 @@ class _PayrollLoadedView extends StatelessWidget {
                       ? '${selectedSite!.name} - Manage and export payroll data'
                       : 'Manage and export payroll data',
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.9),
+                    color: const Color(0xE6FFFFFF),
                     fontSize: 14,
                   ),
                 ),
@@ -521,14 +541,14 @@ class _PayrollLoadedView extends StatelessWidget {
                   Icon(
                     Icons.assignment_outlined,
                     size: 64,
-                    color: Colors.grey[400],
+                    color: const Color(0xFF9CA3AF),
                   ),
                   const SizedBox(height: 16),
                   Text(
                     'No payrolls found',
                     style: TextStyle(
                       fontSize: 18,
-                      color: Colors.grey[600],
+                      color: const Color(0xFF6B7280),
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -537,7 +557,7 @@ class _PayrollLoadedView extends StatelessWidget {
                     'Create your first payroll to get started',
                     style: TextStyle(
                       fontSize: 14,
-                      color: Colors.grey[500],
+                      color: const Color(0xFF9CA3AF),
                     ),
                   ),
                 ],
@@ -587,8 +607,10 @@ class _PayrollCard extends StatelessWidget {
                 Expanded(child: Text('Downloaded $filename')),
               ],
             ),
-            backgroundColor: const Color(0xFF2E7D32),
+            backgroundColor: const Color(0xFF007A3D),
             behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
           ),
         );
       }
@@ -597,9 +619,15 @@ class _PayrollCard extends StatelessWidget {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Export failed: $e'),
-            backgroundColor: Colors.red[700],
+            content: Row(children: [
+              const Icon(Icons.error_outline, color: Colors.white, size: 18),
+              const SizedBox(width: 10),
+              Expanded(child: Text('Export failed: $e')),
+            ]),
+            backgroundColor: const Color(0xFFB71C1C),
             behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
           ),
         );
       }
@@ -614,7 +642,7 @@ class _PayrollCard extends StatelessWidget {
     );
 
     final statusColors = {
-      'draft': Colors.grey,
+      'draft': const Color(0xFF9CA3AF),
       'calculated': const Color(0xFF0A192F),
       'approved': const Color(0xFF007A3D),
       'paid': const Color(0xFF005C2E),
@@ -630,7 +658,7 @@ class _PayrollCard extends StatelessWidget {
     };
 
     final status = payroll.status.toLowerCase();
-    final statusColor = statusColors[status] ?? Colors.grey;
+    final statusColor = statusColors[status] ?? const Color(0xFF9CA3AF);
     final statusLabel = statusLabels[status] ?? payroll.status;
 
     return Card(
@@ -676,7 +704,7 @@ class _PayrollCard extends StatelessWidget {
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: statusColor.withOpacity(0.1),
+                      color: Color.fromARGB(26, statusColor.red, statusColor.green, statusColor.blue),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
@@ -694,12 +722,12 @@ class _PayrollCard extends StatelessWidget {
               Row(
                 children: [
                   Icon(Icons.calendar_today,
-                      size: 16, color: Colors.grey[600]),
+                      size: 16, color: const Color(0xFF6B7280)),
                   const SizedBox(width: 6),
                   Text(
                     payroll.formattedPeriod,
                     style: TextStyle(
-                      color: Colors.grey[600],
+                      color: const Color(0xFF6B7280),
                       fontSize: 13,
                     ),
                   ),
@@ -708,19 +736,19 @@ class _PayrollCard extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
-                        color: Colors.blue.withOpacity(0.1),
+                        color: const Color(0x1A1E3A5F),
                         borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: Colors.blue.withOpacity(0.3)),
+                        border: Border.all(color: const Color(0x4D1E3A5F)),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.group_work, size: 12, color: Colors.blue[700]),
+                          Icon(Icons.group_work, size: 12, color: const Color(0xFF0A192F)),
                           const SizedBox(width: 4),
                           Text(
                             '${payroll.periodTypesCount} periods',
                             style: TextStyle(
-                              color: Colors.blue[700],
+                              color: const Color(0xFF0A192F),
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
                             ),
@@ -738,12 +766,12 @@ class _PayrollCard extends StatelessWidget {
                   Row(
                     children: [
                       Icon(Icons.account_balance_wallet,
-                          size: 16, color: Colors.grey[600]),
+                          size: 16, color: const Color(0xFF6B7280)),
                       const SizedBox(width: 6),
                       Text(
                         'Net: ${currencyFormat.format(payroll.totalNetAmount)}',
                         style: TextStyle(
-                          color: Colors.grey[600],
+                          color: const Color(0xFF6B7280),
                           fontSize: 13,
                         ),
                       ),
@@ -824,9 +852,9 @@ class _StatCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: Color.fromARGB(26, color.red, color.green, color.blue),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: Color.fromARGB(77, color.red, color.green, color.blue)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -846,7 +874,7 @@ class _StatCard extends StatelessWidget {
             title,
             style: TextStyle(
               fontSize: 12,
-              color: Colors.grey[700],
+              color: const Color(0xFF374151),
             ),
           ),
         ],
@@ -874,7 +902,7 @@ class _QuickExportButton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 8),
         decoration: BoxDecoration(
-          color: Theme.of(context).primaryColor.withOpacity(0.1),
+          color: const Color(0x1A007A3D),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Column(

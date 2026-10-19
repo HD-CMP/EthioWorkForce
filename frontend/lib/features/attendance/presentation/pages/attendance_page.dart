@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 class AttendancePage extends StatelessWidget {
   const AttendancePage({super.key});
@@ -60,7 +60,7 @@ class AttendancePage extends StatelessWidget {
                   margin: const EdgeInsets.only(bottom: 8),
                   child: ListTile(
                     leading: CircleAvatar(
-                      backgroundColor: Colors.green,
+                      backgroundColor: const Color(0xFF007A3D),
                       child: const Icon(Icons.check, color: Colors.white),
                     ),
                     title: Text('Worker ${index + 1}'),

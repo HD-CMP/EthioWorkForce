@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 enum FeedbackType {
   success,
@@ -173,7 +173,7 @@ class _FlashFeedbackWidgetState extends State<_FlashFeedbackWidget>
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: _getBackgroundColor().withOpacity(0.4),
+                      color: Color.fromARGB(102, _getBackgroundColor().red, _getBackgroundColor().green, _getBackgroundColor().blue),
                       blurRadius: 20,
                       offset: const Offset(0, 10),
                     ),
@@ -185,7 +185,7 @@ class _FlashFeedbackWidgetState extends State<_FlashFeedbackWidget>
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
+                          color: const Color(0x33FFFFFF),
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
@@ -213,7 +213,7 @@ class _FlashFeedbackWidgetState extends State<_FlashFeedbackWidget>
                               Text(
                                 widget.subtitle!,
                                 style: TextStyle(
-                                  color: Colors.white.withOpacity(0.9),
+                                  color: const Color(0xE6FFFFFF),
                                   fontSize: 14,
                                 ),
                               ),

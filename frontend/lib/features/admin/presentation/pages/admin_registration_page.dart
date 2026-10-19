@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:dio/dio.dart';
 
@@ -77,7 +77,7 @@ class _AdminRegistrationPageContentState
             await _storageService.setUserRole(role);
           }
         } catch (e) {
-          print('Error fetching user role from API: $e');
+          debugPrint('Error fetching user role from API: $e');
         }
       }
       
@@ -88,7 +88,7 @@ class _AdminRegistrationPageContentState
         });
       }
     } catch (e) {
-      print('Error loading user role: $e');
+      debugPrint('Error loading user role: $e');
     }
   }
 
@@ -122,7 +122,17 @@ class _AdminRegistrationPageContentState
     try {
       if (_sites.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No sites available')),
+          SnackBar(
+            content: const Row(children: [
+              Icon(Icons.info_outline, color: Colors.white, size: 18),
+              SizedBox(width: 10),
+              Text('No sites available'),
+            ]),
+            backgroundColor: const Color(0xFF0A192F),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
+          ),
         );
         return;
       }
@@ -197,7 +207,7 @@ class _AdminRegistrationPageContentState
         bottom: TabBar(
           controller: _tabController,
           labelColor: Colors.white,
-          unselectedLabelColor: Colors.white70,
+          unselectedLabelColor: const Color(0xB3FFFFFF),
           indicatorColor: Colors.white,
           indicatorWeight: 3,
           tabs: const [
@@ -302,7 +312,7 @@ class _RegisterAdminTabState extends State<_RegisterAdminTab> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Search failed: ${e.toString().replaceAll('Exception: ', '')}'),
-            backgroundColor: Colors.orange,
+            backgroundColor: const Color(0xFFE65100),
           ),
         );
       }
@@ -357,7 +367,7 @@ class _RegisterAdminTabState extends State<_RegisterAdminTab> {
       // Fallback if all attempts failed
       return '${baseUsername}_${DateTime.now().millisecondsSinceEpoch % 10000}';
     } catch (e) {
-      print('DEBUG: Error checking username: $e');
+      debugPrint('DEBUG: Error checking username: $e');
       return baseUsername;
     }
   }
@@ -590,7 +600,7 @@ class _RegisterAdminTabState extends State<_RegisterAdminTab> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Registration request submitted successfully'),
-              backgroundColor: Colors.green,
+              backgroundColor: const Color(0xFF007A3D),
             ),
           );
           _formKey.currentState!.reset();
@@ -610,7 +620,7 @@ class _RegisterAdminTabState extends State<_RegisterAdminTab> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.message),
-                backgroundColor: Colors.red,
+                backgroundColor: const Color(0xFFB71C1C),
                 duration: const Duration(seconds: 4),
               ),
             );
@@ -657,7 +667,7 @@ class _RegisterAdminTabState extends State<_RegisterAdminTab> {
                                   icon: const Icon(Icons.clear, size: 18),
                                   label: const Text('Clear'),
                                   style: TextButton.styleFrom(
-                                    foregroundColor: Colors.red,
+                                    foregroundColor: const Color(0xFFB71C1C),
                                   ),
                                 ),
                             ],
@@ -685,12 +695,12 @@ class _RegisterAdminTabState extends State<_RegisterAdminTab> {
                                   : _selectedUser != null
                                       ? const Icon(
                                           Icons.check_circle,
-                                          color: Colors.blue,
+                                          color: const Color(0xFF1E3A5F),
                                         )
                                       : null,
                               border: const OutlineInputBorder(),
                               filled: _selectedUser != null ? true : false,
-                              fillColor: _selectedUser != null ? Colors.blue[50] : null,
+                              fillColor: _selectedUser != null ? const Color(0xFFE8EDF4) : null,
                             ),
                           ),
                           if (_searchResults.isNotEmpty) ...[
@@ -698,7 +708,7 @@ class _RegisterAdminTabState extends State<_RegisterAdminTab> {
                             Container(
                               constraints: const BoxConstraints(maxHeight: 200),
                               decoration: BoxDecoration(
-                                border: Border.all(color: Colors.grey[300]!),
+                                border: Border.all(color: const Color(0xFFD1D5DB)),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: ListView.builder(
@@ -727,7 +737,7 @@ class _RegisterAdminTabState extends State<_RegisterAdminTab> {
                                         user.role.toUpperCase(),
                                         style: const TextStyle(fontSize: 10),
                                       ),
-                                      backgroundColor: Colors.blue[50],
+                                      backgroundColor: const Color(0xFFE8EDF4),
                                     ),
                                     onTap: () => _selectUser(user),
                                   );
@@ -740,21 +750,21 @@ class _RegisterAdminTabState extends State<_RegisterAdminTab> {
                             Container(
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: Colors.blue[50],
+                                color: const Color(0xFFE8EDF4),
                                 borderRadius: BorderRadius.circular(8),
-                                border: Border.all(color: Colors.blue[200]!),
+                                border: Border.all(color: const Color(0xFF90CAF9)),
                               ),
                               child: Row(
                                 children: [
                                   Icon(Icons.info_outline,
-                                      color: Colors.blue[700], size: 20),
+                                      color: const Color(0xFF0A192F), size: 20),
                                   const SizedBox(width: 8),
                                   Expanded(
                                     child: Text(
                                       'Creating admin account for ${_selectedUser!.fullName}. Please enter a password and assign role/workplaces.',
                                       style: TextStyle(
                                         fontSize: 13,
-                                        color: Colors.blue[900],
+                                        color: const Color(0xFF0A192F),
                                       ),
                                     ),
                                   ),
@@ -1026,10 +1036,10 @@ class _RegisterAdminTabState extends State<_RegisterAdminTab> {
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: Colors.grey[50],
+                  color: const Color(0xFFF9FAFB),
                   border: Border(
                     bottom: BorderSide(
-                      color: Colors.grey[200]!,
+                      color: const Color(0xFFE5E7EB),
                       width: 1,
                     ),
                   ),
@@ -1058,7 +1068,7 @@ class _RegisterAdminTabState extends State<_RegisterAdminTab> {
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.w600,
-                              color: Colors.black87,
+                              color: const Color(0xFF1A1A1A),
                             ),
                           ),
                         ),
@@ -1068,10 +1078,10 @@ class _RegisterAdminTabState extends State<_RegisterAdminTab> {
                             vertical: 6,
                           ),
                           decoration: BoxDecoration(
-                            color: Theme.of(context).primaryColor.withOpacity(0.1),
+                            color: const Color(0x1A007A3D),
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
-                              color: Theme.of(context).primaryColor.withOpacity(0.3),
+                              color: const Color(0x4D007A3D),
                               width: 1,
                             ),
                           ),
@@ -1088,7 +1098,7 @@ class _RegisterAdminTabState extends State<_RegisterAdminTab> {
                         IconButton(
                           icon: Icon(
                             Icons.close,
-                            color: Colors.grey[700],
+                            color: const Color(0xFF374151),
                             size: 24,
                           ),
                           onPressed: () => Navigator.pop(dialogContext),
@@ -1107,7 +1117,7 @@ class _RegisterAdminTabState extends State<_RegisterAdminTab> {
                     color: Colors.white,
                     border: Border(
                       bottom: BorderSide(
-                        color: Colors.grey[300]!,
+                        color: const Color(0xFFD1D5DB),
                         width: 1,
                       ),
                     ),
@@ -1124,7 +1134,7 @@ class _RegisterAdminTabState extends State<_RegisterAdminTab> {
                         _selectedSite!.name,
                         style: TextStyle(
                           fontSize: 15,
-                          color: Colors.black87,
+                          color: const Color(0xFF1A1A1A),
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -1140,14 +1150,14 @@ class _RegisterAdminTabState extends State<_RegisterAdminTab> {
                             Icon(
                               Icons.work_off,
                               size: 64,
-                              color: Colors.grey[400],
+                              color: const Color(0xFF9CA3AF),
                             ),
                             const SizedBox(height: 16),
                             Text(
                               'No workplaces available',
                               style: TextStyle(
                                 fontSize: 16,
-                                color: Colors.grey[600],
+                                color: const Color(0xFF6B7280),
                               ),
                             ),
                             const SizedBox(height: 8),
@@ -1155,7 +1165,7 @@ class _RegisterAdminTabState extends State<_RegisterAdminTab> {
                               'Create workplaces for this site first',
                               style: TextStyle(
                                 fontSize: 14,
-                                color: Colors.grey[500],
+                                color: const Color(0xFF9CA3AF),
                               ),
                             ),
                           ],
@@ -1188,7 +1198,7 @@ class _RegisterAdminTabState extends State<_RegisterAdminTab> {
                                 border: Border.all(
                                   color: isSelected
                                       ? Theme.of(context).primaryColor
-                                      : Colors.grey[300]!,
+                                      : const Color(0xFFD1D5DB),
                                   width: 1.5,
                                 ),
                                 borderRadius: BorderRadius.circular(8),
@@ -1201,14 +1211,14 @@ class _RegisterAdminTabState extends State<_RegisterAdminTab> {
                                     decoration: BoxDecoration(
                                       color: isSelected
                                           ? Theme.of(context).primaryColor
-                                          : Colors.grey[100],
+                                          : const Color(0xFFF3F4F6),
                                       borderRadius: BorderRadius.circular(6),
                                     ),
                                     child: Icon(
                                       Icons.location_city,
                                       color: isSelected
                                           ? Colors.white
-                                          : Colors.grey[600],
+                                          : const Color(0xFF6B7280),
                                       size: 20,
                                     ),
                                   ),
@@ -1222,7 +1232,7 @@ class _RegisterAdminTabState extends State<_RegisterAdminTab> {
                                           style: TextStyle(
                                             fontSize: 15,
                                             fontWeight: FontWeight.w600,
-                                            color: Colors.black87,
+                                            color: const Color(0xFF1A1A1A),
                                           ),
                                         ),
                                         const SizedBox(height: 6),
@@ -1234,14 +1244,14 @@ class _RegisterAdminTabState extends State<_RegisterAdminTab> {
                                                 vertical: 3,
                                               ),
                                               decoration: BoxDecoration(
-                                                color: Colors.blue[50],
+                                                color: const Color(0xFFE8EDF4),
                                                 borderRadius: BorderRadius.circular(4),
                                               ),
                                               child: Text(
                                                 workplace.code,
                                                 style: TextStyle(
                                                   fontSize: 11,
-                                                  color: Colors.blue[700],
+                                                  color: const Color(0xFF0A192F),
                                                   fontWeight: FontWeight.w600,
                                                 ),
                                               ),
@@ -1251,7 +1261,7 @@ class _RegisterAdminTabState extends State<_RegisterAdminTab> {
                                               Icon(
                                                 Icons.location_on,
                                                 size: 13,
-                                                color: Colors.grey[500],
+                                                color: const Color(0xFF9CA3AF),
                                               ),
                                               const SizedBox(width: 4),
                                               Expanded(
@@ -1259,7 +1269,7 @@ class _RegisterAdminTabState extends State<_RegisterAdminTab> {
                                                   workplace.locationAddress!,
                                                   style: TextStyle(
                                                     fontSize: 12,
-                                                    color: Colors.grey[600],
+                                                    color: const Color(0xFF6B7280),
                                                   ),
                                                   maxLines: 1,
                                                   overflow: TextOverflow.ellipsis,
@@ -1274,7 +1284,7 @@ class _RegisterAdminTabState extends State<_RegisterAdminTab> {
                                             workplace.description!,
                                             style: TextStyle(
                                               fontSize: 12,
-                                              color: Colors.grey[600],
+                                              color: const Color(0xFF6B7280),
                                             ),
                                             maxLines: 2,
                                             overflow: TextOverflow.ellipsis,
@@ -1292,7 +1302,7 @@ class _RegisterAdminTabState extends State<_RegisterAdminTab> {
                                       border: Border.all(
                                         color: isSelected
                                             ? Theme.of(context).primaryColor
-                                            : Colors.grey[400]!,
+                                            : const Color(0xFF9CA3AF),
                                         width: 2,
                                       ),
                                       color: isSelected
@@ -1320,7 +1330,7 @@ class _RegisterAdminTabState extends State<_RegisterAdminTab> {
                   color: Colors.white,
                   border: Border(
                     top: BorderSide(
-                      color: Colors.grey[200]!,
+                      color: const Color(0xFFE5E7EB),
                       width: 1,
                     ),
                   ),
@@ -1332,7 +1342,7 @@ class _RegisterAdminTabState extends State<_RegisterAdminTab> {
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       backgroundColor: _selectedWorkplaces.isEmpty
-                          ? Colors.grey[600]
+                          ? const Color(0xFF6B7280)
                           : Theme.of(context).primaryColor,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
@@ -1366,7 +1376,7 @@ class _RegisterAdminTabState extends State<_RegisterAdminTab> {
       builder: (dialogContext) => AlertDialog(
         title: Row(
           children: [
-            Icon(Icons.warning_amber_rounded, color: Colors.orange[700]),
+            Icon(Icons.warning_amber_rounded, color: const Color(0xFFE65100)),
             const SizedBox(width: 12),
             const Expanded(child: Text('Pending Request Exists')),
           ],
@@ -1383,7 +1393,7 @@ class _RegisterAdminTabState extends State<_RegisterAdminTab> {
               const SizedBox(height: 12),
               Text(
                 'Created: ${_formatDateTime(createdAt)}',
-                style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+                style: TextStyle(fontSize: 13, color: const Color(0xFF6B7280)),
               ),
             ],
             const SizedBox(height: 16),
@@ -1431,10 +1441,19 @@ class _RegisterAdminTabState extends State<_RegisterAdminTab> {
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Previous request cancelled successfully. You can now submit a new request.'),
-            backgroundColor: Colors.green,
-            duration: Duration(seconds: 3),
+          SnackBar(
+            content: const Row(children: [
+              Icon(Icons.check_circle_outline, color: Colors.white, size: 18),
+              SizedBox(width: 10),
+              Expanded(
+                child: Text('Previous request cancelled successfully. You can now submit a new request.'),
+              ),
+            ]),
+            backgroundColor: const Color(0xFF007A3D),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
+            duration: const Duration(seconds: 3),
           ),
         );
       }
@@ -1442,8 +1461,15 @@ class _RegisterAdminTabState extends State<_RegisterAdminTab> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to cancel request: ${e.toString()}'),
-            backgroundColor: Colors.red,
+            content: Row(children: [
+              const Icon(Icons.error_outline, color: Colors.white, size: 18),
+              const SizedBox(width: 10),
+              Expanded(child: Text('Failed to cancel request: ${e.toString()}')),
+            ]),
+            backgroundColor: const Color(0xFFB71C1C),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
           ),
         );
       }
@@ -1454,7 +1480,17 @@ class _RegisterAdminTabState extends State<_RegisterAdminTab> {
     if (_formKey.currentState!.validate()) {
       if (_selectedSite == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please select a site')),
+          SnackBar(
+            content: const Row(children: [
+              Icon(Icons.warning_amber_rounded, color: Colors.white, size: 18),
+              SizedBox(width: 10),
+              Text('Please select a site'),
+            ]),
+            backgroundColor: const Color(0xFFE65100),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
+          ),
         );
         return;
       }
@@ -1596,7 +1632,7 @@ class _AdminDetailsTabState extends State<_AdminDetailsTab> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Failed to load admins: $errorMessage'),
-            backgroundColor: Colors.red,
+            backgroundColor: const Color(0xFFB71C1C),
             duration: const Duration(seconds: 4),
           ),
         );
@@ -1646,7 +1682,7 @@ class _AdminDetailsTabState extends State<_AdminDetailsTab> {
               Icon(
                 Icons.warning_amber_rounded,
                 size: 80,
-                color: Colors.orange[700],
+                color: const Color(0xFFE65100),
               ),
               const SizedBox(height: 24),
               Text(
@@ -1654,27 +1690,27 @@ class _AdminDetailsTabState extends State<_AdminDetailsTab> {
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
-                  color: Colors.grey[800],
+                  color: const Color(0xFF1F2937),
                 ),
               ),
               const SizedBox(height: 16),
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: Colors.orange[50],
+                  color: const Color(0xFFFFF3E0),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.orange[200]!, width: 2),
+                  border: Border.all(color: const Color(0xFFFFCC80), width: 2),
                 ),
                 child: Column(
                   children: [
-                    Icon(Icons.info_outline, color: Colors.orange[800], size: 32),
+                    Icon(Icons.info_outline, color: const Color(0xFFBF360C), size: 32),
                     const SizedBox(height: 12),
                     Text(
                       'You need to be assigned to a workplace to view and manage data.',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 16,
-                        color: Colors.grey[800],
+                        color: const Color(0xFF1F2937),
                         height: 1.5,
                       ),
                     ),
@@ -1684,7 +1720,7 @@ class _AdminDetailsTabState extends State<_AdminDetailsTab> {
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 14,
-                        color: Colors.grey[600],
+                        color: const Color(0xFF6B7280),
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -1695,14 +1731,14 @@ class _AdminDetailsTabState extends State<_AdminDetailsTab> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
-                  color: Colors.blue[50],
+                  color: const Color(0xFFE8EDF4),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.blue[200]!),
+                  border: Border.all(color: const Color(0xFF90CAF9)),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.lightbulb_outline, color: Colors.blue[700], size: 20),
+                    Icon(Icons.lightbulb_outline, color: const Color(0xFF0A192F), size: 20),
                     const SizedBox(width: 8),
                     Flexible(
                       child: Text(
@@ -1710,7 +1746,7 @@ class _AdminDetailsTabState extends State<_AdminDetailsTab> {
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 13,
-                          color: Colors.blue[900],
+                          color: const Color(0xFF0A192F),
                         ),
                       ),
                     ),
@@ -1728,7 +1764,7 @@ class _AdminDetailsTabState extends State<_AdminDetailsTab> {
         if (widget.selectedSite != null)
           Container(
             padding: const EdgeInsets.all(16),
-            color: Colors.grey[100],
+            color: const Color(0xFFF3F4F6),
             child: TextField(
               controller: _searchController,
               decoration: const InputDecoration(
@@ -1749,7 +1785,7 @@ class _AdminDetailsTabState extends State<_AdminDetailsTab> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Icon(Icons.admin_panel_settings_outlined,
-                              size: 64, color: Colors.grey[400]),
+                              size: 64, color: const Color(0xFF9CA3AF)),
                           const SizedBox(height: 16),
                           Text(
                             widget.selectedSite == null
@@ -1757,7 +1793,7 @@ class _AdminDetailsTabState extends State<_AdminDetailsTab> {
                                 : 'No admins found',
                             style: TextStyle(
                               fontSize: 16,
-                              color: Colors.grey[600],
+                              color: const Color(0xFF6B7280),
                             ),
                           ),
                         ],
@@ -1780,7 +1816,7 @@ class _AdminDetailsTabState extends State<_AdminDetailsTab> {
 
   Widget _buildAdminCard(dynamic admin) {
     final isActive = admin['is_active'] as bool? ?? true;
-    final statusColor = isActive ? Colors.green : Colors.red;
+    final statusColor = isActive ? const Color(0xFF007A3D) : const Color(0xFFB71C1C);
     final role = admin['role'] as String? ?? 'admin';
 
     return Card(
@@ -1826,7 +1862,7 @@ class _AdminDetailsTabState extends State<_AdminDetailsTab> {
                             vertical: 4,
                           ),
                           decoration: BoxDecoration(
-                            color: statusColor.withOpacity(0.1),
+                            color: Color.fromARGB(26, statusColor.red, statusColor.green, statusColor.blue),
                             borderRadius: BorderRadius.circular(4),
                             border: Border.all(color: statusColor),
                           ),
@@ -1844,28 +1880,28 @@ class _AdminDetailsTabState extends State<_AdminDetailsTab> {
                     const SizedBox(height: 4),
                     Row(
                       children: [
-                        Icon(Icons.person, size: 14, color: Colors.grey[600]),
+                        Icon(Icons.person, size: 14, color: const Color(0xFF6B7280)),
                         const SizedBox(width: 4),
                         Flexible(
                           child: Text(
                             '@${admin['username'] as String? ?? 'N/A'}',
                             style: TextStyle(
                               fontSize: 13,
-                              color: Colors.grey[700],
+                              color: const Color(0xFF374151),
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
                         const SizedBox(width: 16),
-                        Icon(Icons.admin_panel_settings, size: 14, color: Colors.grey[600]),
+                        Icon(Icons.admin_panel_settings, size: 14, color: const Color(0xFF6B7280)),
                         const SizedBox(width: 4),
                         Expanded(
                           child: Text(
                             role.toUpperCase().replaceAll('_', ' '),
                             style: TextStyle(
                               fontSize: 13,
-                              color: Colors.grey[700],
+                              color: const Color(0xFF374151),
                               fontWeight: FontWeight.w600,
                             ),
                             overflow: TextOverflow.ellipsis,
@@ -1876,14 +1912,14 @@ class _AdminDetailsTabState extends State<_AdminDetailsTab> {
                     const SizedBox(height: 4),
                     Row(
                       children: [
-                        Icon(Icons.email, size: 14, color: Colors.grey[600]),
+                        Icon(Icons.email, size: 14, color: const Color(0xFF6B7280)),
                         const SizedBox(width: 4),
                         Expanded(
                           child: Text(
                             admin['email'] as String? ?? 'N/A',
                             style: TextStyle(
                               fontSize: 13,
-                              color: Colors.grey[700],
+                              color: const Color(0xFF374151),
                             ),
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -1893,7 +1929,7 @@ class _AdminDetailsTabState extends State<_AdminDetailsTab> {
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right, color: Colors.grey),
+              const Icon(Icons.chevron_right, color: const Color(0xFF9CA3AF)),
             ],
           ),
         ),
@@ -1965,7 +2001,7 @@ class _AdminDetailsDialogState extends State<_AdminDetailsDialog> {
             final workplace = await datasource.getWorkPlaceById(workplaceId);
             loadedWorkplaces.add(workplace);
           } catch (e) {
-            print('Failed to load workplace $workplaceId: $e');
+            debugPrint('Failed to load workplace $workplaceId: $e');
           }
         }
       }
@@ -1978,7 +2014,7 @@ class _AdminDetailsDialogState extends State<_AdminDetailsDialog> {
         });
       }
     } catch (e) {
-      print('Error loading workplace details: $e');
+      debugPrint('Error loading workplace details: $e');
       if (mounted) {
         setState(() {
           _loadingWorkplaces = false;
@@ -2020,7 +2056,7 @@ class _AdminDetailsDialogState extends State<_AdminDetailsDialog> {
               );
               allWorkplaces.addAll(workplaces);
             } catch (e) {
-              print('Failed to load workplaces for site $siteId: $e');
+              debugPrint('Failed to load workplaces for site $siteId: $e');
             }
           }
         }
@@ -2045,7 +2081,7 @@ class _AdminDetailsDialogState extends State<_AdminDetailsDialog> {
                 );
                 allWorkplaces.addAll(workplaces);
               } catch (e) {
-                print('Failed to load workplaces for site $siteId: $e');
+                debugPrint('Failed to load workplaces for site $siteId: $e');
               }
             }
           }
@@ -2056,7 +2092,7 @@ class _AdminDetailsDialogState extends State<_AdminDetailsDialog> {
               final workplace = await datasource.getWorkPlaceById(workplaceId);
               allWorkplaces.add(workplace);
             } catch (e) {
-              print('Failed to load workplace $workplaceId: $e');
+              debugPrint('Failed to load workplace $workplaceId: $e');
             }
           }
         }
@@ -2084,7 +2120,7 @@ class _AdminDetailsDialogState extends State<_AdminDetailsDialog> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Failed to load available workplaces: $e'),
-            backgroundColor: Colors.orange,
+            backgroundColor: const Color(0xFFE65100),
           ),
         );
       }
@@ -2125,15 +2161,22 @@ class _AdminDetailsDialogState extends State<_AdminDetailsDialog> {
             },
           );
         } catch (e) {
-          print('Failed to update workplace assignments: $e');
+          debugPrint('Failed to update workplace assignments: $e');
         }
       }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Admin details updated successfully'),
-            backgroundColor: Colors.green,
+          SnackBar(
+            content: const Row(children: [
+              Icon(Icons.check_circle_outline, color: Colors.white, size: 18),
+              SizedBox(width: 10),
+              Text('Admin details updated successfully'),
+            ]),
+            backgroundColor: const Color(0xFF007A3D),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
           ),
         );
         widget.onSave();
@@ -2143,8 +2186,15 @@ class _AdminDetailsDialogState extends State<_AdminDetailsDialog> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to update admin: $e'),
-            backgroundColor: Colors.red,
+            content: Row(children: [
+              const Icon(Icons.error_outline, color: Colors.white, size: 18),
+              const SizedBox(width: 10),
+              Expanded(child: Text('Failed to update admin: $e')),
+            ]),
+            backgroundColor: const Color(0xFFB71C1C),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
           ),
         );
       }
@@ -2232,19 +2282,33 @@ class _AdminDetailsDialogState extends State<_AdminDetailsDialog> {
                     if (mounted) {
                       Navigator.pop(context);
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Password reset successfully'),
-                          backgroundColor: Colors.green,
-                        )
+                        SnackBar(
+                          content: const Row(children: [
+                            Icon(Icons.check_circle_outline, color: Colors.white, size: 18),
+                            SizedBox(width: 10),
+                            Text('Password reset successfully'),
+                          ]),
+                          backgroundColor: const Color(0xFF007A3D),
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          margin: const EdgeInsets.all(16),
+                        ),
                       );
                     }
                   } catch (e) {
                     if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text('Failed to reset password: $e'),
-                          backgroundColor: Colors.red,
-                        )
+                          content: Row(children: [
+                            const Icon(Icons.error_outline, color: Colors.white, size: 18),
+                            const SizedBox(width: 10),
+                            Expanded(child: Text('Failed to reset password: $e')),
+                          ]),
+                          backgroundColor: const Color(0xFFB71C1C),
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          margin: const EdgeInsets.all(16),
+                        ),
                       );
                     }
                   } finally {
@@ -2275,7 +2339,7 @@ class _AdminDetailsDialogState extends State<_AdminDetailsDialog> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         title: const Row(
           children: [
-            Icon(Icons.warning, color: Colors.red, size: 28),
+            Icon(Icons.warning_amber_rounded, color: Color(0xFFB71C1C), size: 28),
             SizedBox(width: 12),
             Text('Delete Admin'),
           ],
@@ -2292,13 +2356,13 @@ class _AdminDetailsDialogState extends State<_AdminDetailsDialog> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.orange[50],
+                color: const Color(0xFFFFF3E0),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.orange[300]!),
+                border: Border.all(color: const Color(0xFFFFCC80)),
               ),
               child: const Row(
                 children: [
-                  Icon(Icons.info_outline, color: Colors.orange, size: 20),
+                  Icon(Icons.info_outline, color: Color(0xFFE65100), size: 20),
                   SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -2319,7 +2383,7 @@ class _AdminDetailsDialogState extends State<_AdminDetailsDialog> {
           ElevatedButton.icon(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
+              backgroundColor: const Color(0xFFB71C1C),
               foregroundColor: Colors.white,
             ),
             icon: const Icon(Icons.delete),
@@ -2340,9 +2404,16 @@ class _AdminDetailsDialogState extends State<_AdminDetailsDialog> {
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Admin deleted successfully'),
-              backgroundColor: Colors.green,
+            SnackBar(
+              content: const Row(children: [
+                Icon(Icons.check_circle_outline, color: Colors.white, size: 18),
+                SizedBox(width: 10),
+                Text('Admin deleted successfully'),
+              ]),
+              backgroundColor: const Color(0xFF007A3D),
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              margin: const EdgeInsets.all(16),
             ),
           );
           widget.onDelete();
@@ -2352,8 +2423,15 @@ class _AdminDetailsDialogState extends State<_AdminDetailsDialog> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Failed to delete admin: $e'),
-              backgroundColor: Colors.red,
+              content: Row(children: [
+                const Icon(Icons.error_outline, color: Colors.white, size: 18),
+                const SizedBox(width: 10),
+                Expanded(child: Text('Failed to delete admin: $e')),
+              ]),
+              backgroundColor: const Color(0xFFB71C1C),
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              margin: const EdgeInsets.all(16),
             ),
           );
         }
@@ -2381,7 +2459,7 @@ class _AdminDetailsDialogState extends State<_AdminDetailsDialog> {
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.15),
+              color: const Color(0x26000000),
               blurRadius: 30,
               offset: const Offset(0, 10),
             ),
@@ -2398,8 +2476,8 @@ class _AdminDetailsDialogState extends State<_AdminDetailsDialog> {
                   end: Alignment.bottomRight,
                   colors: [
                     Theme.of(context).primaryColor,
-                    Theme.of(context).primaryColor.withOpacity(0.85),
-                    Theme.of(context).primaryColor.withOpacity(0.7),
+                    const Color(0xD9007A3D),
+                    const Color(0xB3007A3D),
                   ],
                 ),
                 borderRadius: const BorderRadius.only(
@@ -2408,7 +2486,7 @@ class _AdminDetailsDialogState extends State<_AdminDetailsDialog> {
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Theme.of(context).primaryColor.withOpacity(0.3),
+                    color: const Color(0x4D007A3D),
                     blurRadius: 8,
                     offset: const Offset(0, 4),
                   ),
@@ -2453,7 +2531,7 @@ class _AdminDetailsDialogState extends State<_AdminDetailsDialog> {
                             Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Icon(Icons.alternate_email, size: 13, color: Colors.white70),
+                                const Icon(Icons.alternate_email, size: 13, color: const Color(0xB3FFFFFF)),
                                 const SizedBox(width: 3),
                                 Flexible(
                                   child: Text(
@@ -2486,7 +2564,7 @@ class _AdminDetailsDialogState extends State<_AdminDetailsDialog> {
                       OutlinedButton.icon(
                         style: OutlinedButton.styleFrom(
                           foregroundColor: Colors.white,
-                          side: const BorderSide(color: Colors.white54),
+                          side: const BorderSide(color: const Color(0x8AFFFFFF)),
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                           visualDensity: VisualDensity.compact,
                         ),
@@ -2498,8 +2576,8 @@ class _AdminDetailsDialogState extends State<_AdminDetailsDialog> {
                       if (!_deleting)
                         OutlinedButton.icon(
                           style: OutlinedButton.styleFrom(
-                            foregroundColor: Colors.red[200],
-                            side: BorderSide(color: Colors.red.shade300),
+                            foregroundColor: const Color(0xFFEF9A9A),
+                            side: BorderSide(color: const Color(0xFFE57373)),
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                             visualDensity: VisualDensity.compact,
                           ),
@@ -2511,7 +2589,7 @@ class _AdminDetailsDialogState extends State<_AdminDetailsDialog> {
                       OutlinedButton.icon(
                         style: OutlinedButton.styleFrom(
                           foregroundColor: Colors.white,
-                          side: const BorderSide(color: Colors.white54),
+                          side: const BorderSide(color: const Color(0x8AFFFFFF)),
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                           visualDensity: VisualDensity.compact,
                         ),
@@ -2527,7 +2605,7 @@ class _AdminDetailsDialogState extends State<_AdminDetailsDialog> {
             Expanded(
               child: Container(
                 decoration: BoxDecoration(
-                  color: Colors.grey[50],
+                  color: const Color(0xFFF9FAFB),
                 ),
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.all(28),
@@ -2537,7 +2615,7 @@ class _AdminDetailsDialogState extends State<_AdminDetailsDialog> {
                       _buildSection(
                         'Contact Information',
                         Icons.person_outline,
-                        Colors.blue,
+                        const Color(0xFF1E3A5F),
                         [
                           _buildDetailField(
                             'Full Name',
@@ -2560,7 +2638,7 @@ class _AdminDetailsDialogState extends State<_AdminDetailsDialog> {
                       _buildSection(
                         'Account Details',
                         Icons.admin_panel_settings_outlined,
-                        Colors.purple,
+                        const Color(0xFF0A192F),
                         [
                           _buildReadOnlyField(
                             'Username',
@@ -2587,7 +2665,7 @@ class _AdminDetailsDialogState extends State<_AdminDetailsDialog> {
                       _buildSection(
                         'Workplace Assignments',
                         Icons.business_outlined,
-                        Colors.orange,
+                        const Color(0xFFE65100),
                         [
                           _buildWorkplaceAssignmentsList(),
                         ],
@@ -2596,7 +2674,7 @@ class _AdminDetailsDialogState extends State<_AdminDetailsDialog> {
                       _buildSection(
                         'Site Assignments',
                         Icons.location_on_outlined,
-                        Colors.green,
+                        const Color(0xFF007A3D),
                         [
                           _buildSiteAssignmentsList(),
                         ],
@@ -2612,11 +2690,11 @@ class _AdminDetailsDialogState extends State<_AdminDetailsDialog> {
                 decoration: BoxDecoration(
                   color: Colors.white,
                   border: Border(
-                    top: BorderSide(color: Colors.grey[200]!, width: 1),
+                    top: BorderSide(color: const Color(0xFFE5E7EB), width: 1),
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: const Color(0x0D000000),
                       blurRadius: 10,
                       offset: const Offset(0, -5),
                     ),
@@ -2689,10 +2767,10 @@ class _AdminDetailsDialogState extends State<_AdminDetailsDialog> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey[200]!, width: 1),
+        border: Border.all(color: const Color(0xFFE5E7EB), width: 1),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: const Color(0x08000000),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -2706,8 +2784,8 @@ class _AdminDetailsDialogState extends State<_AdminDetailsDialog> {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  color.withOpacity(0.08),
-                  color.withOpacity(0.05),
+                  Color.fromARGB(20, color.red, color.green, color.blue),
+                  Color.fromARGB(13, color.red, color.green, color.blue),
                 ],
               ),
               borderRadius: const BorderRadius.only(
@@ -2720,7 +2798,7 @@ class _AdminDetailsDialogState extends State<_AdminDetailsDialog> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: color.withOpacity(0.15),
+                    color: Color.fromARGB(38, color.red, color.green, color.blue),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(icon, color: color, size: 20),
@@ -2764,17 +2842,17 @@ class _AdminDetailsDialogState extends State<_AdminDetailsDialog> {
           labelText: label,
           labelStyle: TextStyle(
             fontSize: 14,
-            color: Colors.grey[700],
+            color: const Color(0xFF374151),
             fontWeight: FontWeight.w500,
           ),
-          prefixIcon: Icon(icon, size: 20, color: Colors.grey[600]),
+          prefixIcon: Icon(icon, size: 20, color: const Color(0xFF6B7280)),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
-            borderSide: BorderSide(color: Colors.grey[300]!),
+            borderSide: BorderSide(color: const Color(0xFFD1D5DB)),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
-            borderSide: BorderSide(color: Colors.grey[300]!),
+            borderSide: BorderSide(color: const Color(0xFFD1D5DB)),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
@@ -2782,10 +2860,10 @@ class _AdminDetailsDialogState extends State<_AdminDetailsDialog> {
           ),
           disabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
-            borderSide: BorderSide(color: Colors.grey[200]!),
+            borderSide: BorderSide(color: const Color(0xFFE5E7EB)),
           ),
           filled: true,
-          fillColor: _isEditing ? Colors.white : Colors.grey[50],
+          fillColor: _isEditing ? Colors.white : const Color(0xFFF9FAFB),
           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         ),
       ),
@@ -2803,20 +2881,20 @@ class _AdminDetailsDialogState extends State<_AdminDetailsDialog> {
           labelText: label,
           labelStyle: TextStyle(
             fontSize: 14,
-            color: Colors.grey[700],
+            color: const Color(0xFF374151),
             fontWeight: FontWeight.w500,
           ),
-          prefixIcon: Icon(icon, size: 20, color: Colors.grey[500]),
+          prefixIcon: Icon(icon, size: 20, color: const Color(0xFF9CA3AF)),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
-            borderSide: BorderSide(color: Colors.grey[200]!),
+            borderSide: BorderSide(color: const Color(0xFFE5E7EB)),
           ),
           disabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
-            borderSide: BorderSide(color: Colors.grey[200]!),
+            borderSide: BorderSide(color: const Color(0xFFE5E7EB)),
           ),
           filled: true,
-          fillColor: Colors.grey[50],
+          fillColor: const Color(0xFFF9FAFB),
           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         ),
       ),
@@ -2847,8 +2925,8 @@ class _AdminDetailsDialogState extends State<_AdminDetailsDialog> {
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [
-                          Colors.orange,
-                          Colors.orange.withOpacity(0.85),
+                          const Color(0xFFE65100),
+                          const Color(0xD9E65100),
                         ],
                       ),
                       borderRadius: const BorderRadius.only(
@@ -2874,10 +2952,10 @@ class _AdminDetailsDialogState extends State<_AdminDetailsDialog> {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
+                              color: const Color(0x33FFFFFF),
                               borderRadius: BorderRadius.circular(16),
                               border: Border.all(
-                                color: Colors.white.withOpacity(0.3),
+                                color: const Color(0x4DFFFFFF),
                                 width: 1,
                               ),
                             ),
@@ -2905,13 +2983,13 @@ class _AdminDetailsDialogState extends State<_AdminDetailsDialog> {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.work_off, size: 64, color: Colors.grey[400]),
+                            Icon(Icons.work_off, size: 64, color: const Color(0xFF9CA3AF)),
                             const SizedBox(height: 16),
                             Text(
                               'No workplaces available',
                               style: TextStyle(
                                 fontSize: 16,
-                                color: Colors.grey[600],
+                                color: const Color(0xFF6B7280),
                               ),
                             ),
                           ],
@@ -2944,9 +3022,9 @@ class _AdminDetailsDialogState extends State<_AdminDetailsDialog> {
                               child: Container(
                                 padding: const EdgeInsets.all(16),
                                 decoration: BoxDecoration(
-                                  color: isSelected ? Colors.orange[50] : Colors.white,
+                                  color: isSelected ? const Color(0xFFFFF3E0) : Colors.white,
                                   border: Border.all(
-                                    color: isSelected ? Colors.orange : Colors.grey[300]!,
+                                    color: isSelected ? const Color(0xFFE65100) : const Color(0xFFD1D5DB),
                                     width: isSelected ? 2 : 1,
                                   ),
                                   borderRadius: BorderRadius.circular(12),
@@ -2959,10 +3037,10 @@ class _AdminDetailsDialogState extends State<_AdminDetailsDialog> {
                                       decoration: BoxDecoration(
                                         shape: BoxShape.circle,
                                         border: Border.all(
-                                          color: isSelected ? Colors.orange : Colors.grey[400]!,
+                                          color: isSelected ? const Color(0xFFE65100) : const Color(0xFF9CA3AF),
                                           width: 2,
                                         ),
-                                        color: isSelected ? Colors.orange : Colors.transparent,
+                                        color: isSelected ? const Color(0xFFE65100) : Colors.transparent,
                                       ),
                                       child: isSelected
                                           ? const Icon(Icons.check, color: Colors.white, size: 16)
@@ -2978,7 +3056,7 @@ class _AdminDetailsDialogState extends State<_AdminDetailsDialog> {
                                             style: TextStyle(
                                               fontSize: 15,
                                               fontWeight: FontWeight.w600,
-                                              color: isSelected ? Colors.orange[900] : Colors.black87,
+                                              color: isSelected ? const Color(0xFFBF360C) : const Color(0xFF1A1A1A),
                                             ),
                                           ),
                                           const SizedBox(height: 4),
@@ -2986,7 +3064,7 @@ class _AdminDetailsDialogState extends State<_AdminDetailsDialog> {
                                             workplace.code,
                                             style: TextStyle(
                                               fontSize: 13,
-                                              color: isSelected ? Colors.orange[700] : Colors.grey[600],
+                                              color: isSelected ? const Color(0xFFE65100) : const Color(0xFF6B7280),
                                             ),
                                           ),
                                           if (workplace.locationAddress != null) ...[
@@ -2996,7 +3074,7 @@ class _AdminDetailsDialogState extends State<_AdminDetailsDialog> {
                                                 Icon(
                                                   Icons.location_on,
                                                   size: 12,
-                                                  color: Colors.grey[500],
+                                                  color: const Color(0xFF9CA3AF),
                                                 ),
                                                 const SizedBox(width: 4),
                                                 Expanded(
@@ -3004,7 +3082,7 @@ class _AdminDetailsDialogState extends State<_AdminDetailsDialog> {
                                                     workplace.locationAddress!,
                                                     style: TextStyle(
                                                       fontSize: 12,
-                                                      color: Colors.grey[600],
+                                                      color: const Color(0xFF6B7280),
                                                     ),
                                                     maxLines: 1,
                                                     overflow: TextOverflow.ellipsis,
@@ -3028,7 +3106,7 @@ class _AdminDetailsDialogState extends State<_AdminDetailsDialog> {
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      border: Border(top: BorderSide(color: Colors.grey[200]!)),
+                      border: Border(top: BorderSide(color: const Color(0xFFE5E7EB))),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.end,
@@ -3046,7 +3124,7 @@ class _AdminDetailsDialogState extends State<_AdminDetailsDialog> {
                           icon: const Icon(Icons.check),
                           label: const Text('Done'),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.orange,
+                            backgroundColor: const Color(0xFFE65100),
                             padding: const EdgeInsets.symmetric(
                               horizontal: 24,
                               vertical: 12,
@@ -3085,19 +3163,19 @@ class _AdminDetailsDialogState extends State<_AdminDetailsDialog> {
             child: Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.orange[50],
+                color: const Color(0xFFFFF3E0),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.orange[200]!, width: 1.5, style: BorderStyle.solid),
+                border: Border.all(color: const Color(0xFFFFCC80), width: 1.5, style: BorderStyle.solid),
               ),
               child: Row(
                 children: [
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: Colors.orange[100],
+                      color: const Color(0xFFFFF3E0),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: Icon(Icons.add, color: Colors.orange[800], size: 20),
+                    child: Icon(Icons.add, color: const Color(0xFFBF360C), size: 20),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -3106,13 +3184,13 @@ class _AdminDetailsDialogState extends State<_AdminDetailsDialog> {
                           ? 'Add Workplace Assignments'
                           : 'Manage Workplace Assignments (${_selectedWorkplaceIds.length})',
                       style: TextStyle(
-                        color: Colors.orange[800],
+                        color: const Color(0xFFBF360C),
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),
-                  Icon(Icons.arrow_forward_ios, size: 16, color: Colors.orange[700]),
+                  Icon(Icons.arrow_forward_ios, size: 16, color: const Color(0xFFE65100)),
                 ],
               ),
             ),
@@ -3123,26 +3201,26 @@ class _AdminDetailsDialogState extends State<_AdminDetailsDialog> {
           Container(
             padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
-              color: Colors.grey[50],
+              color: const Color(0xFFF9FAFB),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.grey[200]!, width: 1.5),
+              border: Border.all(color: const Color(0xFFE5E7EB), width: 1.5),
             ),
             child: Row(
               children: [
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.grey[200],
+                    color: const Color(0xFFE5E7EB),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Icon(Icons.info_outline, color: Colors.grey[600], size: 20),
+                  child: Icon(Icons.info_outline, color: const Color(0xFF6B7280), size: 20),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     'No workplace assignments',
                     style: TextStyle(
-                      color: Colors.grey[700],
+                      color: const Color(0xFF374151),
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
                     ),
@@ -3159,15 +3237,15 @@ class _AdminDetailsDialogState extends State<_AdminDetailsDialog> {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    Colors.orange[50]!,
-                    Colors.orange[50]!.withOpacity(0.5),
+                    const Color(0xFFFFF3E0),
+                    const Color(0x80FFF3E0),
                   ],
                 ),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.orange[200]!, width: 1.5),
+                border: Border.all(color: const Color(0xFFFFCC80), width: 1.5),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.orange.withOpacity(0.1),
+                    color: const Color(0x1AE65100),
                     blurRadius: 4,
                     offset: const Offset(0, 2),
                   ),
@@ -3179,10 +3257,10 @@ class _AdminDetailsDialogState extends State<_AdminDetailsDialog> {
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: Colors.orange[100],
+                      color: const Color(0xFFFFF3E0),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: Icon(Icons.business, color: Colors.orange[800], size: 24),
+                    child: Icon(Icons.business, color: const Color(0xFFBF360C), size: 24),
                   ),
                   const SizedBox(width: 14),
                   Expanded(
@@ -3194,7 +3272,7 @@ class _AdminDetailsDialogState extends State<_AdminDetailsDialog> {
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
-                            color: Colors.orange[900],
+                            color: const Color(0xFFBF360C),
                           ),
                         ),
                         const SizedBox(height: 6),
@@ -3203,7 +3281,7 @@ class _AdminDetailsDialogState extends State<_AdminDetailsDialog> {
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                               decoration: BoxDecoration(
-                                color: Colors.orange[100],
+                                color: const Color(0xFFFFF3E0),
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: Text(
@@ -3211,7 +3289,7 @@ class _AdminDetailsDialogState extends State<_AdminDetailsDialog> {
                                 style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.orange[800],
+                                  color: const Color(0xFFBF360C),
                                 ),
                               ),
                             ),
@@ -3221,14 +3299,14 @@ class _AdminDetailsDialogState extends State<_AdminDetailsDialog> {
                           const SizedBox(height: 8),
                           Row(
                             children: [
-                              Icon(Icons.location_on, size: 14, color: Colors.orange[700]),
+                              Icon(Icons.location_on, size: 14, color: const Color(0xFFE65100)),
                               const SizedBox(width: 4),
                               Expanded(
                                 child: Text(
                                   workplace.locationAddress!,
                                   style: TextStyle(
                                     fontSize: 13,
-                                    color: Colors.orange[800],
+                                    color: const Color(0xFFBF360C),
                                   ),
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
@@ -3255,26 +3333,26 @@ class _AdminDetailsDialogState extends State<_AdminDetailsDialog> {
       return Container(
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
-          color: Colors.grey[50],
+          color: const Color(0xFFF9FAFB),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey[200]!, width: 1.5),
+          border: Border.all(color: const Color(0xFFE5E7EB), width: 1.5),
         ),
         child: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Colors.grey[200],
+                color: const Color(0xFFE5E7EB),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Icon(Icons.info_outline, color: Colors.grey[600], size: 20),
+              child: Icon(Icons.info_outline, color: const Color(0xFF6B7280), size: 20),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
                 'No site assignments',
                 style: TextStyle(
-                  color: Colors.grey[700],
+                  color: const Color(0xFF374151),
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
                 ),
@@ -3294,15 +3372,15 @@ class _AdminDetailsDialogState extends State<_AdminDetailsDialog> {
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                Colors.green[50]!,
-                Colors.green[50]!.withOpacity(0.5),
+                const Color(0xFFE8F5EE),
+                const Color(0x80E8F5EE),
               ],
             ),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.green[200]!, width: 1.5),
+            border: Border.all(color: const Color(0xFFB2DFCA), width: 1.5),
             boxShadow: [
               BoxShadow(
-                color: Colors.green.withOpacity(0.1),
+                color: const Color(0x1A007A3D),
                 blurRadius: 4,
                 offset: const Offset(0, 2),
               ),
@@ -3313,10 +3391,10 @@ class _AdminDetailsDialogState extends State<_AdminDetailsDialog> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: Colors.green[100],
+                  color: const Color(0xFFE8F5EE),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(Icons.location_on, color: Colors.green[800], size: 24),
+                child: Icon(Icons.location_on, color: const Color(0xFF005C2E), size: 24),
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -3328,7 +3406,7 @@ class _AdminDetailsDialogState extends State<_AdminDetailsDialog> {
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: Colors.green[900],
+                        color: const Color(0xFF003D1F),
                       ),
                     ),
                     if (assignment['site_code'] != null) ...[
@@ -3336,7 +3414,7 @@ class _AdminDetailsDialogState extends State<_AdminDetailsDialog> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
-                          color: Colors.green[100],
+                          color: const Color(0xFFE8F5EE),
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
@@ -3344,7 +3422,7 @@ class _AdminDetailsDialogState extends State<_AdminDetailsDialog> {
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
-                            color: Colors.green[800],
+                            color: const Color(0xFF005C2E),
                           ),
                         ),
                       ),
@@ -3417,8 +3495,8 @@ class _PendingRequestsTabState extends State<_PendingRequestsTab> {
                     : (state as RegistrationRejected).message,
               ),
               backgroundColor: state is RegistrationApproved
-                  ? Colors.green
-                  : Colors.orange,
+                  ? const Color(0xFF007A3D)
+                  : const Color(0xFFE65100),
             ),
           );
           _loadRequests();
@@ -3426,7 +3504,7 @@ class _PendingRequestsTabState extends State<_PendingRequestsTab> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(state.message),
-              backgroundColor: Colors.red,
+              backgroundColor: const Color(0xFFB71C1C),
             ),
           );
         }
@@ -3447,10 +3525,10 @@ class _PendingRequestsTabState extends State<_PendingRequestsTab> {
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     decoration: BoxDecoration(
-                      color: Theme.of(context).primaryColor.withOpacity(0.1),
+                      color: const Color(0x1A007A3D),
                       border: Border(
                         bottom: BorderSide(
-                          color: Theme.of(context).primaryColor.withOpacity(0.3),
+                          color: const Color(0x4D007A3D),
                           width: 1,
                         ),
                       ),
@@ -3497,13 +3575,13 @@ class _PendingRequestsTabState extends State<_PendingRequestsTab> {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              const Icon(Icons.inbox, size: 64, color: Colors.grey),
+                              const Icon(Icons.inbox, size: 64, color: const Color(0xFF9CA3AF)),
                               const SizedBox(height: 16),
                               Text(
                                 _filterSiteId != null 
                                     ? 'No pending requests for selected site'
                                     : 'No pending requests',
-                                style: const TextStyle(fontSize: 16, color: Colors.grey),
+                                style: const TextStyle(fontSize: 16, color: const Color(0xFF9CA3AF)),
                               ),
                             ],
                           ),
@@ -3590,7 +3668,7 @@ class _PendingRequestsTabState extends State<_PendingRequestsTab> {
                       Text(
                         '@${request.username}',
                         style: TextStyle(
-                          color: Colors.grey[600],
+                          color: const Color(0xFF6B7280),
                           fontSize: 14,
                         ),
                       ),
@@ -3603,13 +3681,13 @@ class _PendingRequestsTabState extends State<_PendingRequestsTab> {
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.orange[100],
+                    color: const Color(0xFFFFF3E0),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
                     request.role.toUpperCase(),
                     style: TextStyle(
-                      color: Colors.orange[900],
+                      color: const Color(0xFFBF360C),
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
                     ),
@@ -3641,7 +3719,7 @@ class _PendingRequestsTabState extends State<_PendingRequestsTab> {
                     icon: const Icon(Icons.close),
                     label: const Text('Reject'),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.red,
+                      foregroundColor: const Color(0xFFB71C1C),
                     ),
                   ),
                 ),
@@ -3664,13 +3742,13 @@ class _PendingRequestsTabState extends State<_PendingRequestsTab> {
   Widget _buildInfoRow(IconData icon, String text) {
     return Row(
       children: [
-        Icon(icon, size: 16, color: Colors.grey[600]),
+        Icon(icon, size: 16, color: const Color(0xFF6B7280)),
         const SizedBox(width: 8),
         Expanded(
           child: Text(
             text,
             style: TextStyle(
-              color: Colors.grey[700],
+              color: const Color(0xFF374151),
               fontSize: 14,
             ),
           ),
@@ -3746,7 +3824,7 @@ class _PendingRequestsTabState extends State<_PendingRequestsTab> {
                   );
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
+              backgroundColor: const Color(0xFFB71C1C),
             ),
             child: const Text('Reject'),
           ),

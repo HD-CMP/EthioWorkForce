@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 import '../../domain/entities/site.dart';
 import '../../data/datasources/site_remote_datasource.dart';
@@ -162,7 +162,7 @@ class _SiteManagementPageState extends State<SiteManagementPage> with SingleTick
         bottom: TabBar(
           controller: _tabController,
           labelColor: Colors.white,
-          unselectedLabelColor: Colors.white70,
+          unselectedLabelColor: const Color(0xB3FFFFFF),
           indicatorColor: Colors.white,
           indicatorWeight: 3,
           tabs: const [
@@ -223,8 +223,8 @@ class _SiteManagementPageState extends State<SiteManagementPage> with SingleTick
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             leading: CircleAvatar(
               backgroundColor: site.isActive 
-                  ? Colors.green[600] 
-                  : Colors.grey[400],
+                  ? const Color(0xFF007A3D) 
+                  : const Color(0xFF9CA3AF),
               child: const Icon(Icons.location_city, color: Colors.white),
             ),
             title: Text(
@@ -242,7 +242,7 @@ class _SiteManagementPageState extends State<SiteManagementPage> with SingleTick
                   Text(
                     'Code: ${site.code}',
                     style: TextStyle(
-                      color: Colors.grey[600],
+                      color: const Color(0xFF6B7280),
                       fontSize: 13,
                     ),
                   ),
@@ -250,13 +250,13 @@ class _SiteManagementPageState extends State<SiteManagementPage> with SingleTick
                     const SizedBox(height: 2),
                     Row(
                       children: [
-                        Icon(Icons.location_on, size: 14, color: Colors.grey[600]),
+                        Icon(Icons.location_on, size: 14, color: const Color(0xFF6B7280)),
                         const SizedBox(width: 4),
                         Expanded(
                           child: Text(
                             site.locationAddress!,
                             style: TextStyle(
-                              color: Colors.grey[700],
+                              color: const Color(0xFF374151),
                               fontSize: 13,
                             ),
                             maxLines: 1,
@@ -276,13 +276,13 @@ class _SiteManagementPageState extends State<SiteManagementPage> with SingleTick
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: site.isActive 
-                        ? Colors.green[50] 
-                        : Colors.grey[200],
+                        ? const Color(0xFFE8F5EE) 
+                        : const Color(0xFFE5E7EB),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: site.isActive 
-                          ? Colors.green[300]! 
-                          : Colors.grey[400]!,
+                          ? const Color(0xFF66B28A) 
+                          : const Color(0xFF9CA3AF),
                     ),
                   ),
                   child: Text(
@@ -291,8 +291,8 @@ class _SiteManagementPageState extends State<SiteManagementPage> with SingleTick
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
                       color: site.isActive 
-                          ? Colors.green[900] 
-                          : Colors.grey[700],
+                          ? const Color(0xFF003D1F) 
+                          : const Color(0xFF374151),
                     ),
                   ),
                 ),
@@ -303,7 +303,7 @@ class _SiteManagementPageState extends State<SiteManagementPage> with SingleTick
                   tooltip: 'Edit',
                 ),
                 IconButton(
-                  icon: const Icon(Icons.delete_outline, color: Colors.red, size: 20),
+                  icon: const Icon(Icons.delete_outline, color: const Color(0xFFB71C1C), size: 20),
                   onPressed: () => _deleteSite(site),
                   tooltip: 'Delete',
                 ),
@@ -321,20 +321,20 @@ class _SiteManagementPageState extends State<SiteManagementPage> with SingleTick
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.location_city_outlined, size: 80, color: Colors.grey[300]),
+            Icon(Icons.location_city_outlined, size: 80, color: const Color(0xFFD1D5DB)),
             const SizedBox(height: 16),
             Text(
               'No Sites Available',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
-                color: Colors.grey[600],
+                color: const Color(0xFF6B7280),
               ),
             ),
             const SizedBox(height: 8),
             Text(
               'Create sites in the Manage tab',
-              style: TextStyle(color: Colors.grey[500]),
+              style: TextStyle(color: const Color(0xFF9CA3AF)),
             ),
           ],
         ),
@@ -379,8 +379,8 @@ class _SiteManagementPageState extends State<SiteManagementPage> with SingleTick
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: site.isActive
-                  ? [Colors.green[50]!, Colors.green[100]!]
-                  : [Colors.grey[200]!, Colors.grey[300]!],
+                  ? [const Color(0xFFE8F5EE), const Color(0xFFE8F5EE)]
+                  : [const Color(0xFFE5E7EB), const Color(0xFFD1D5DB)],
             ),
           ),
           child: Column(
@@ -393,8 +393,8 @@ class _SiteManagementPageState extends State<SiteManagementPage> with SingleTick
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
                       color: site.isActive
-                          ? Colors.green[600]
-                          : Colors.grey[600],
+                          ? const Color(0xFF007A3D)
+                          : const Color(0xFF6B7280),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Icon(
@@ -406,7 +406,7 @@ class _SiteManagementPageState extends State<SiteManagementPage> with SingleTick
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: site.isActive ? Colors.green : Colors.grey,
+                      color: site.isActive ? const Color(0xFF007A3D) : const Color(0xFF9CA3AF),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
@@ -435,7 +435,7 @@ class _SiteManagementPageState extends State<SiteManagementPage> with SingleTick
                 site.code,
                 style: TextStyle(
                   fontSize: 12,
-                  color: Colors.grey[700],
+                  color: const Color(0xFF374151),
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -443,14 +443,14 @@ class _SiteManagementPageState extends State<SiteManagementPage> with SingleTick
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    Icon(Icons.location_on, size: 14, color: Colors.grey[600]),
+                    Icon(Icons.location_on, size: 14, color: const Color(0xFF6B7280)),
                     const SizedBox(width: 4),
                     Expanded(
                       child: Text(
                         site.locationAddress!,
                         style: TextStyle(
                           fontSize: 11,
-                          color: Colors.grey[600],
+                          color: const Color(0xFF6B7280),
                         ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
@@ -476,13 +476,13 @@ class _SiteManagementPageState extends State<SiteManagementPage> with SingleTick
             Container(
               padding: const EdgeInsets.all(32),
               decoration: BoxDecoration(
-                color: Colors.green[50],
+                color: const Color(0xFFE8F5EE),
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 Icons.location_city_outlined,
                 size: 80,
-                color: Colors.green[300],
+                color: const Color(0xFF66B28A),
               ),
             ),
             const SizedBox(height: 24),
@@ -490,7 +490,7 @@ class _SiteManagementPageState extends State<SiteManagementPage> with SingleTick
               'No Sites Yet',
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.bold,
-                color: Colors.grey[800],
+                color: const Color(0xFF1F2937),
               ),
             ),
             const SizedBox(height: 12),
@@ -499,7 +499,7 @@ class _SiteManagementPageState extends State<SiteManagementPage> with SingleTick
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14,
-                color: Colors.grey[600],
+                color: const Color(0xFF6B7280),
                 height: 1.5,
               ),
             ),
@@ -534,13 +534,13 @@ class _SiteManagementPageState extends State<SiteManagementPage> with SingleTick
             Container(
               padding: const EdgeInsets.all(32),
               decoration: BoxDecoration(
-                color: isNoDataError ? Colors.green[50] : Colors.red[50],
+                color: isNoDataError ? const Color(0xFFE8F5EE) : const Color(0xFFFFEBEE),
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 isNoDataError ? Icons.info_outline : Icons.error_outline,
                 size: 80,
-                color: isNoDataError ? Colors.green[300] : Colors.red[300],
+                color: isNoDataError ? const Color(0xFF66B28A) : const Color(0xFFE57373),
               ),
             ),
             const SizedBox(height: 24),
@@ -548,23 +548,23 @@ class _SiteManagementPageState extends State<SiteManagementPage> with SingleTick
               isNoDataError ? 'No Sites Found' : 'Unable to Load Sites',
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.bold,
-                color: Colors.grey[800],
+                color: const Color(0xFF1F2937),
               ),
             ),
             const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.grey[100],
+                color: const Color(0xFFF3F4F6),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.grey[300]!),
+                border: Border.all(color: const Color(0xFFD1D5DB)),
               ),
               child: Text(
                 _errorMessage!,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 14,
-                  color: Colors.grey[700],
+                  color: const Color(0xFF374151),
                 ),
               ),
             ),
@@ -613,7 +613,7 @@ class _SiteManagementPageState extends State<SiteManagementPage> with SingleTick
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: Colors.grey[700],
+                    color: const Color(0xFF374151),
                   ),
                 ),
                 children: [
@@ -655,14 +655,14 @@ class _SiteManagementPageState extends State<SiteManagementPage> with SingleTick
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         children: [
-          Icon(icon, size: 16, color: Colors.grey[600]),
+          Icon(icon, size: 16, color: const Color(0xFF6B7280)),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               text,
               style: TextStyle(
                 fontSize: 13,
-                color: Colors.grey[700],
+                color: const Color(0xFF374151),
               ),
             ),
           ),
@@ -757,9 +757,19 @@ class _SiteFormDialogState extends State<SiteFormDialog> {
         Navigator.pop(context, true);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(widget.site == null 
-                ? 'Site created successfully' 
-                : 'Site updated successfully'),
+            content: Row(children: [
+              const Icon(Icons.check_circle_outline, color: Colors.white, size: 18),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(widget.site == null 
+                    ? 'Site created successfully' 
+                    : 'Site updated successfully'),
+              ),
+            ]),
+            backgroundColor: const Color(0xFF007A3D),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
           ),
         );
       }
@@ -768,8 +778,15 @@ class _SiteFormDialogState extends State<SiteFormDialog> {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e is ApiException ? e.displayMessage : 'Failed to save site'),
-            backgroundColor: Colors.red,
+            content: Row(children: [
+              const Icon(Icons.error_outline, color: Colors.white, size: 18),
+              const SizedBox(width: 10),
+              Expanded(child: Text(e is ApiException ? e.displayMessage : 'Failed to save site')),
+            ]),
+            backgroundColor: const Color(0xFFB71C1C),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
           ),
         );
       }
@@ -779,9 +796,12 @@ class _SiteFormDialogState extends State<SiteFormDialog> {
   @override
   Widget build(BuildContext context) {
     return Dialog(
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Container(
-        width: 600,
+        width: double.infinity,
         constraints: BoxConstraints(
+          maxWidth: 540,
           maxHeight: MediaQuery.of(context).size.height * 0.8,
         ),
         child: Column(
@@ -791,11 +811,15 @@ class _SiteFormDialogState extends State<SiteFormDialog> {
               padding: const EdgeInsets.all(16),
               child: Row(
                 children: [
-                  Text(
-                    widget.site == null ? 'Add New Site' : 'Edit Site',
-                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  Expanded(
+                    child: Text(
+                      widget.site == null ? 'Add New Site' : 'Edit Site',
+                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
-                  const Spacer(),
+                  const SizedBox(width: 8),
                   IconButton(
                     icon: const Icon(Icons.close),
                     onPressed: () => Navigator.pop(context),

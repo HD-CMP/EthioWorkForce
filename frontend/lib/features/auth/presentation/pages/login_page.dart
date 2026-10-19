@@ -1,10 +1,11 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/router/app_router.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
+import '../../../../core/utils/app_snackbar.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -58,17 +59,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
           if (state is AuthAuthenticated) {
             Navigator.of(context).pushReplacementNamed(AppRouter.home);
           } else if (state is AuthError) {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: Row(children: [
-                const Icon(Icons.error_outline, color: Colors.white, size: 18),
-                const SizedBox(width: 10),
-                Expanded(child: Text(state.message)),
-              ]),
-              backgroundColor: const Color(0xFFB71C1C),
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              margin: const EdgeInsets.all(16),
-            ));
+            AppSnackBar.showError(context, state.message);
           }
         },
         builder: (context, state) {
@@ -79,7 +70,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
               Container(
                 decoration: const BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [Color(0xFF1B5E20), Color(0xFF2E7D32), Color(0xFF1B5E20)],
+                    colors: [Color(0xFF005C2E), Color(0xFF007A3D), Color(0xFF005C2E)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -88,13 +79,13 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
               // Decorative circles
               Positioned(top: -80, right: -60,
                 child: Container(width: 260, height: 260,
-                  decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.white.withOpacity(0.06)))),
+                  decoration: BoxDecoration(shape: BoxShape.circle, color: const Color(0x0FFFFFFF)))),
               Positioned(top: 80, right: 30,
                 child: Container(width: 100, height: 100,
-                  decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.white.withOpacity(0.05)))),
+                  decoration: BoxDecoration(shape: BoxShape.circle, color: const Color(0x0DFFFFFF)))),
               Positioned(bottom: -60, left: -40,
                 child: Container(width: 200, height: 200,
-                  decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.white.withOpacity(0.05)))),
+                  decoration: BoxDecoration(shape: BoxShape.circle, color: const Color(0x0DFFFFFF)))),
               // Content
               SafeArea(
                 child: SingleChildScrollView(
@@ -116,7 +107,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                                       width: 90, height: 90,
                                       decoration: BoxDecoration(
                                         borderRadius: BorderRadius.circular(22),
-                                        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.25), blurRadius: 24, offset: const Offset(0, 8))],
+                                        boxShadow: [BoxShadow(color: const Color(0x40000000), blurRadius: 24, offset: const Offset(0, 8))],
                                       ),
                                       clipBehavior: Clip.antiAlias,
                                       child: Image.asset(
@@ -124,9 +115,9 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                                         fit: BoxFit.cover,
                                         errorBuilder: (context, error, stackTrace) => Container(
                                           decoration: BoxDecoration(
-                                            color: Colors.white.withOpacity(0.15),
+                                            color: const Color(0x26FFFFFF),
                                             shape: BoxShape.circle,
-                                            border: Border.all(color: Colors.white.withOpacity(0.3), width: 2),
+                                            border: Border.all(color: const Color(0x4DFFFFFF), width: 2),
                                           ),
                                           child: const Icon(Icons.business_center_rounded, color: Colors.white, size: 42),
                                         ),
@@ -140,7 +131,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                                     const SizedBox(height: 6),
                                     Text(
                                       'Workforce Management Platform',
-                                      style: TextStyle(color: Colors.white.withOpacity(0.75), fontSize: 13, letterSpacing: 0.3),
+                                      style: TextStyle(color: const Color(0xBFFFFFFF), fontSize: 13, letterSpacing: 0.3),
                                     ),
                                   ],
                                 ),
@@ -171,7 +162,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                                       children: [
                                         const Text('Welcome back', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF1A1A1A), letterSpacing: -0.4)),
                                         const SizedBox(height: 6),
-                                        Text('Sign in to your account', style: TextStyle(fontSize: 14, color: Colors.grey[500])),
+                                        Text('Sign in to your account', style: TextStyle(fontSize: 14, color: const Color(0xFF9CA3AF))),
                                         const SizedBox(height: 32),
 
                                         // Username field
@@ -204,7 +195,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                                             suffix: IconButton(
                                               icon: Icon(
                                                 _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                                                color: Colors.grey[400],
+                                                color: const Color(0xFF9CA3AF),
                                                 size: 20,
                                               ),
                                               onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
@@ -223,9 +214,9 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                                           child: ElevatedButton(
                                             onPressed: isLoading ? null : _handleLogin,
                                             style: ElevatedButton.styleFrom(
-                                              backgroundColor: const Color(0xFF2E7D32),
+                                              backgroundColor: const Color(0xFF007A3D),
                                               foregroundColor: Colors.white,
-                                              disabledBackgroundColor: const Color(0xFF2E7D32).withOpacity(0.6),
+                                              disabledBackgroundColor: Color(0x99007A3D),
                                               elevation: 0,
                                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                                             ),
@@ -250,7 +241,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                                         Center(
                                           child: Text(
                                             '© 2026 EthioWorkforce. All rights reserved.',
-                                            style: TextStyle(fontSize: 11, color: Colors.grey[400]),
+                                            style: TextStyle(fontSize: 11, color: const Color(0xFF9CA3AF)),
                                           ),
                                         ),
                                       ],
@@ -283,23 +274,23 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
   InputDecoration _inputDecoration({required String hint, required IconData icon, Widget? suffix}) {
     return InputDecoration(
       hintText: hint,
-      hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
-      prefixIcon: Icon(icon, color: const Color(0xFF2E7D32), size: 20),
+      hintStyle: TextStyle(color: const Color(0xFF9CA3AF), fontSize: 14),
+      prefixIcon: Icon(icon, color: const Color(0xFF007A3D), size: 20),
       suffixIcon: suffix,
       filled: true,
       fillColor: const Color(0xFFF8FAF8),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Colors.grey[200]!, width: 1.5),
+        borderSide: BorderSide(color: const Color(0xFFE5E7EB), width: 1.5),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Colors.grey[200]!, width: 1.5),
+        borderSide: BorderSide(color: const Color(0xFFE5E7EB), width: 1.5),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFF2E7D32), width: 2),
+        borderSide: const BorderSide(color: Color(0xFF007A3D), width: 2),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),

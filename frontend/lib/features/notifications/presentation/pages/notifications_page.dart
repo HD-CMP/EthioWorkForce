@@ -11,6 +11,7 @@ import '../../../admin/data/models/registration_request.dart';
 import '../bloc/notifications_bloc.dart';
 import '../bloc/notifications_event.dart';
 import '../bloc/notifications_state.dart';
+import '../../../../core/utils/app_snackbar.dart';
 
 class NotificationsPage extends StatefulWidget {
   const NotificationsPage({super.key});
@@ -93,22 +94,16 @@ class _NotificationsPageState extends State<NotificationsPage> {
       await _adminDatasource.approveRequest(approval);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(approved ? 'Request approved successfully' : 'Request rejected'),
-            backgroundColor: approved ? Colors.green : Colors.orange,
-          ),
-        );
+        if (approved) {
+          AppSnackBar.showSuccess(context, 'Request approved successfully');
+        } else {
+          AppSnackBar.showWarning(context, 'Request rejected');
+        }
         _loadPendingRequests();
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        AppSnackBar.showError(context, 'Error: ${e.toString()}');
       }
     }
   }
@@ -148,8 +143,18 @@ class _NotificationsPageContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF4F7F4),
       appBar: AppBar(
-        title: const Text('Notifications'),
+        backgroundColor: const Color(0xFF007A3D),
+        foregroundColor: Colors.white,
+        elevation: 0,
+        title: const Row(
+          children: [
+            Icon(Icons.notifications_active_rounded, size: 22, color: Colors.white),
+            SizedBox(width: 10),
+            Text('Notifications', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 18)),
+          ],
+        ),
         actions: [
           BlocBuilder<NotificationsBloc, NotificationsState>(
             builder: (context, state) {
@@ -157,7 +162,7 @@ class _NotificationsPageContent extends StatelessWidget {
                   state.notifications.any((n) => !n.isRead);
 
               return IconButton(
-                icon: const Icon(Icons.mark_chat_read),
+                icon: const Icon(Icons.done_all_rounded, color: Colors.white),
                 tooltip: 'Mark all as read',
                 onPressed: hasUnread
                     ? () {
@@ -174,18 +179,15 @@ class _NotificationsPageContent extends StatelessWidget {
       body: BlocListener<NotificationsBloc, NotificationsState>(
         listener: (context, state) {
           if (state is NotificationsError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: Colors.red,
-              ),
-            );
+            AppSnackBar.showError(context, state.message);
           }
         },
         child: BlocBuilder<NotificationsBloc, NotificationsState>(
           builder: (context, state) {
             if (state is NotificationsLoading) {
-              return const Center(child: CircularProgressIndicator());
+              return const Center(
+                child: CircularProgressIndicator(color: Color(0xFF007A3D)),
+              );
             }
 
             if (state is NotificationsLoaded) {
@@ -196,25 +198,25 @@ class _NotificationsPageContent extends StatelessWidget {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(
-                        Icons.notifications_none,
-                        size: 64,
-                        color: Colors.grey[400],
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'No notifications',
-                        style: TextStyle(
-                          fontSize: 18,
-                          color: Colors.grey[600],
+                      Container(
+                        width: 80, height: 80,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFE8F5EE),
+                          shape: BoxShape.circle,
                         ),
+                        child: const Icon(Icons.notifications_none_rounded, size: 40, color: Color(0xFF007A3D)),
                       ),
+                      const SizedBox(height: 20),
+                      const Text('All caught up!', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF1A1A1A))),
+                      const SizedBox(height: 8),
+                      const Text('No notifications at this time', style: TextStyle(fontSize: 14, color: Color(0xFF6B7280))),
                     ],
                   ),
                 );
               }
 
               return RefreshIndicator(
+                color: const Color(0xFF007A3D),
                 onRefresh: () async {
                   onRefresh();
                   context
@@ -259,15 +261,23 @@ class _NotificationsPageContent extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text('Pull to refresh'),
+                  const Icon(Icons.refresh_rounded, size: 48, color: Color(0xFF9CA3AF)),
                   const SizedBox(height: 16),
-                  ElevatedButton(
+                  const Text('Pull to refresh', style: TextStyle(color: Color(0xFF6B7280))),
+                  const SizedBox(height: 16),
+                  ElevatedButton.icon(
                     onPressed: () {
                       context
                           .read<NotificationsBloc>()
                           .add(const FetchNotificationsEvent());
                     },
-                    child: const Text('Load Notifications'),
+                    icon: const Icon(Icons.refresh_rounded),
+                    label: const Text('Load Notifications'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF007A3D),
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
                   ),
                 ],
               ),
@@ -318,7 +328,7 @@ class _NotificationsPageContent extends StatelessWidget {
                     'Total',
                     notifications.length.toString(),
                     Icons.notifications,
-                    Colors.blue,
+                    const Color(0xFF1E3A5F),
                   ),
                 ),
                 Expanded(
@@ -327,7 +337,7 @@ class _NotificationsPageContent extends StatelessWidget {
                     'Unread',
                     unreadCount.toString(),
                     Icons.mark_email_unread,
-                    Colors.orange,
+                    const Color(0xFFE65100),
                   ),
                 ),
                 Expanded(
@@ -336,7 +346,7 @@ class _NotificationsPageContent extends StatelessWidget {
                     'Today',
                     todayNotifications.toString(),
                     Icons.today,
-                    Colors.green,
+                    const Color(0xFF007A3D),
                   ),
                 ),
                 if (isSuperAdmin)
@@ -346,7 +356,7 @@ class _NotificationsPageContent extends StatelessWidget {
                       'Pending',
                       pendingRequests.length.toString(),
                       Icons.pending_actions,
-                      Colors.red,
+                      const Color(0xFFB71C1C),
                     ),
                   ),
               ],
@@ -361,7 +371,7 @@ class _NotificationsPageContent extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: Color.fromARGB(26, color.red, color.green, color.blue),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -380,7 +390,7 @@ class _NotificationsPageContent extends StatelessWidget {
             label,
             style: TextStyle(
               fontSize: 12,
-              color: Colors.grey[600],
+              color: const Color(0xFF6B7280),
             ),
           ),
         ],
@@ -396,7 +406,7 @@ class _NotificationsPageContent extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [Colors.orange.withOpacity(0.2), Colors.orange.withOpacity(0.1)],
+              colors: [Color(0x33E65100), const Color(0x1AE65100)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -406,7 +416,7 @@ class _NotificationsPageContent extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.orange[800],
+                  color: const Color(0xFFBF360C),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Icon(Icons.pending_actions, color: Colors.white, size: 24),
@@ -421,14 +431,14 @@ class _NotificationsPageContent extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: Colors.orange[900],
+                        color: const Color(0xFFBF360C),
                       ),
                     ),
                     Text(
                       '${pendingRequests.length} registration request${pendingRequests.length != 1 ? 's' : ''} awaiting review',
                       style: TextStyle(
                         fontSize: 12,
-                        color: Colors.orange[700],
+                        color: const Color(0xFFE65100),
                       ),
                     ),
                   ],
@@ -446,7 +456,7 @@ class _NotificationsPageContent extends StatelessWidget {
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
-              color: Colors.grey[700],
+              color: const Color(0xFF374151),
             ),
           ),
         ),
@@ -460,7 +470,7 @@ class _NotificationsPageContent extends StatelessWidget {
       elevation: 4,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: Colors.orange.withOpacity(0.3), width: 2),
+        side: BorderSide(color: const Color(0x4DE65100), width: 2),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -470,8 +480,8 @@ class _NotificationsPageContent extends StatelessWidget {
             Row(
               children: [
                 CircleAvatar(
-                  backgroundColor: Colors.orange[100],
-                  child: Icon(Icons.person_add, color: Colors.orange[800]),
+                  backgroundColor: const Color(0xFFFFF3E0),
+                  child: Icon(Icons.person_add, color: const Color(0xFFBF360C)),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -489,7 +499,7 @@ class _NotificationsPageContent extends StatelessWidget {
                         '@${request.username} • ${request.role}',
                         style: TextStyle(
                           fontSize: 14,
-                          color: Colors.grey[600],
+                          color: const Color(0xFF6B7280),
                         ),
                       ),
                     ],
@@ -502,9 +512,9 @@ class _NotificationsPageContent extends StatelessWidget {
               if (request.email != null)
                 Row(
                   children: [
-                    Icon(Icons.email, size: 16, color: Colors.grey[600]),
+                    Icon(Icons.email, size: 16, color: const Color(0xFF6B7280)),
                     const SizedBox(width: 8),
-                    Text(request.email!, style: TextStyle(color: Colors.grey[700])),
+                    Text(request.email!, style: TextStyle(color: const Color(0xFF374151))),
                   ],
                 ),
               if (request.phoneNumber != null)
@@ -512,9 +522,9 @@ class _NotificationsPageContent extends StatelessWidget {
                   padding: const EdgeInsets.only(top: 4),
                   child: Row(
                     children: [
-                      Icon(Icons.phone, size: 16, color: Colors.grey[600]),
+                      Icon(Icons.phone, size: 16, color: const Color(0xFF6B7280)),
                       const SizedBox(width: 8),
-                      Text(request.phoneNumber!, style: TextStyle(color: Colors.grey[700])),
+                      Text(request.phoneNumber!, style: TextStyle(color: const Color(0xFF374151))),
                     ],
                   ),
                 ),
@@ -523,12 +533,12 @@ class _NotificationsPageContent extends StatelessWidget {
               const SizedBox(height: 12),
               Row(
                 children: [
-                  Icon(Icons.location_on, size: 16, color: Colors.grey[600]),
+                  Icon(Icons.location_on, size: 16, color: const Color(0xFF6B7280)),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       'Sites: ${request.siteNames!.join(', ')}',
-                      style: TextStyle(color: Colors.grey[700]),
+                      style: TextStyle(color: const Color(0xFF374151)),
                     ),
                   ),
                 ],
@@ -543,8 +553,8 @@ class _NotificationsPageContent extends StatelessWidget {
                   icon: const Icon(Icons.close, size: 18),
                   label: const Text('Reject'),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.red[700],
-                    side: BorderSide(color: Colors.red[300]!),
+                    foregroundColor: const Color(0xFFB71C1C),
+                    side: BorderSide(color: const Color(0xFFE57373)),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -553,7 +563,7 @@ class _NotificationsPageContent extends StatelessWidget {
                   icon: const Icon(Icons.check, size: 18),
                   label: const Text('Approve'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
+                    backgroundColor: const Color(0xFF007A3D),
                     foregroundColor: Colors.white,
                   ),
                 ),
@@ -619,7 +629,7 @@ class _NotificationsPageContent extends StatelessWidget {
       background: Container(
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 20),
-        color: Colors.red,
+        color: const Color(0xFFB71C1C),
         child: const Icon(Icons.delete, color: Colors.white),
       ),
       child: Card(
@@ -628,7 +638,7 @@ class _NotificationsPageContent extends StatelessWidget {
         child: ListTile(
           leading: CircleAvatar(
             backgroundColor: notification.isRead
-                ? Colors.grey[400]
+                ? const Color(0xFF9CA3AF)
                 : Theme.of(context).colorScheme.primary,
             child: Icon(
               _getIconForType(notification.type),
@@ -667,7 +677,7 @@ class _NotificationsPageContent extends StatelessWidget {
                 timeAgo,
                 style: TextStyle(
                   fontSize: 12,
-                  color: Colors.grey[600],
+                  color: const Color(0xFF6B7280),
                 ),
               ),
             ],

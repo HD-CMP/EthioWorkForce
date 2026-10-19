@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../domain/entities/attendance.dart';
 
@@ -65,15 +65,15 @@ class _AttendancePeriodGridState extends State<AttendancePeriodGrid> {
   Color _getStatusColor(String status) {
     switch (status) {
       case 'present':
-        return Colors.green;
+        return const Color(0xFF007A3D);
       case 'absent':
-        return Colors.red;
+        return const Color(0xFFB71C1C);
       case 'late':
-        return Colors.orange;
+        return const Color(0xFFE65100);
       case 'excused':
-        return Colors.blue;
+        return const Color(0xFF1E3A5F);
       default:
-        return Colors.grey;
+        return const Color(0xFF9CA3AF);
     }
   }
 
@@ -120,13 +120,13 @@ class _AttendancePeriodGridState extends State<AttendancePeriodGrid> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _buildStatusOption('present', 'Present', Icons.check_circle, Colors.green, date),
-            _buildStatusOption('absent', 'Absent', Icons.cancel, Colors.red, date),
-            _buildStatusOption('late', 'Late', Icons.access_time, Colors.orange, date),
-            _buildStatusOption('excused', 'Excused', Icons.event_available, Colors.blue, date),
+            _buildStatusOption('present', 'Present', Icons.check_circle, const Color(0xFF007A3D), date),
+            _buildStatusOption('absent', 'Absent', Icons.cancel, const Color(0xFFB71C1C), date),
+            _buildStatusOption('late', 'Late', Icons.access_time, const Color(0xFFE65100), date),
+            _buildStatusOption('excused', 'Excused', Icons.event_available, const Color(0xFF1E3A5F), date),
             const Divider(),
             ListTile(
-              leading: const Icon(Icons.clear, color: Colors.grey),
+              leading: const Icon(Icons.clear, color: const Color(0xFF9CA3AF)),
               title: const Text('Clear'),
               onTap: () {
                 setState(() {
@@ -192,7 +192,7 @@ class _AttendancePeriodGridState extends State<AttendancePeriodGrid> {
                         '${DateFormat('MMM d').format(widget.periodStartDate)} - ${DateFormat('MMM d, yyyy').format(widget.periodStartDate.add(Duration(days: widget.periodDays - 1)))}',
                         style: TextStyle(
                           fontSize: 12,
-                          color: Colors.grey[600],
+                          color: const Color(0xFF6B7280),
                         ),
                       ),
                     ],
@@ -228,16 +228,16 @@ class _AttendancePeriodGridState extends State<AttendancePeriodGrid> {
                   child: Container(
                     decoration: BoxDecoration(
                       color: isFuture
-                          ? Colors.grey[200]
+                          ? const Color(0xFFE5E7EB)
                           : (status != null
-                              ? _getStatusColor(status).withOpacity(0.1)
+                              ? Color.fromARGB(26, _getStatusColor(status).red, _getStatusColor(status).green, _getStatusColor(status).blue)
                               : Colors.white),
                       border: Border.all(
                         color: isToday
                             ? Theme.of(context).primaryColor
                             : (status != null
                                 ? _getStatusColor(status)
-                                : Colors.grey[300]!),
+                                : const Color(0xFFD1D5DB)),
                         width: isToday ? 2 : 1,
                       ),
                       borderRadius: BorderRadius.circular(8),
@@ -252,16 +252,16 @@ class _AttendancePeriodGridState extends State<AttendancePeriodGrid> {
                             color: _getStatusColor(status),
                           )
                         else if (isFuture)
-                          Icon(Icons.lock_outline, size: 14, color: Colors.grey[400])
+                          Icon(Icons.lock_outline, size: 14, color: const Color(0xFF9CA3AF))
                         else
-                          Icon(Icons.circle_outlined, size: 14, color: Colors.grey[400]),
+                          Icon(Icons.circle_outlined, size: 14, color: const Color(0xFF9CA3AF)),
                         const SizedBox(height: 2),
                         Text(
                           dateFormat.format(date),
                           style: TextStyle(
                             fontSize: 10,
                             fontWeight: isToday ? FontWeight.bold : FontWeight.normal,
-                            color: isFuture ? Colors.grey[400] : Colors.black87,
+                            color: isFuture ? const Color(0xFF9CA3AF) : const Color(0xFF1A1A1A),
                           ),
                         ),
                         if (index < 7 || date.day == 1)
@@ -269,7 +269,7 @@ class _AttendancePeriodGridState extends State<AttendancePeriodGrid> {
                             monthFormat.format(date),
                             style: TextStyle(
                               fontSize: 8,
-                              color: Colors.grey[600],
+                              color: const Color(0xFF6B7280),
                             ),
                           ),
                       ],
@@ -312,19 +312,19 @@ class _AttendancePeriodGridState extends State<AttendancePeriodGrid> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: Colors.grey[100],
+        color: const Color(0xFFF3F4F6),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _buildSummaryItem('P', present, Colors.green),
+          _buildSummaryItem('P', present, const Color(0xFF007A3D)),
           const SizedBox(width: 4),
-          _buildSummaryItem('A', absent, Colors.red),
+          _buildSummaryItem('A', absent, const Color(0xFFB71C1C)),
           const SizedBox(width: 4),
-          _buildSummaryItem('L', late, Colors.orange),
+          _buildSummaryItem('L', late, const Color(0xFFE65100)),
           const SizedBox(width: 4),
-          _buildSummaryItem('E', excused, Colors.blue),
+          _buildSummaryItem('E', excused, const Color(0xFF1E3A5F)),
         ],
       ),
     );
@@ -334,7 +334,7 @@ class _AttendancePeriodGridState extends State<AttendancePeriodGrid> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: Color.fromARGB(26, color.red, color.green, color.blue),
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(
@@ -353,11 +353,11 @@ class _AttendancePeriodGridState extends State<AttendancePeriodGrid> {
       spacing: 12,
       runSpacing: 4,
       children: [
-        _buildLegendItem(Icons.check_circle, 'Present', Colors.green),
-        _buildLegendItem(Icons.cancel, 'Absent', Colors.red),
-        _buildLegendItem(Icons.access_time, 'Late', Colors.orange),
-        _buildLegendItem(Icons.event_available, 'Excused', Colors.blue),
-        _buildLegendItem(Icons.lock_outline, 'Locked', Colors.grey),
+        _buildLegendItem(Icons.check_circle, 'Present', const Color(0xFF007A3D)),
+        _buildLegendItem(Icons.cancel, 'Absent', const Color(0xFFB71C1C)),
+        _buildLegendItem(Icons.access_time, 'Late', const Color(0xFFE65100)),
+        _buildLegendItem(Icons.event_available, 'Excused', const Color(0xFF1E3A5F)),
+        _buildLegendItem(Icons.lock_outline, 'Locked', const Color(0xFF9CA3AF)),
       ],
     );
   }
@@ -370,7 +370,7 @@ class _AttendancePeriodGridState extends State<AttendancePeriodGrid> {
         const SizedBox(width: 4),
         Text(
           label,
-          style: TextStyle(fontSize: 11, color: Colors.grey[700]),
+          style: TextStyle(fontSize: 11, color: const Color(0xFF374151)),
         ),
       ],
     );

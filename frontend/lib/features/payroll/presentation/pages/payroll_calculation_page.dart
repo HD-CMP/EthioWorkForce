@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
@@ -101,8 +101,15 @@ class _PayrollCalculationPageState extends State<PayrollCalculationPage> {
         setState(() => _isLoadingWorkers = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error loading workers: ${e.toString()}'),
-            backgroundColor: Colors.red,
+            content: Row(children: [
+              const Icon(Icons.error_outline, color: Colors.white, size: 18),
+              const SizedBox(width: 10),
+              Expanded(child: Text('Error loading workers: ${e.toString()}')),
+            ]),
+            backgroundColor: const Color(0xFFB71C1C),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
           ),
         );
       }
@@ -233,9 +240,16 @@ class _PayrollCalculationPageState extends State<PayrollCalculationPage> {
     if (_formKey.currentState!.validate()) {
       if (_periodStart == null || _periodEnd == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Please select both start and end dates'),
-            backgroundColor: Colors.red,
+          SnackBar(
+            content: const Row(children: [
+              Icon(Icons.warning_amber_rounded, color: Colors.white, size: 18),
+              SizedBox(width: 10),
+              Text('Please select both start and end dates'),
+            ]),
+            backgroundColor: const Color(0xFFE65100),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
           ),
         );
         return;
@@ -243,9 +257,16 @@ class _PayrollCalculationPageState extends State<PayrollCalculationPage> {
 
       if (_periodEnd!.isBefore(_periodStart!)) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('End date must be after start date'),
-            backgroundColor: Colors.red,
+          SnackBar(
+            content: const Row(children: [
+              Icon(Icons.warning_amber_rounded, color: Colors.white, size: 18),
+              SizedBox(width: 10),
+              Text('End date must be after start date'),
+            ]),
+            backgroundColor: const Color(0xFFE65100),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
           ),
         );
         return;
@@ -281,8 +302,17 @@ class _PayrollCalculationPageState extends State<PayrollCalculationPage> {
           if (state is PayrollCalculated) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Payroll calculated successfully: ${state.payroll.payrollCode}'),
-                backgroundColor: Colors.green,
+                content: Row(children: [
+                  const Icon(Icons.check_circle_outline, color: Colors.white, size: 18),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text('Payroll calculated successfully: ${state.payroll.payrollCode}'),
+                  ),
+                ]),
+                backgroundColor: const Color(0xFF007A3D),
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                margin: const EdgeInsets.all(16),
                 duration: const Duration(seconds: 3),
               ),
             );
@@ -298,8 +328,15 @@ class _PayrollCalculationPageState extends State<PayrollCalculationPage> {
           } else if (state is PayrollError) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text(state.message),
-                backgroundColor: Colors.red,
+                content: Row(children: [
+                  const Icon(Icons.error_outline, color: Colors.white, size: 18),
+                  const SizedBox(width: 10),
+                  Expanded(child: Text(state.message)),
+                ]),
+                backgroundColor: const Color(0xFFB71C1C),
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                margin: const EdgeInsets.all(16),
                 duration: const Duration(seconds: 5),
               ),
             );
@@ -324,7 +361,7 @@ class _PayrollCalculationPageState extends State<PayrollCalculationPage> {
                       gradient: LinearGradient(
                         colors: [
                           Theme.of(context).primaryColor,
-                          Theme.of(context).primaryColor.withOpacity(0.7),
+                          const Color(0xB3007A3D),
                         ],
                       ),
                     ),
@@ -343,7 +380,7 @@ class _PayrollCalculationPageState extends State<PayrollCalculationPage> {
                         Text(
                           '${widget.site.name} · ${_allWorkers.where((w) => _selectedWorkPlaceName == null || (w.workPlaceName ?? 'General Workforce') == _selectedWorkPlaceName).length} Workers',
                           style: TextStyle(
-                            color: Colors.white.withOpacity(0.9),
+                            color: const Color(0xE6FFFFFF),
                             fontSize: 14,
                           ),
                         ),
@@ -423,7 +460,7 @@ class _PayrollCalculationPageState extends State<PayrollCalculationPage> {
                                               fontWeight: _showEthiopianCalendar ? FontWeight.bold : FontWeight.normal,
                                               color: _showEthiopianCalendar 
                                                   ? Theme.of(context).primaryColor 
-                                                  : Colors.grey,
+                                                  : const Color(0xFF9CA3AF),
                                             ),
                                           ),
                                           Switch(
@@ -568,7 +605,7 @@ class _PayrollCalculationPageState extends State<PayrollCalculationPage> {
                                                             useAmharic: false,
                                                           ),
                                                           style: const TextStyle(
-                                                            color: Colors.black87,
+                                                            color: const Color(0xFF1A1A1A),
                                                             fontSize: 14,
                                                             fontWeight: FontWeight.w500,
                                                           ),
@@ -577,7 +614,7 @@ class _PayrollCalculationPageState extends State<PayrollCalculationPage> {
                                                         Text(
                                                           dateFormat.format(_periodStart!),
                                                           style: TextStyle(
-                                                            color: Colors.grey[600],
+                                                            color: const Color(0xFF6B7280),
                                                             fontSize: 11,
                                                           ),
                                                         ),
@@ -585,7 +622,7 @@ class _PayrollCalculationPageState extends State<PayrollCalculationPage> {
                                                         Text(
                                                           dateFormat.format(_periodStart!),
                                                           style: const TextStyle(
-                                                            color: Colors.black87,
+                                                            color: const Color(0xFF1A1A1A),
                                                             fontSize: 14,
                                                             fontWeight: FontWeight.w500,
                                                           ),
@@ -595,7 +632,7 @@ class _PayrollCalculationPageState extends State<PayrollCalculationPage> {
                                                   )
                                                 : const Text(
                                                     'Select date',
-                                                    style: TextStyle(color: Colors.grey),
+                                                    style: TextStyle(color: const Color(0xFF9CA3AF)),
                                                   ),
                                           ),
                                         ),
@@ -624,7 +661,7 @@ class _PayrollCalculationPageState extends State<PayrollCalculationPage> {
                                                             useAmharic: false,
                                                           ),
                                                           style: const TextStyle(
-                                                            color: Colors.black87,
+                                                            color: const Color(0xFF1A1A1A),
                                                             fontSize: 14,
                                                             fontWeight: FontWeight.w500,
                                                           ),
@@ -633,7 +670,7 @@ class _PayrollCalculationPageState extends State<PayrollCalculationPage> {
                                                         Text(
                                                           dateFormat.format(_periodEnd!),
                                                           style: TextStyle(
-                                                            color: Colors.grey[600],
+                                                            color: const Color(0xFF6B7280),
                                                             fontSize: 11,
                                                           ),
                                                         ),
@@ -641,7 +678,7 @@ class _PayrollCalculationPageState extends State<PayrollCalculationPage> {
                                                         Text(
                                                           dateFormat.format(_periodEnd!),
                                                           style: const TextStyle(
-                                                            color: Colors.black87,
+                                                            color: const Color(0xFF1A1A1A),
                                                             fontSize: 14,
                                                             fontWeight: FontWeight.w500,
                                                           ),
@@ -651,7 +688,7 @@ class _PayrollCalculationPageState extends State<PayrollCalculationPage> {
                                                   )
                                                 : const Text(
                                                     'Select date',
-                                                    style: TextStyle(color: Colors.grey),
+                                                    style: TextStyle(color: const Color(0xFF9CA3AF)),
                                                   ),
                                           ),
                                         ),
@@ -663,21 +700,21 @@ class _PayrollCalculationPageState extends State<PayrollCalculationPage> {
                                     Container(
                                       padding: const EdgeInsets.all(12),
                                       decoration: BoxDecoration(
-                                        color: Colors.blue.withOpacity(0.1),
+                                        color: const Color(0x1A1E3A5F),
                                         borderRadius: BorderRadius.circular(8),
                                         border: Border.all(
-                                          color: Colors.blue.withOpacity(0.3),
+                                          color: const Color(0x4D1E3A5F),
                                         ),
                                       ),
                                       child: Row(
                                         children: [
-                                          const Icon(Icons.info_outline, color: Colors.blue, size: 20),
+                                          const Icon(Icons.info_outline, color: const Color(0xFF1E3A5F), size: 20),
                                           const SizedBox(width: 8),
                                           Expanded(
                                             child: Text(
                                               'Period: ${_periodEnd!.difference(_periodStart!).inDays + 1} days',
                                               style: const TextStyle(
-                                                color: Colors.blue,
+                                                color: const Color(0xFF1E3A5F),
                                                 fontWeight: FontWeight.w500,
                                               ),
                                             ),
@@ -693,7 +730,7 @@ class _PayrollCalculationPageState extends State<PayrollCalculationPage> {
                           const SizedBox(height: 16),
                           if (_periodStart != null) Card(
                             elevation: 2,
-                            color: Colors.green.shade50,
+                            color: const Color(0xFFE8F5EE),
                             child: Padding(
                               padding: const EdgeInsets.all(16),
                               child: Column(
@@ -703,7 +740,7 @@ class _PayrollCalculationPageState extends State<PayrollCalculationPage> {
                                     children: [
                                       Icon(
                                         Icons.calendar_month,
-                                        color: Colors.green.shade700,
+                                        color: const Color(0xFF005C2E),
                                         size: 20,
                                       ),
                                       const SizedBox(width: 8),
@@ -712,14 +749,14 @@ class _PayrollCalculationPageState extends State<PayrollCalculationPage> {
                                           'Ethiopian Calendar Period',
                                           style: Theme.of(context).textTheme.titleMedium?.copyWith(
                                                 fontWeight: FontWeight.bold,
-                                                color: Colors.green.shade900,
+                                                color: const Color(0xFF003D1F),
                                               ),
                                         ),
                                       ),
                                       Container(
                                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                         decoration: BoxDecoration(
-                                          color: Colors.green.shade700,
+                                          color: const Color(0xFF005C2E),
                                           borderRadius: BorderRadius.circular(12),
                                         ),
                                         child: const Text(
@@ -771,7 +808,7 @@ class _PayrollCalculationPageState extends State<PayrollCalculationPage> {
                                   Text(
                                     'These values are automatically populated based on your selected start date',
                                     style: TextStyle(
-                                      color: Colors.green.shade800,
+                                      color: const Color(0xFF004A25),
                                       fontSize: 11,
                                       fontStyle: FontStyle.italic,
                                     ),
@@ -783,7 +820,7 @@ class _PayrollCalculationPageState extends State<PayrollCalculationPage> {
                           const SizedBox(height: 24),
                           if (isCalculating)
                             Card(
-                              color: Colors.blue.shade50,
+                              color: const Color(0xFFE8EDF4),
                               child: Padding(
                                 padding: const EdgeInsets.all(20),
                                 child: Column(
@@ -794,14 +831,14 @@ class _PayrollCalculationPageState extends State<PayrollCalculationPage> {
                                       'Calculating Payroll...',
                                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                                             fontWeight: FontWeight.bold,
-                                            color: Colors.blue.shade900,
+                                            color: const Color(0xFF071020),
                                           ),
                                     ),
                                     const SizedBox(height: 8),
                                     Text(
                                       'This may take a few moments',
                                       style: TextStyle(
-                                        color: Colors.blue.shade700,
+                                        color: const Color(0xFF0A192F),
                                         fontSize: 14,
                                       ),
                                     ),
@@ -836,7 +873,7 @@ class _PayrollCalculationPageState extends State<PayrollCalculationPage> {
                           const SizedBox(height: 16),
                           Card(
                             elevation: 1,
-                            color: Colors.blue.shade50,
+                            color: const Color(0xFFE8EDF4),
                             child: Padding(
                               padding: const EdgeInsets.all(14),
                               child: Column(
@@ -844,12 +881,12 @@ class _PayrollCalculationPageState extends State<PayrollCalculationPage> {
                                 children: [
                                   Row(
                                     children: [
-                                      Icon(Icons.info_outline, color: Colors.blue.shade700, size: 20),
+                                      Icon(Icons.info_outline, color: const Color(0xFF0A192F), size: 20),
                                       const SizedBox(width: 8),
                                       Text(
                                         'What Gets Calculated',
                                         style: TextStyle(
-                                          color: Colors.blue.shade900,
+                                          color: const Color(0xFF071020),
                                           fontSize: 14,
                                           fontWeight: FontWeight.bold,
                                         ),
@@ -860,22 +897,22 @@ class _PayrollCalculationPageState extends State<PayrollCalculationPage> {
                                   _buildCalculationItem(
                                     icon: Icons.event_available,
                                     text: 'Attendance records & work days',
-                                    color: Colors.blue.shade700,
+                                    color: const Color(0xFF0A192F),
                                   ),
                                   _buildCalculationItem(
                                     icon: Icons.access_time,
                                     text: 'Overtime hours & rates',
-                                    color: Colors.blue.shade700,
+                                    color: const Color(0xFF0A192F),
                                   ),
                                   _buildCalculationItem(
                                     icon: Icons.remove_circle_outline,
                                     text: 'Deductions & advances',
-                                    color: Colors.blue.shade700,
+                                    color: const Color(0xFF0A192F),
                                   ),
                                   _buildCalculationItem(
                                     icon: Icons.receipt_long,
                                     text: 'Income tax & pension contributions',
-                                    color: Colors.blue.shade700,
+                                    color: const Color(0xFF0A192F),
                                   ),
                                 ],
                               ),
@@ -885,16 +922,16 @@ class _PayrollCalculationPageState extends State<PayrollCalculationPage> {
                           Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: Colors.green.withOpacity(0.1),
+                              color: const Color(0x1A007A3D),
                               borderRadius: BorderRadius.circular(8),
                               border: Border.all(
-                                color: Colors.green.withOpacity(0.3),
+                                color: const Color(0x4D007A3D),
                               ),
                             ),
                             child: Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Icon(Icons.lightbulb_outline, color: Colors.green.shade700, size: 20),
+                                Icon(Icons.lightbulb_outline, color: const Color(0xFF005C2E), size: 20),
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Column(
@@ -903,7 +940,7 @@ class _PayrollCalculationPageState extends State<PayrollCalculationPage> {
                                       Text(
                                         'Quick Period Selection',
                                         style: TextStyle(
-                                          color: Colors.green.shade900,
+                                          color: const Color(0xFF003D1F),
                                           fontSize: 14,
                                           fontWeight: FontWeight.bold,
                                         ),
@@ -913,7 +950,7 @@ class _PayrollCalculationPageState extends State<PayrollCalculationPage> {
                                         '• Current Period: Calculate up to today for real-time earnings tracking\n'
                                         '• Full Month: Calculate entire month for advance planning and budgeting',
                                         style: TextStyle(
-                                          color: Colors.green.shade800,
+                                          color: const Color(0xFF004A25),
                                           fontSize: 13,
                                         ),
                                       ),
@@ -927,22 +964,22 @@ class _PayrollCalculationPageState extends State<PayrollCalculationPage> {
                           Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: Colors.amber.withOpacity(0.1),
+                              color: const Color(0x1AE65100),
                               borderRadius: BorderRadius.circular(8),
                               border: Border.all(
-                                color: Colors.amber.withOpacity(0.3),
+                                color: const Color(0x4DE65100),
                               ),
                             ),
                             child: const Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Icon(Icons.warning_amber, color: Colors.amber, size: 20),
+                                Icon(Icons.warning_amber, color: const Color(0xFFE65100), size: 20),
                                 SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
                                     'Ensure all attendance has been verified before calculating to get accurate results.',
                                     style: TextStyle(
-                                      color: Colors.black87,
+                                      color: const Color(0xFF1A1A1A),
                                       fontSize: 13,
                                     ),
                                   ),
@@ -978,7 +1015,7 @@ class _PayrollCalculationPageState extends State<PayrollCalculationPage> {
             child: Text(
               text,
               style: TextStyle(
-                color: color.withOpacity(0.9),
+                color: Color.fromARGB(230, color.red, color.green, color.blue),
                 fontSize: 13,
               ),
             ),
@@ -1007,11 +1044,11 @@ class _PayrollCalculationPageState extends State<PayrollCalculationPage> {
           _selectedWorkPlaceName = selected ? workPlaceName : null;
         });
       },
-      backgroundColor: Colors.grey[200],
-      selectedColor: Theme.of(context).primaryColor.withOpacity(0.2),
+      backgroundColor: const Color(0xFFE5E7EB),
+      selectedColor: const Color(0x33007A3D),
       checkmarkColor: Theme.of(context).primaryColor,
       labelStyle: TextStyle(
-        color: isSelected ? Theme.of(context).primaryColor : Colors.black87,
+        color: isSelected ? Theme.of(context).primaryColor : const Color(0xFF1A1A1A),
         fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
       ),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
