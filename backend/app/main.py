@@ -17,6 +17,19 @@ from app.middleware.security_headers import SecurityHeadersMiddleware
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("Starting EthioWorkforce API Server...")
+    try:
+        import sys
+        from pathlib import Path
+        backend_dir = Path(__file__).parent.parent
+        if str(backend_dir) not in sys.path:
+            sys.path.insert(0, str(backend_dir))
+        
+        from scripts.init_cloud_db import run_alembic_migrations, seed_cloud_database
+        run_alembic_migrations()
+        seed_cloud_database()
+        logger.info("Database schema and master data initialized successfully.")
+    except Exception as e:
+        logger.error(f"Automatic database migration/seed notice: {e}")
     yield
     logger.info("Shutting down EthioWorkforce API Server...")
 
