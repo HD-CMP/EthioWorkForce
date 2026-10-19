@@ -48,19 +48,19 @@ def run_alembic_migrations():
             logger.info("Alembic migrations completed successfully.")
         else:
             logger.warning("alembic.ini not found, creating all tables directly from metadata...")
-            engine = create_engine(settings.database_url_str)
+            engine = create_engine(settings.database_url_str, connect_args=settings.database_connect_args)
             Base.metadata.create_all(bind=engine)
     except Exception as e:
         logger.warning(f"Alembic auto-migration encountered warning/notice: {e}")
         logger.info("Ensuring all tables exist via SQLAlchemy metadata...")
-        engine = create_engine(settings.database_url_str)
+        engine = create_engine(settings.database_url_str, connect_args=settings.database_connect_args)
         Base.metadata.create_all(bind=engine)
 
 
 def seed_cloud_database():
     """Seed initial super admin, sites, and standard work types if empty."""
     logger.info(f"Connecting to database: {settings.database_url_str.split('@')[-1] if '@' in settings.database_url_str else 'local'}...")
-    engine = create_engine(settings.database_url_str)
+    engine = create_engine(settings.database_url_str, connect_args=settings.database_connect_args)
     Session = sessionmaker(bind=engine)
     db = Session()
 

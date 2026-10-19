@@ -35,10 +35,17 @@ def run_migrations_offline() -> None:
 
 
 def run_migrations_online() -> None:
+    from app.core.config import settings
+    configuration = config.get_section(config.config_ini_section)
+    if configuration is None:
+        configuration = {}
+    configuration["sqlalchemy.url"] = settings.database_url_str
+
     connectable = engine_from_config(
-        config.get_section(config.config_ini_section),
+        configuration,
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
+        connect_args=settings.database_connect_args,
     )
 
     with connectable.connect() as connection:

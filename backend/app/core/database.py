@@ -20,6 +20,7 @@ if settings.database_url_str.startswith("sqlite"):
 else:
     engine = create_engine(
         settings.database_url_str,
+        connect_args=settings.database_connect_args,
         pool_pre_ping=True,
         pool_size=pool_size,
         max_overflow=max_overflow,

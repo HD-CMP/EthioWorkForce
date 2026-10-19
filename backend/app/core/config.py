@@ -56,18 +56,38 @@ class Settings(BaseSettings):
     CELERY_RESULT_BACKEND: str = "redis://localhost:6379/2"
 
     @property
+    def is_ssl_required(self) -> bool:
+        url = str(self.DATABASE_URL)
+        return "sslmode=require" in url or "neon.tech" in url or "render.com" in url or "amazonaws.com" in url
+
+    @property
     def database_url_str(self) -> str:
         """Return a normalized database URL string.
         Handles Heroku/Render/Neon/Supabase 'postgres://' shorthand and ensures
-        pg8000 driver prefix is applied if psycopg2 is not specified, while
-        preserving query parameters (e.g. ?sslmode=require).
+        pg8000 driver prefix is applied if psycopg2 is not specified.
+        Strips 'sslmode' query parameter when using pg8000 since pg8000 uses
+        connect_args ssl_context instead of sslmode keyword argument.
         """
+        import re
         url = str(self.DATABASE_URL)
         if url.startswith("postgres://"):
             url = url.replace("postgres://", "postgresql+pg8000://", 1)
         elif url.startswith("postgresql://") and not url.startswith("postgresql+"):
             url = url.replace("postgresql://", "postgresql+pg8000://", 1)
+
+        if "pg8000" in url:
+            url = re.sub(r'[\?&]sslmode=[^&]+', '', url)
+            if '?' not in url and '&' in url:
+                url = url.replace('&', '?', 1)
         return url
+
+    @property
+    def database_connect_args(self) -> dict:
+        import ssl
+        args = {}
+        if "pg8000" in self.database_url_str and self.is_ssl_required:
+            args["ssl_context"] = ssl.create_default_context()
+        return args
 
     @property
     def is_production(self) -> bool:
