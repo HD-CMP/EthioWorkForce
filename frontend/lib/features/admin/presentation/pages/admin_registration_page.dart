@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:dio/dio.dart';
 
@@ -154,7 +154,7 @@ class _AdminRegistrationPageContentState
                   return ListTile(
                     leading: Icon(
                       isSelected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
-                      color: isSelected ? Theme.of(context).primaryColor : null,
+                      color: isSelected ? const Color(0xFF007A3D) : null,
                     ),
                     title: Text(site.name),
                     subtitle: Text(site.code),
@@ -649,7 +649,7 @@ class _RegisterAdminTabState extends State<_RegisterAdminTab> {
                             children: [
                               Icon(
                                 Icons.search,
-                                color: Theme.of(context).primaryColor,
+                                color: const Color(0xFF007A3D),
                               ),
                               const SizedBox(width: 8),
                               Text(
@@ -657,7 +657,7 @@ class _RegisterAdminTabState extends State<_RegisterAdminTab> {
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w600,
-                                  color: Theme.of(context).primaryColor,
+                                  color: const Color(0xFF007A3D),
                                 ),
                               ),
                               const Spacer(),
@@ -719,7 +719,7 @@ class _RegisterAdminTabState extends State<_RegisterAdminTab> {
                                   return ListTile(
                                     leading: CircleAvatar(
                                       backgroundColor:
-                                          Theme.of(context).primaryColor,
+                                          const Color(0xFF007A3D),
                                       child: Text(
                                         user.fullName.isNotEmpty ? user.fullName[0].toUpperCase() : 'U',
                                         style: const TextStyle(
@@ -729,7 +729,7 @@ class _RegisterAdminTabState extends State<_RegisterAdminTab> {
                                     ),
                                     title: Text(user.fullName),
                                     subtitle: Text(
-                                      '${user.username} • ${user.email}',
+                                      '${user.username} � ${user.email}',
                                       style: const TextStyle(fontSize: 12),
                                     ),
                                     trailing: Chip(
@@ -1052,7 +1052,7 @@ class _RegisterAdminTabState extends State<_RegisterAdminTab> {
                         Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: Theme.of(context).primaryColor,
+                            color: const Color(0xFF007A3D),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: const Icon(
@@ -1088,7 +1088,7 @@ class _RegisterAdminTabState extends State<_RegisterAdminTab> {
                           child: Text(
                             '${_selectedWorkplaces.length} selected',
                             style: TextStyle(
-                              color: Theme.of(context).primaryColor,
+                              color: const Color(0xFF007A3D),
                               fontWeight: FontWeight.w600,
                               fontSize: 12,
                             ),
@@ -1127,7 +1127,7 @@ class _RegisterAdminTabState extends State<_RegisterAdminTab> {
                       Icon(
                         Icons.location_on,
                         size: 18,
-                        color: Theme.of(context).primaryColor,
+                        color: const Color(0xFF007A3D),
                       ),
                       const SizedBox(width: 8),
                       Text(
@@ -1197,7 +1197,7 @@ class _RegisterAdminTabState extends State<_RegisterAdminTab> {
                                 color: Colors.white,
                                 border: Border.all(
                                   color: isSelected
-                                      ? Theme.of(context).primaryColor
+                                      ? const Color(0xFF007A3D)
                                       : const Color(0xFFD1D5DB),
                                   width: 1.5,
                                 ),
@@ -1210,7 +1210,7 @@ class _RegisterAdminTabState extends State<_RegisterAdminTab> {
                                     height: 40,
                                     decoration: BoxDecoration(
                                       color: isSelected
-                                          ? Theme.of(context).primaryColor
+                                          ? const Color(0xFF007A3D)
                                           : const Color(0xFFF3F4F6),
                                       borderRadius: BorderRadius.circular(6),
                                     ),
@@ -1301,12 +1301,12 @@ class _RegisterAdminTabState extends State<_RegisterAdminTab> {
                                       shape: BoxShape.circle,
                                       border: Border.all(
                                         color: isSelected
-                                            ? Theme.of(context).primaryColor
+                                            ? const Color(0xFF007A3D)
                                             : const Color(0xFF9CA3AF),
                                         width: 2,
                                       ),
                                       color: isSelected
-                                          ? Theme.of(context).primaryColor
+                                          ? const Color(0xFF007A3D)
                                           : Colors.transparent,
                                     ),
                                     child: isSelected
@@ -1343,7 +1343,7 @@ class _RegisterAdminTabState extends State<_RegisterAdminTab> {
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       backgroundColor: _selectedWorkplaces.isEmpty
                           ? const Color(0xFF6B7280)
-                          : Theme.of(context).primaryColor,
+                          : const Color(0xFF007A3D),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -1402,9 +1402,9 @@ class _RegisterAdminTabState extends State<_RegisterAdminTab> {
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
-            const Text('• Wait for the existing request to be approved'),
-            const Text('• Cancel the existing request and submit a new one'),
-            const Text('• Modify the existing request details'),
+            const Text('� Wait for the existing request to be approved'),
+            const Text('� Cancel the existing request and submit a new one'),
+            const Text('� Modify the existing request details'),
           ],
         ),
         actions: [
@@ -1830,7 +1830,7 @@ class _AdminDetailsTabState extends State<_AdminDetailsTab> {
             children: [
               CircleAvatar(
                 radius: 30,
-                backgroundColor: Theme.of(context).primaryColor,
+                backgroundColor: const Color(0xFF007A3D),
                 child: Text(
                   (admin['full_name'] as String? ?? 'U')[0].toUpperCase(),
                   style: const TextStyle(
@@ -2221,7 +2221,7 @@ class _AdminDetailsDialogState extends State<_AdminDetailsDialog> {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           title: Row(
             children: [
-              Icon(Icons.lock_reset, color: Theme.of(context).primaryColor, size: 28),
+              Icon(Icons.lock_reset, color: const Color(0xFF007A3D), size: 28),
               const SizedBox(width: 12),
               const Text('Reset Password'),
             ],
@@ -2319,7 +2319,7 @@ class _AdminDetailsDialogState extends State<_AdminDetailsDialog> {
                 }
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).primaryColor,
+                backgroundColor: const Color(0xFF007A3D),
                 foregroundColor: Colors.white,
               ),
               child: isResetting 
@@ -2475,7 +2475,7 @@ class _AdminDetailsDialogState extends State<_AdminDetailsDialog> {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    Theme.of(context).primaryColor,
+                    const Color(0xFF007A3D),
                     const Color(0xD9007A3D),
                     const Color(0xB3007A3D),
                   ],
@@ -2505,7 +2505,7 @@ class _AdminDetailsDialogState extends State<_AdminDetailsDialog> {
                         child: Text(
                           (widget.admin['full_name'] as String? ?? 'U')[0].toUpperCase(),
                           style: TextStyle(
-                            color: Theme.of(context).primaryColor,
+                            color: const Color(0xFF007A3D),
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
                           ),
@@ -2856,7 +2856,7 @@ class _AdminDetailsDialogState extends State<_AdminDetailsDialog> {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
-            borderSide: BorderSide(color: Theme.of(context).primaryColor, width: 2),
+            borderSide: BorderSide(color: const Color(0xFF007A3D), width: 2),
           ),
           disabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
@@ -3538,7 +3538,7 @@ class _PendingRequestsTabState extends State<_PendingRequestsTab> {
                         Icon(
                           Icons.filter_alt,
                           size: 18,
-                          color: Theme.of(context).primaryColor,
+                          color: const Color(0xFF007A3D),
                         ),
                         const SizedBox(width: 8),
                         Expanded(
@@ -3547,14 +3547,14 @@ class _PendingRequestsTabState extends State<_PendingRequestsTab> {
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w500,
-                              color: Theme.of(context).primaryColor,
+                              color: const Color(0xFF007A3D),
                             ),
                           ),
                         ),
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
-                            color: Theme.of(context).primaryColor,
+                            color: const Color(0xFF007A3D),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(

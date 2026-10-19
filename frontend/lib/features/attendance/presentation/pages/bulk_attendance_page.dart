@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../data/datasources/attendance_remote_datasource.dart';
@@ -88,7 +88,7 @@ class _BulkAttendancePageState extends State<BulkAttendancePage> {
       
       setState(() {
         // BUSINESS RULE: Hierarchy 1 & 2 (Executive & Site Management) are NOT
-        // clocked by timekeepers — they are salaried and self-managed.
+        // clocked by timekeepers � they are salaried and self-managed.
         // Only Hierarchy 3+ (Operational workers) appear on the attendance grid.
         final attendanceEligibleWorkers = (results[0] as List<Worker>)
             .where((w) => w.hierarchyLevel == null || w.hierarchyLevel! > 1)
@@ -816,7 +816,7 @@ class _BulkAttendancePageState extends State<BulkAttendancePage> {
         child: ListTile(
           onTap: () => _showOvertimeDialog(worker),
           leading: CircleAvatar(
-            backgroundColor: hasOvertime ? const Color(0xFFE65100) : Theme.of(context).primaryColor,
+            backgroundColor: hasOvertime ? const Color(0xFFE65100) : const Color(0xFF007A3D),
             child: Text(
               worker.fullName.isNotEmpty ? worker.fullName[0].toUpperCase() : '?',
               style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
@@ -856,7 +856,7 @@ class _BulkAttendancePageState extends State<BulkAttendancePage> {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: isSelected
-            ? BorderSide(color: _isUnmarkMode ? const Color(0xFFB71C1C) : Theme.of(context).primaryColor, width: 2)
+            ? BorderSide(color: _isUnmarkMode ? const Color(0xFFB71C1C) : const Color(0xFF007A3D), width: 2)
             : hasAttendance
                 ? BorderSide(color: const Color(0xFF66B28A), width: 1.5)
                 : BorderSide.none,
@@ -926,7 +926,7 @@ class _BulkAttendancePageState extends State<BulkAttendancePage> {
               : (hasAttendance
                   ? const Color(0xFF007A3D)
                   : isSelected
-                      ? Theme.of(context).primaryColor
+                      ? const Color(0xFF007A3D)
                       : const Color(0xFFD1D5DB)),
           child: Icon(
             _isUnmarkMode && hasAttendance
@@ -1047,7 +1047,7 @@ class _BulkAttendancePageState extends State<BulkAttendancePage> {
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.event, size: 20, color: Theme.of(context).primaryColor),
+                    Icon(Icons.event, size: 20, color: const Color(0xFF007A3D)),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Column(
@@ -1111,7 +1111,7 @@ class _BulkAttendancePageState extends State<BulkAttendancePage> {
                             Icon(
                               Icons.check_circle_outline,
                               size: 18,
-                              color: _bulkMode == 'attendance' ? Theme.of(context).primaryColor : const Color(0xFF6B7280),
+                              color: _bulkMode == 'attendance' ? const Color(0xFF007A3D) : const Color(0xFF6B7280),
                             ),
                             const SizedBox(width: 8),
                             Text(
@@ -1119,7 +1119,7 @@ class _BulkAttendancePageState extends State<BulkAttendancePage> {
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: _bulkMode == 'attendance' ? FontWeight.bold : FontWeight.normal,
-                                color: _bulkMode == 'attendance' ? Theme.of(context).primaryColor : const Color(0xFF6B7280),
+                                color: _bulkMode == 'attendance' ? const Color(0xFF007A3D) : const Color(0xFF6B7280),
                               ),
                             ),
                           ],
@@ -1326,7 +1326,7 @@ class _BulkAttendancePageState extends State<BulkAttendancePage> {
               selected: _selectedWorkPlace == null,
               onSelected: (_) => _selectWorkPlace(null),
               selectedColor: const Color(0x33007A3D),
-              checkmarkColor: Theme.of(context).primaryColor,
+              checkmarkColor: const Color(0xFF007A3D),
             ),
             const SizedBox(width: 8),
             ..._workPlaces.map((place) {
@@ -1338,7 +1338,7 @@ class _BulkAttendancePageState extends State<BulkAttendancePage> {
                   selected: _selectedWorkPlace == place,
                   onSelected: (_) => _selectWorkPlace(place),
                   selectedColor: const Color(0x33007A3D),
-                  checkmarkColor: Theme.of(context).primaryColor,
+                  checkmarkColor: const Color(0xFF007A3D),
                 ),
               );
             }).toList(),

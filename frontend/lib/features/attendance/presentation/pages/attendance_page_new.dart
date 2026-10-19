@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:dio/dio.dart';
 
@@ -719,17 +719,39 @@ class _AttendancePageNewState extends State<AttendancePageNew> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(localizations?.attendance ?? 'Attendance'),
+        backgroundColor: const Color(0xFF007A3D),
+        foregroundColor: Colors.white,
         elevation: 0,
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              localizations?.attendance ?? 'Attendance',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            if (_currentSiteId != null && _sites.isNotEmpty)
+              Text(
+                _sites.firstWhere((s) => s.id == _currentSiteId, orElse: () => _sites.first).name,
+                style: const TextStyle(
+                  color: Color(0xB3FFFFFF),
+                  fontSize: 12,
+                ),
+              ),
+          ],
+        ),
         actions: [
           if (_isSuperAdmin && _sites.length > 1)
             IconButton(
-              icon: const Icon(Icons.location_on),
+              icon: const Icon(Icons.location_on, color: Colors.white),
               onPressed: _showSiteSelectorDialog,
               tooltip: 'Select Site',
             ),
           IconButton(
-            icon: const Icon(Icons.calendar_today),
+            icon: const Icon(Icons.calendar_today, color: Colors.white),
             onPressed: () {
               setState(() {
                 _showEthiopianCalendar = !_showEthiopianCalendar;
@@ -739,7 +761,7 @@ class _AttendancePageNewState extends State<AttendancePageNew> {
             tooltip: 'Toggle Calendar Type',
           ),
           PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert),
+            icon: const Icon(Icons.more_vert, color: Colors.white),
             onSelected: (value) {
               if (value == 'export') {
                 // TODO: Implement export
@@ -761,6 +783,7 @@ class _AttendancePageNewState extends State<AttendancePageNew> {
         ],
       ),
       body: RefreshIndicator(
+        color: const Color(0xFF007A3D),
         onRefresh: () async {
           await _loadData();
         },
@@ -802,11 +825,11 @@ class _AttendancePageNewState extends State<AttendancePageNew> {
     
     return Container(
       width: double.infinity,
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            Theme.of(context).primaryColor,
-            const Color(0xCC007A3D),
+            Color(0xFF005C2E),
+            Color(0xFF007A3D),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -879,7 +902,7 @@ class _AttendancePageNewState extends State<AttendancePageNew> {
                   return ListTile(
                     leading: Icon(
                       isSelected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
-                      color: isSelected ? Theme.of(context).primaryColor : null,
+                      color: isSelected ? const Color(0xFF007A3D) : const Color(0xFF9CA3AF),
                     ),
                     title: Text(site.name),
                     subtitle: Text(site.code),
@@ -921,7 +944,7 @@ class _AttendancePageNewState extends State<AttendancePageNew> {
           decoration: BoxDecoration(
             border: Border(
               bottom: BorderSide(
-                color: Theme.of(context).primaryColor,
+                color: const Color(0xFF007A3D),
                 width: 3,
               ),
             ),
@@ -932,14 +955,14 @@ class _AttendancePageNewState extends State<AttendancePageNew> {
               Icon(
                 Icons.people_outline,
                 size: 20,
-                color: Theme.of(context).primaryColor,
+                color: const Color(0xFF007A3D),
               ),
               const SizedBox(width: 8),
               Text(
                 'Workers (${_workers.length})',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  color: Theme.of(context).primaryColor,
+                  color: const Color(0xFF007A3D),
                 ),
               ),
             ],
@@ -961,7 +984,7 @@ class _AttendancePageNewState extends State<AttendancePageNew> {
                 decoration: BoxDecoration(
                   border: Border(
                     bottom: BorderSide(
-                      color: _currentTabIndex == 0 ? Theme.of(context).primaryColor : Colors.transparent,
+                      color: _currentTabIndex == 0 ? const Color(0xFF007A3D) : Colors.transparent,
                       width: 3,
                     ),
                   ),
@@ -972,14 +995,14 @@ class _AttendancePageNewState extends State<AttendancePageNew> {
                     Icon(
                       Icons.check_circle_outline,
                       size: 20,
-                      color: _currentTabIndex == 0 ? Theme.of(context).primaryColor : const Color(0xFF9CA3AF),
+                      color: _currentTabIndex == 0 ? const Color(0xFF007A3D) : const Color(0xFF9CA3AF),
                     ),
                     const SizedBox(width: 8),
                     Text(
                       'Attendance ($_uniqueWorkersWithAttendance)',
                       style: TextStyle(
                         fontWeight: _currentTabIndex == 0 ? FontWeight.bold : FontWeight.normal,
-                        color: _currentTabIndex == 0 ? Theme.of(context).primaryColor : const Color(0xFF9CA3AF),
+                        color: _currentTabIndex == 0 ? const Color(0xFF007A3D) : const Color(0xFF9CA3AF),
                       ),
                     ),
                   ],
@@ -995,7 +1018,7 @@ class _AttendancePageNewState extends State<AttendancePageNew> {
                 decoration: BoxDecoration(
                   border: Border(
                     bottom: BorderSide(
-                      color: _currentTabIndex == 1 ? Theme.of(context).primaryColor : Colors.transparent,
+                      color: _currentTabIndex == 1 ? const Color(0xFF007A3D) : Colors.transparent,
                       width: 3,
                     ),
                   ),
@@ -1006,14 +1029,14 @@ class _AttendancePageNewState extends State<AttendancePageNew> {
                     Icon(
                       Icons.people_outline,
                       size: 20,
-                      color: _currentTabIndex == 1 ? Theme.of(context).primaryColor : const Color(0xFF9CA3AF),
+                      color: _currentTabIndex == 1 ? const Color(0xFF007A3D) : const Color(0xFF9CA3AF),
                     ),
                     const SizedBox(width: 8),
                     Text(
                       'Workers (${_workers.length})',
                       style: TextStyle(
                         fontWeight: _currentTabIndex == 1 ? FontWeight.bold : FontWeight.normal,
-                        color: _currentTabIndex == 1 ? Theme.of(context).primaryColor : const Color(0xFF9CA3AF),
+                        color: _currentTabIndex == 1 ? const Color(0xFF007A3D) : const Color(0xFF9CA3AF),
                       ),
                     ),
                   ],
@@ -1094,7 +1117,7 @@ class _AttendancePageNewState extends State<AttendancePageNew> {
                 physics: const BouncingScrollPhysics(),
                 child: Row(
                   children: [
-                    _buildStatusFilterChip('All', 'all', Icons.all_inclusive, Theme.of(context).primaryColor),
+                    _buildStatusFilterChip('All', 'all', Icons.all_inclusive, const Color(0xFF007A3D)),
                     const SizedBox(width: 8),
                     _buildStatusFilterChip('Present', 'present', Icons.check_circle, const Color(0xFF007A3D)),
                     const SizedBox(width: 8),

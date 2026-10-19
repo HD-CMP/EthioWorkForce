@@ -234,7 +234,7 @@ class _AttendancePeriodGridState extends State<AttendancePeriodGrid> {
                               : Colors.white),
                       border: Border.all(
                         color: isToday
-                            ? Theme.of(context).primaryColor
+                            ? const Color(0xFF007A3D)
                             : (status != null
                                 ? _getStatusColor(status)
                                 : const Color(0xFFD1D5DB)),

@@ -444,7 +444,7 @@ class _PayrollDetailPageState extends State<PayrollDetailPage> {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    Theme.of(context).primaryColor,
+                    const Color(0xFF007A3D),
                     const Color(0xB3007A3D),
                   ],
                 ),
@@ -750,7 +750,7 @@ class _ExportSection extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(icon, color: Theme.of(context).primaryColor),
+                Icon(icon, color: const Color(0xFF007A3D)),
                 const SizedBox(width: 8),
                 Text(
                   title,
@@ -848,7 +848,7 @@ class _PeriodBreakdownCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(Icons.group_work, color: Theme.of(context).primaryColor),
+                Icon(Icons.group_work, color: const Color(0xFF007A3D)),
                 const SizedBox(width: 8),
                 Text(
                   '${breakdown['period_types_count']} Different Payment Cycles',
@@ -1024,7 +1024,7 @@ class _WorkTypeGroupsCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(Icons.work, color: Theme.of(context).primaryColor),
+                Icon(Icons.work, color: const Color(0xFF007A3D)),
                 const SizedBox(width: 8),
                 Text(
                   '${sortedWorkTypes.length} Work Types',

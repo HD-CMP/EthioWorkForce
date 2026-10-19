@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../domain/entities/work_type.dart';
@@ -31,10 +31,16 @@ class WorkTypeDetailPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF9FAFB),
+      backgroundColor: const Color(0xFFF4F7F4),
       appBar: AppBar(
-        title: const Text('Work Type Details'),
+        backgroundColor: const Color(0xFF007A3D),
+        foregroundColor: Colors.white,
+        title: const Text(
+          'Work Type Details',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
         elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
         actions: [
           Container(
             margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),

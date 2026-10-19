@@ -188,10 +188,10 @@ class _HierarchicalAttendanceListState extends State<HierarchicalAttendanceList>
         .where((o) => o.workerId == worker.id)
         .toList();
     
-    debugPrint('📂 Opening overtime modal for worker ${worker.id}');
-    debugPrint('📂 Worker overtimes passed to modal: ${workerOvertimes.length}');
+    debugPrint('?? Opening overtime modal for worker ${worker.id}');
+    debugPrint('?? Worker overtimes passed to modal: ${workerOvertimes.length}');
     for (final o in workerOvertimes.where((o) => o.hours > 0)) {
-      debugPrint('   📂 Overtime: ${o.overtimeDate} = ${o.hours}h');
+      debugPrint('   ?? Overtime: ${o.overtimeDate} = ${o.hours}h');
     }
 
     showModalBottomSheet(
@@ -516,7 +516,7 @@ class _HierarchicalAttendanceListState extends State<HierarchicalAttendanceList>
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
           side: isSelected
-              ? BorderSide(color: Theme.of(context).primaryColor, width: 2)
+              ? BorderSide(color: const Color(0xFF007A3D), width: 2)
               : isManager
                   ? BorderSide(color: const Color(0xFFD1D5DB), width: 1.5)
                   : BorderSide.none,
@@ -687,7 +687,7 @@ class _HierarchicalAttendanceListState extends State<HierarchicalAttendanceList>
           subtitle: Padding(
             padding: const EdgeInsets.only(top: 6),
             child: Text(
-              '${worker.workType ?? 'No work type'}${worker.phoneNumber != null ? ' • ${worker.phoneNumber}' : ''}',
+              '${worker.workType ?? 'No work type'}${worker.phoneNumber != null ? ' � ${worker.phoneNumber}' : ''}',
               style: TextStyle(color: const Color(0xFF6B7280), fontSize: 13),
             ),
           ),

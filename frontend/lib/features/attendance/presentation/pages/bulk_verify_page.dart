@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../data/datasources/attendance_remote_datasource.dart';
@@ -450,7 +450,7 @@ class _BulkVerifyPageState extends State<BulkVerifyPage> {
             Text('Records: ${_selectedAttendanceIds.length}'),
             const SizedBox(height: 12),
             const Text(
-              '⚠️ This will verify the selected attendance records.',
+              '?? This will verify the selected attendance records.',
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
           ],
@@ -739,7 +739,7 @@ class _BulkVerifyPageState extends State<BulkVerifyPage> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.event, size: 20, color: Theme.of(context).primaryColor),
+                    Icon(Icons.event, size: 20, color: const Color(0xFF007A3D)),
                     const SizedBox(width: 8),
                     Text(
                       _showEthiopianCalendar
@@ -752,12 +752,12 @@ class _BulkVerifyPageState extends State<BulkVerifyPage> {
                           : DateFormat('EEEE, MMMM d, yyyy').format(_selectedDate),
                       style: TextStyle(
                         fontSize: 14,
-                        color: Theme.of(context).primaryColor,
+                        color: const Color(0xFF007A3D),
                         fontWeight: FontWeight.w500,
                       ),
                     ),
                     const SizedBox(width: 4),
-                    Icon(Icons.arrow_drop_down, size: 20, color: Theme.of(context).primaryColor),
+                    Icon(Icons.arrow_drop_down, size: 20, color: const Color(0xFF007A3D)),
                   ],
                 ),
               ),
@@ -795,7 +795,7 @@ class _BulkVerifyPageState extends State<BulkVerifyPage> {
                             Icon(
                               Icons.check_circle_outline,
                               size: 18,
-                              color: _bulkMode == 'attendance' ? Theme.of(context).primaryColor : const Color(0xFF6B7280),
+                              color: _bulkMode == 'attendance' ? const Color(0xFF007A3D) : const Color(0xFF6B7280),
                             ),
                             const SizedBox(width: 8),
                             Text(
@@ -803,7 +803,7 @@ class _BulkVerifyPageState extends State<BulkVerifyPage> {
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: _bulkMode == 'attendance' ? FontWeight.bold : FontWeight.normal,
-                                color: _bulkMode == 'attendance' ? Theme.of(context).primaryColor : const Color(0xFF6B7280),
+                                color: _bulkMode == 'attendance' ? const Color(0xFF007A3D) : const Color(0xFF6B7280),
                               ),
                             ),
                           ],
@@ -958,7 +958,7 @@ class _BulkVerifyPageState extends State<BulkVerifyPage> {
                 _selectAll = false;
               }),
               selectedColor: const Color(0x33007A3D),
-              checkmarkColor: Theme.of(context).primaryColor,
+              checkmarkColor: const Color(0xFF007A3D),
             ),
             const SizedBox(width: 8),
             FilterChip(
@@ -1035,7 +1035,7 @@ class _BulkVerifyPageState extends State<BulkVerifyPage> {
               selected: _selectedWorkPlace == null,
               onSelected: (_) => _selectWorkPlace(null),
               selectedColor: const Color(0x33007A3D),
-              checkmarkColor: Theme.of(context).primaryColor,
+              checkmarkColor: const Color(0xFF007A3D),
             ),
             const SizedBox(width: 8),
             ..._workPlaces.map((place) {
@@ -1047,7 +1047,7 @@ class _BulkVerifyPageState extends State<BulkVerifyPage> {
                   selected: _selectedWorkPlace == place,
                   onSelected: (_) => _selectWorkPlace(place),
                   selectedColor: const Color(0x33007A3D),
-                  checkmarkColor: Theme.of(context).primaryColor,
+                  checkmarkColor: const Color(0xFF007A3D),
                 ),
               );
             }),
@@ -1232,7 +1232,7 @@ class _BulkVerifyPageState extends State<BulkVerifyPage> {
             borderRadius: BorderRadius.circular(12),
             side: isSelected
                 ? BorderSide(
-                    color: _isUnverifyMode ? const Color(0xFFE65100) : Theme.of(context).primaryColor, 
+                    color: _isUnverifyMode ? const Color(0xFFE65100) : const Color(0xFF007A3D), 
                     width: 2
                   )
                 : BorderSide.none,
@@ -1271,7 +1271,7 @@ class _BulkVerifyPageState extends State<BulkVerifyPage> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: Theme.of(context).primaryColor,
+                      color: const Color(0xFF007A3D),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
@@ -1384,7 +1384,7 @@ class _BulkVerifyPageState extends State<BulkVerifyPage> {
                   : (_isUnverifyMode ? 'Unverify' : 'Verify')),
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                backgroundColor: _isUnverifyMode ? const Color(0xFFE65100) : Theme.of(context).primaryColor,
+                backgroundColor: _isUnverifyMode ? const Color(0xFFE65100) : const Color(0xFF007A3D),
                 foregroundColor: Colors.white,
               ),
             ),

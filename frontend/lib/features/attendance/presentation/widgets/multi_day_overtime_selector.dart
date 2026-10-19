@@ -116,8 +116,8 @@ class _MultiDayOvertimeSelectorState extends State<MultiDayOvertimeSelector> {
   void _initializeOvertimeData() {
     if (mounted) {
       setState(() {
-        debugPrint('🔧 Initializing overtime data for worker ${widget.worker.id}');
-        debugPrint('📋 Existing overtimes: ${widget.existingOvertimes.length}');
+        debugPrint('?? Initializing overtime data for worker ${widget.worker.id}');
+        debugPrint('?? Existing overtimes: ${widget.existingOvertimes.length}');
         for (final ot in widget.existingOvertimes) {
           debugPrint('   - ${ot.overtimeDate.toIso8601String().split('T')[0]}: hours=${ot.hours}h');
         }
@@ -129,11 +129,11 @@ class _MultiDayOvertimeSelectorState extends State<MultiDayOvertimeSelector> {
           final overtime = _getOvertime(date);
           
           if (overtime != null && overtime.hours > 0) {
-            debugPrint('✨ Found overtime: ${overtime.overtimeDate} = ${overtime.hours}h');
+            debugPrint('? Found overtime: ${overtime.overtimeDate} = ${overtime.hours}h');
             _overtimeData[normalizedDate] = overtime.hours;
           }
         }
-        debugPrint('📊 Initialized overtime data: ${_overtimeData.length} days');
+        debugPrint('?? Initialized overtime data: ${_overtimeData.length} days');
       });
     }
   }
@@ -499,7 +499,7 @@ class _MultiDayOvertimeSelectorState extends State<MultiDayOvertimeSelector> {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      'ID: ${widget.worker.employeeId} • ${widget.worker.workType ?? 'No work type'}',
+                      'ID: ${widget.worker.employeeId} � ${widget.worker.workType ?? 'No work type'}',
                       style: TextStyle(
                         fontSize: 13,
                         color: const Color(0xFF6B7280),
@@ -591,8 +591,8 @@ class _MultiDayOvertimeSelectorState extends State<MultiDayOvertimeSelector> {
             children: [
               Text(
                 widget.mode == 'verify'
-                    ? '${_selectedDates.length} selected • ${_selectedDates.fold<double>(0.0, (sum, date) => sum + (_overtimeData[date] ?? 0.0))} hours'
-                    : '${_overtimeData.length} day${_overtimeData.length != 1 ? 's' : ''} • $totalHours hours',
+                    ? '${_selectedDates.length} selected � ${_selectedDates.fold<double>(0.0, (sum, date) => sum + (_overtimeData[date] ?? 0.0))} hours'
+                    : '${_overtimeData.length} day${_overtimeData.length != 1 ? 's' : ''} � $totalHours hours',
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
@@ -1082,7 +1082,7 @@ class _MultiDayOvertimeSelectorState extends State<MultiDayOvertimeSelector> {
             tooltip: 'Previous Period',
             style: IconButton.styleFrom(
               backgroundColor: Colors.white,
-              foregroundColor: Theme.of(context).primaryColor,
+              foregroundColor: const Color(0xFF007A3D),
               padding: const EdgeInsets.all(12),
             ),
           ),
@@ -1128,7 +1128,7 @@ class _MultiDayOvertimeSelectorState extends State<MultiDayOvertimeSelector> {
             tooltip: 'Next Period',
             style: IconButton.styleFrom(
               backgroundColor: canGoNext ? Colors.white : const Color(0xFFE5E7EB),
-              foregroundColor: canGoNext ? Theme.of(context).primaryColor : const Color(0xFF9CA3AF),
+              foregroundColor: canGoNext ? const Color(0xFF007A3D) : const Color(0xFF9CA3AF),
               padding: const EdgeInsets.all(12),
             ),
           ),

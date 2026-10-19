@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/utils/ethiopian_calendar.dart';
@@ -353,7 +353,7 @@ class _PayrollPreviewPageState extends State<PayrollPreviewPage> {
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [
-                            Theme.of(context).primaryColor,
+                            const Color(0xFF007A3D),
                             const Color(0xB3007A3D),
                           ],
                         ),
@@ -419,7 +419,7 @@ class _PayrollPreviewPageState extends State<PayrollPreviewPage> {
         },
         icon: const Icon(Icons.calculate),
         label: const Text('Calculate Payroll'),
-        backgroundColor: Theme.of(context).primaryColor,
+        backgroundColor: const Color(0xFF007A3D),
       ),
     );
   }
@@ -437,9 +437,9 @@ class _PayrollPreviewPageState extends State<PayrollPreviewPage> {
       },
       backgroundColor: const Color(0xFFE5E7EB),
       selectedColor: const Color(0x33007A3D),
-      checkmarkColor: Theme.of(context).primaryColor,
+      checkmarkColor: const Color(0xFF007A3D),
       labelStyle: TextStyle(
-        color: isSelected ? Theme.of(context).primaryColor : const Color(0xFF1A1A1A),
+        color: isSelected ? const Color(0xFF007A3D) : const Color(0xFF1A1A1A),
         fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
       ),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -627,7 +627,7 @@ class _PayrollPreviewPageState extends State<PayrollPreviewPage> {
                       child: Text(
                         worker.fullName.isNotEmpty ? worker.fullName[0].toUpperCase() : 'W',
                         style: TextStyle(
-                          color: Theme.of(context).primaryColor,
+                          color: const Color(0xFF007A3D),
                           fontWeight: FontWeight.bold,
                         ),
                       ),

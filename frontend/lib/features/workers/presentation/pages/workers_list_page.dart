@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 
 import '../../../../core/localization/app_localizations.dart';
@@ -857,19 +857,25 @@ class _WorkersListPageState extends State<WorkersListPage> {
     return Scaffold(
       backgroundColor: _kBackground,
       appBar: AppBar(
-        title: Text(localizations?.workers ?? 'Workers'),
+        backgroundColor: const Color(0xFF007A3D),
+        foregroundColor: Colors.white,
+        title: Text(
+          localizations?.workers ?? 'Workers',
+          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
         elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
         actions: [
           if (_isSuperAdmin && _sites.length > 1)
             IconButton(
-              icon: const Icon(Icons.location_on),
+              icon: const Icon(Icons.location_on, color: Colors.white),
               onPressed: _showSiteSelector,
               tooltip: 'Select Site',
             ),
           Stack(
             children: [
               IconButton(
-                icon: const Icon(Icons.notifications),
+                icon: const Icon(Icons.notifications, color: Colors.white),
                 onPressed: () async {
                   await Navigator.push(
                     context,
@@ -912,7 +918,7 @@ class _WorkersListPageState extends State<WorkersListPage> {
           ),
           if (_isSuperAdmin)
             IconButton(
-              icon: const Icon(Icons.filter_list),
+              icon: const Icon(Icons.filter_list, color: Colors.white),
               onPressed: _showFilterSheet,
             ),
         ],

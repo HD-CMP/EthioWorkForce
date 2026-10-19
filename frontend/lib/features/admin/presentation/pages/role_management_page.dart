@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 
 import '../../../../core/di/injection.dart';
@@ -202,7 +202,7 @@ class _RoleManagementPageState extends State<RoleManagementPage> {
                       ),
                       child: Icon(
                         Icons.admin_panel_settings,
-                        color: Theme.of(context).primaryColor,
+                        color: const Color(0xFF007A3D),
                         size: 28,
                       ),
                     ),
@@ -562,16 +562,14 @@ class _RoleManagementPageState extends State<RoleManagementPage> {
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: [
-                              Theme.of(context).primaryColor,
+                              const Color(0xFF007A3D),
                               const Color(0xCC007A3D),
                             ],
                           ),
                           borderRadius: BorderRadius.circular(12),
                           boxShadow: [
                             BoxShadow(
-                              color: Theme.of(context)
-                                  .primaryColor
-                                  .withValues(alpha: 0.3),
+                              color: const Color(0x4D007A3D),
                               blurRadius: 8,
                               offset: const Offset(0, 4),
                             ),
@@ -627,7 +625,7 @@ class _RoleManagementPageState extends State<RoleManagementPage> {
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
                           color: role.isActive
-                              ? Theme.of(context).primaryColor
+                              ? const Color(0xFF007A3D)
                               : const Color(0xFF9CA3AF),
                           borderRadius: BorderRadius.circular(8),
                         ),
@@ -717,7 +715,7 @@ class _RoleManagementPageState extends State<RoleManagementPage> {
                               children: [
                                 IconButton(
                                   icon: const Icon(Icons.edit),
-                                  color: Theme.of(context).primaryColor,
+                                  color: const Color(0xFF007A3D),
                                   tooltip: 'Edit role',
                                   onPressed: () => _showRoleDialog(role: role),
                                 ),

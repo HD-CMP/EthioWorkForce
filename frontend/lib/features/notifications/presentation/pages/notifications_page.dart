@@ -308,7 +308,7 @@ class _NotificationsPageContent extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(Icons.dashboard, color: Theme.of(context).primaryColor),
+                Icon(Icons.dashboard, color: const Color(0xFF007A3D)),
                 const SizedBox(width: 8),
                 const Text(
                   'System Overview',

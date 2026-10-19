@@ -461,7 +461,7 @@ class _PayrollLoadedView extends StatelessWidget {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  Theme.of(context).primaryColor,
+                  const Color(0xFF007A3D),
                   const Color(0xB3007A3D),
                 ],
               ),
@@ -908,14 +908,14 @@ class _QuickExportButton extends StatelessWidget {
         child: Column(
           children: [
             Icon(icon,
-                size: 20, color: Theme.of(context).primaryColor),
+                size: 20, color: const Color(0xFF007A3D)),
             const SizedBox(height: 4),
             Text(
               label,
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
-                color: Theme.of(context).primaryColor,
+                color: const Color(0xFF007A3D),
               ),
             ),
           ],

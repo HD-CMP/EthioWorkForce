@@ -1,4 +1,4 @@
-import '../../../workers/domain/entities/worker.dart';
+﻿import '../../../workers/domain/entities/worker.dart';
 
 class WorkerHierarchyNode {
   final Worker worker;

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '../../../../core/services/audio_feedback_service.dart';
@@ -95,14 +95,21 @@ class _QRScannerPageState extends State<QRScannerPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(localizations?.scanQrCode ?? 'Scan QR Code'),
+        backgroundColor: const Color(0xFF0A192F),
+        foregroundColor: Colors.white,
+        elevation: 0,
+        title: Text(
+          localizations?.scanQrCode ?? 'Scan QR Code',
+          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+        iconTheme: const IconThemeData(color: Colors.white),
         actions: [
           IconButton(
-            icon: const Icon(Icons.flash_on),
+            icon: const Icon(Icons.flash_on, color: Colors.white),
             onPressed: () => _controller.toggleTorch(),
           ),
           IconButton(
-            icon: const Icon(Icons.flip_camera_ios),
+            icon: const Icon(Icons.flip_camera_ios, color: Colors.white),
             onPressed: () => _controller.switchCamera(),
           ),
         ],

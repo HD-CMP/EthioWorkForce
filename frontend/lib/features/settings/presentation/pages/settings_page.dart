@@ -1,4 +1,4 @@
-﻿import 'dart:convert';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:dio/dio.dart';
@@ -380,9 +380,9 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
                 content: Text(
                   'Successfully verified and restored offline backup:\n\n'
-                  '• Sites: ${sites.length}\n'
-                  '• Workers: ${workers.length}\n'
-                  '• Attendance Logs: ${attendances.length}\n\n'
+                  '� Sites: ${sites.length}\n'
+                  '� Workers: ${workers.length}\n'
+                  '� Attendance Logs: ${attendances.length}\n\n'
                   'Archive generated on: ${data['exported_at'] ?? 'Unknown'}',
                 ),
                 actions: [
@@ -421,9 +421,16 @@ class _SettingsPageState extends State<SettingsPage> {
     final localizations = AppLocalizations.of(context);
 
     return Scaffold(
+      backgroundColor: const Color(0xFFF4F7F4),
       appBar: AppBar(
-        title: Text(localizations?.settings ?? 'Settings'),
+        backgroundColor: const Color(0xFF007A3D),
+        foregroundColor: Colors.white,
+        title: Text(
+          localizations?.settings ?? 'Settings',
+          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
         elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -432,11 +439,11 @@ class _SettingsPageState extends State<SettingsPage> {
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    Theme.of(context).primaryColor,
-                    const Color(0xB3007A3D),
+                    Color(0xFF005C2E),
+                    Color(0xFF007A3D),
                   ],
                 ),
               ),
@@ -452,10 +459,10 @@ class _SettingsPageState extends State<SettingsPage> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Text(
+                  const Text(
                     'Configure app preferences',
                     style: TextStyle(
-                      color: const Color(0xE6FFFFFF),
+                      color: Color(0xE6FFFFFF),
                       fontSize: 14,
                     ),
                   ),
@@ -611,7 +618,7 @@ class _SettingsPageState extends State<SettingsPage> {
               children: [
                 SwitchListTile(
                   title: const Text('Amharic'),
-                  subtitle: const Text('አማርኛ'),
+                  subtitle: const Text('????'),
                   value: _isAmharic,
                   onChanged: (value) => setState(() => _isAmharic = value),
                 ),
@@ -693,14 +700,14 @@ class _Section extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
           child: Row(
             children: [
-              Icon(icon, size: 20, color: Theme.of(context).primaryColor),
+              Icon(icon, size: 20, color: const Color(0xFF007A3D)),
               const SizedBox(width: 8),
               Text(
                 title,
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
-                  color: Theme.of(context).primaryColor,
+                  color: const Color(0xFF007A3D),
                   letterSpacing: 0.5,
                 ),
               ),

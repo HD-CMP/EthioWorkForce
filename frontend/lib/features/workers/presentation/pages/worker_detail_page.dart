@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
 import '../../../../core/localization/app_localizations.dart';
@@ -275,15 +275,22 @@ class _WorkerDetailPageState extends State<WorkerDetailPage> {
     final localizations = AppLocalizations.of(context);
 
     return Scaffold(
+      backgroundColor: const Color(0xFFF4F7F4),
       appBar: AppBar(
-        title: Text(_worker.fullName),
+        backgroundColor: const Color(0xFF007A3D),
+        foregroundColor: Colors.white,
+        title: Text(
+          _worker.fullName,
+          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+        iconTheme: const IconThemeData(color: Colors.white),
         actions: [
           IconButton(
-            icon: const Icon(Icons.edit),
+            icon: const Icon(Icons.edit, color: Colors.white),
             onPressed: _editWorker,
           ),
           IconButton(
-            icon: const Icon(Icons.more_vert),
+            icon: const Icon(Icons.more_vert, color: Colors.white),
             onPressed: _showOptionsMenu,
           ),
         ],
@@ -294,11 +301,11 @@ class _WorkerDetailPageState extends State<WorkerDetailPage> {
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    Theme.of(context).primaryColor,
-                    const Color(0xB3007A3D),
+                    Color(0xFF005C2E),
+                    Color(0xFF007A3D),
                   ],
                 ),
               ),
@@ -309,10 +316,10 @@ class _WorkerDetailPageState extends State<WorkerDetailPage> {
                     backgroundColor: Colors.white,
                     child: Text(
                       _worker.fullName.isNotEmpty ? _worker.fullName.substring(0, 1).toUpperCase() : 'W',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 40,
                         fontWeight: FontWeight.bold,
-                        color: Theme.of(context).primaryColor,
+                        color: Color(0xFF007A3D),
                       ),
                     ),
                   ),
@@ -525,7 +532,7 @@ class _WorkerDetailPageState extends State<WorkerDetailPage> {
                       supervisorId: _worker.supervisorId,
                       supervisorName: _worker.supervisorName,
                       datasource: _datasource,
-                      iconColor: Theme.of(context).primaryColor,
+                      iconColor: const Color(0xFF007A3D),
                     ),
                   if (_worker.bankAccountNumber != null)
                     _BankInfoCard(
@@ -738,7 +745,7 @@ class _InfoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final effectiveIconColor = iconColor ?? Theme.of(context).primaryColor;
+    final effectiveIconColor = iconColor ?? const Color(0xFF007A3D);
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 1,
@@ -857,7 +864,7 @@ class _SupervisorCardState extends State<_SupervisorCard> {
 
   @override
   Widget build(BuildContext context) {
-    final effectiveColor = widget.iconColor ?? Theme.of(context).primaryColor;
+    final effectiveColor = widget.iconColor ?? const Color(0xFF007A3D);
     
     if (_loading) {
       return Card(
@@ -871,7 +878,7 @@ class _SupervisorCardState extends State<_SupervisorCard> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: Color.fromARGB(26, effectiveColor.red, effectiveColor.green, effectiveColor.blue),
+                color: effectiveColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(
@@ -923,7 +930,7 @@ class _SupervisorCardState extends State<_SupervisorCard> {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: Color.fromARGB(26, effectiveColor.red, effectiveColor.green, effectiveColor.blue),
+                color: effectiveColor.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(
@@ -974,14 +981,14 @@ class _SupervisorCardState extends State<_SupervisorCard> {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
-                              color: Color.fromARGB(26, effectiveColor.red, effectiveColor.green, effectiveColor.blue),
+                            color: effectiveColor.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(
                               employeeId,
                               style: TextStyle(
                                 fontSize: 11,
-                                color: Color.fromARGB(204, effectiveColor.red, effectiveColor.green, effectiveColor.blue),
+                                color: effectiveColor.withValues(alpha: 0.8),
                                 fontFamily: 'monospace',
                                 fontWeight: FontWeight.w500,
                               ),

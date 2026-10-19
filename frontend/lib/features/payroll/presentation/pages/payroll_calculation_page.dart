@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
@@ -360,7 +360,7 @@ class _PayrollCalculationPageState extends State<PayrollCalculationPage> {
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [
-                          Theme.of(context).primaryColor,
+                          const Color(0xFF007A3D),
                           const Color(0xB3007A3D),
                         ],
                       ),
@@ -378,7 +378,7 @@ class _PayrollCalculationPageState extends State<PayrollCalculationPage> {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          '${widget.site.name} · ${_allWorkers.where((w) => _selectedWorkPlaceName == null || (w.workPlaceName ?? 'General Workforce') == _selectedWorkPlaceName).length} Workers',
+                          '${widget.site.name} � ${_allWorkers.where((w) => _selectedWorkPlaceName == null || (w.workPlaceName ?? 'General Workforce') == _selectedWorkPlaceName).length} Workers',
                           style: TextStyle(
                             color: const Color(0xE6FFFFFF),
                             fontSize: 14,
@@ -438,7 +438,7 @@ class _PayrollCalculationPageState extends State<PayrollCalculationPage> {
                                         children: [
                                           Icon(
                                             Icons.calendar_today,
-                                            color: Theme.of(context).primaryColor,
+                                            color: const Color(0xFF007A3D),
                                             size: 20,
                                           ),
                                           const SizedBox(width: 8),
@@ -454,12 +454,12 @@ class _PayrollCalculationPageState extends State<PayrollCalculationPage> {
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
                                           Text(
-                                            'ቀን',
+                                            '??',
                                             style: TextStyle(
                                               fontSize: 12,
                                               fontWeight: _showEthiopianCalendar ? FontWeight.bold : FontWeight.normal,
                                               color: _showEthiopianCalendar 
-                                                  ? Theme.of(context).primaryColor 
+                                                  ? const Color(0xFF007A3D) 
                                                   : const Color(0xFF9CA3AF),
                                             ),
                                           ),
@@ -470,7 +470,7 @@ class _PayrollCalculationPageState extends State<PayrollCalculationPage> {
                                                 _showEthiopianCalendar = value;
                                               });
                                             },
-                                            activeColor: Theme.of(context).primaryColor,
+                                            activeColor: const Color(0xFF007A3D),
                                           ),
                                         ],
                                       ),
@@ -542,7 +542,7 @@ class _PayrollCalculationPageState extends State<PayrollCalculationPage> {
                                                 label: const Text('Current Period'),
                                                 style: ElevatedButton.styleFrom(
                                                   padding: const EdgeInsets.symmetric(vertical: 12),
-                                                  backgroundColor: Theme.of(context).primaryColor,
+                                                  backgroundColor: const Color(0xFF007A3D),
                                                   foregroundColor: Colors.white,
                                                 ),
                                               )
@@ -564,7 +564,7 @@ class _PayrollCalculationPageState extends State<PayrollCalculationPage> {
                                                 label: const Text('Full Month'),
                                                 style: ElevatedButton.styleFrom(
                                                   padding: const EdgeInsets.symmetric(vertical: 12),
-                                                  backgroundColor: Theme.of(context).primaryColor,
+                                                  backgroundColor: const Color(0xFF007A3D),
                                                   foregroundColor: Colors.white,
                                                 ),
                                               )
@@ -862,7 +862,7 @@ class _PayrollCalculationPageState extends State<PayrollCalculationPage> {
                                 ),
                               ),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: Theme.of(context).primaryColor,
+                                backgroundColor: const Color(0xFF007A3D),
                                 foregroundColor: Colors.white,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(8),
@@ -947,8 +947,8 @@ class _PayrollCalculationPageState extends State<PayrollCalculationPage> {
                                       ),
                                       const SizedBox(height: 4),
                                       Text(
-                                        '• Current Period: Calculate up to today for real-time earnings tracking\n'
-                                        '• Full Month: Calculate entire month for advance planning and budgeting',
+                                        '� Current Period: Calculate up to today for real-time earnings tracking\n'
+                                        '� Full Month: Calculate entire month for advance planning and budgeting',
                                         style: TextStyle(
                                           color: const Color(0xFF004A25),
                                           fontSize: 13,
@@ -1046,9 +1046,9 @@ class _PayrollCalculationPageState extends State<PayrollCalculationPage> {
       },
       backgroundColor: const Color(0xFFE5E7EB),
       selectedColor: const Color(0x33007A3D),
-      checkmarkColor: Theme.of(context).primaryColor,
+      checkmarkColor: const Color(0xFF007A3D),
       labelStyle: TextStyle(
-        color: isSelected ? Theme.of(context).primaryColor : const Color(0xFF1A1A1A),
+        color: isSelected ? const Color(0xFF007A3D) : const Color(0xFF1A1A1A),
         fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
       ),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),

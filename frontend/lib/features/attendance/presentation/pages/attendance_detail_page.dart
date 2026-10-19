@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../domain/entities/attendance.dart';
@@ -281,7 +281,7 @@ class _AttendanceDetailPageState extends State<AttendanceDetailPage> {
               children: [
                 CircleAvatar(
                   backgroundColor: const Color(0x1A007A3D),
-                  child: Icon(Icons.person, color: Theme.of(context).primaryColor),
+                  child: Icon(Icons.person, color: const Color(0xFF007A3D)),
                 ),
                 const SizedBox(width: 12),
                 Expanded(

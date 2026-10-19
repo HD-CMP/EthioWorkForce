@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/network/dio_client.dart';
@@ -262,7 +262,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         color: const Color(0x1A007A3D),
                         shape: BoxShape.circle,
                       ),
-                      child: Icon(Icons.lock_reset, color: Theme.of(context).primaryColor, size: 28),
+                      child: Icon(Icons.lock_reset, color: const Color(0xFF007A3D), size: 28),
                     ),
                     const SizedBox(width: 16),
                     Text(
@@ -351,7 +351,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     ElevatedButton(
                       onPressed: _isLoading ? null : _changePassword,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Theme.of(context).primaryColor,
+                        backgroundColor: const Color(0xFF007A3D),
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -378,12 +378,19 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF4F7F4),
       appBar: AppBar(
-        title: const Text('My Profile'),
+        backgroundColor: const Color(0xFF007A3D),
+        foregroundColor: Colors.white,
+        title: const Text(
+          'My Profile',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
         elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: _isLoading && _userData == null
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator(color: Color(0xFF007A3D)))
           : SingleChildScrollView(
               padding: const EdgeInsets.all(16),
               child: Form(
@@ -400,7 +407,7 @@ class _ProfilePageState extends State<ProfilePage> {
                             child: Icon(
                               Icons.person,
                               size: 60,
-                              color: Theme.of(context).primaryColor,
+                              color: const Color(0xFF007A3D),
                             ),
                           ),
                           Positioned(
@@ -409,7 +416,7 @@ class _ProfilePageState extends State<ProfilePage> {
                             child: Container(
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                color: Theme.of(context).primaryColor,
+                                color: const Color(0xFF007A3D),
                                 shape: BoxShape.circle,
                               ),
                               child: const Icon(
@@ -525,7 +532,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           icon: const Icon(Icons.lock_reset),
                           label: const Text('Change Password', style: TextStyle(fontWeight: FontWeight.bold)),
                           style: OutlinedButton.styleFrom(
-                            foregroundColor: Theme.of(context).primaryColor,
+                            foregroundColor: const Color(0xFF007A3D),
                             side: BorderSide(color: const Color(0x80007A3D), width: 1.5),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),

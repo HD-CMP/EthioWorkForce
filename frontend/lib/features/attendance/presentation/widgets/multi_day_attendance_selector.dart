@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../domain/entities/attendance.dart';
@@ -835,7 +835,7 @@ class _MultiDayAttendanceSelectorState extends State<MultiDayAttendanceSelector>
             tooltip: 'Previous Period',
             style: IconButton.styleFrom(
               backgroundColor: Colors.white,
-              foregroundColor: Theme.of(context).primaryColor,
+              foregroundColor: const Color(0xFF007A3D),
               padding: const EdgeInsets.all(12),
             ),
           ),
@@ -881,7 +881,7 @@ class _MultiDayAttendanceSelectorState extends State<MultiDayAttendanceSelector>
             tooltip: 'Next Period',
             style: IconButton.styleFrom(
               backgroundColor: canGoNext ? Colors.white : const Color(0xFFE5E7EB),
-              foregroundColor: canGoNext ? Theme.of(context).primaryColor : const Color(0xFF9CA3AF),
+              foregroundColor: canGoNext ? const Color(0xFF007A3D) : const Color(0xFF9CA3AF),
               padding: const EdgeInsets.all(12),
             ),
           ),
@@ -941,9 +941,9 @@ class _MultiDayAttendanceSelectorState extends State<MultiDayAttendanceSelector>
       backgroundColor = Color.fromARGB(38, statusColor.red, statusColor.green, statusColor.blue);
       textColor = Color.fromARGB(230, statusColor.red, statusColor.green, statusColor.blue);
     } else if (isSelected) {
-      borderColor = Theme.of(context).primaryColor;
+      borderColor = const Color(0xFF007A3D);
       backgroundColor = const Color(0x1A007A3D);
-      textColor = Theme.of(context).primaryColor;
+      textColor = const Color(0xFF007A3D);
     } else {
       borderColor = const Color(0xFFD1D5DB);
       backgroundColor = Colors.white;

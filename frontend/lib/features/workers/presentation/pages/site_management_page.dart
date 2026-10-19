@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 import '../../domain/entities/site.dart';
 import '../../data/datasources/site_remote_datasource.dart';
@@ -157,7 +157,12 @@ class _SiteManagementPageState extends State<SiteManagementPage> with SingleTick
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Sites'),
+        backgroundColor: const Color(0xFF007A3D),
+        foregroundColor: Colors.white,
+        title: const Text(
+          'Site Management',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
         elevation: 0,
         bottom: TabBar(
           controller: _tabController,
@@ -177,8 +182,9 @@ class _SiteManagementPageState extends State<SiteManagementPage> with SingleTick
           ],
         ),
       ),
+      backgroundColor: const Color(0xFFF4F7F4),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator(color: Color(0xFF007A3D)))
           : _errorMessage != null
               ? _buildErrorState(context)
               : TabBarView(
@@ -191,6 +197,8 @@ class _SiteManagementPageState extends State<SiteManagementPage> with SingleTick
       floatingActionButton: _tabController.index == 0 && _errorMessage == null
           ? FloatingActionButton.extended(
               onPressed: () => _showSiteDialog(),
+              backgroundColor: const Color(0xFF007A3D),
+              foregroundColor: Colors.white,
               icon: const Icon(Icons.add),
               label: const Text('Add Site'),
             )

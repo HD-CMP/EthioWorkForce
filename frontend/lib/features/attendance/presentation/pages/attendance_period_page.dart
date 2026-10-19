@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../domain/entities/attendance.dart';
@@ -262,7 +262,14 @@ class _AttendancePeriodPageState extends State<AttendancePeriodPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Period Attendance'),
+        backgroundColor: const Color(0xFF007A3D),
+        foregroundColor: Colors.white,
+        elevation: 0,
+        title: const Text(
+          'Period Attendance',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+        iconTheme: const IconThemeData(color: Colors.white),
         actions: [
           if (_pendingChanges.isNotEmpty)
             Container(
@@ -347,7 +354,7 @@ class _AttendancePeriodPageState extends State<AttendancePeriodPage> {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            Theme.of(context).primaryColor,
+            const Color(0xFF007A3D),
             const Color(0xCC007A3D),
           ],
         ),
