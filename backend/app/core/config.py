@@ -69,5 +69,26 @@ class Settings(BaseSettings):
             url = url.replace("postgresql://", "postgresql+pg8000://", 1)
         return url
 
+    @property
+    def is_production(self) -> bool:
+        return self.ENVIRONMENT.lower() == "production"
+
 
 settings = Settings()
+
+# Production safety checks (log warnings, don't crash)
+if settings.is_production:
+    import warnings
+    _DEFAULT_KEY = "1ba3a94233f9296246a932a1cce71325f35b7dd0d1015da72d5029714ab718b3"
+    if settings.SECRET_KEY == _DEFAULT_KEY:
+        warnings.warn(
+            "SECURITY WARNING: Using default SECRET_KEY in production! "
+            "Set a unique SECRET_KEY environment variable.",
+            stacklevel=2,
+        )
+    if ["*"] == settings.CORS_ORIGINS:
+        warnings.warn(
+            "SECURITY WARNING: CORS_ORIGINS is set to '*' in production. "
+            "Consider restricting to specific domains.",
+            stacklevel=2,
+        )

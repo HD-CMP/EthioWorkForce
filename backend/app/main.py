@@ -11,6 +11,7 @@ from app.core.database import engine, Base
 from app.api.v1 import api_router
 from app.middleware.logging import LoggingMiddleware
 from app.middleware.error_handler import ErrorHandlerMiddleware
+from app.middleware.security_headers import SecurityHeadersMiddleware
 
 
 @asynccontextmanager
@@ -48,6 +49,7 @@ def create_application() -> FastAPI:
         allow_headers=["*"],
     )
     application.add_middleware(GZipMiddleware, minimum_size=1000)
+    application.add_middleware(SecurityHeadersMiddleware)
     application.add_middleware(LoggingMiddleware)
     application.add_middleware(ErrorHandlerMiddleware)
 
