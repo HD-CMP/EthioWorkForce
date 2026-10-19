@@ -506,22 +506,24 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Row(
-                        children: [
-                          Container(
-                            width: 34, height: 34,
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.15),
-                              borderRadius: BorderRadius.circular(10),
+                      Expanded(
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 34, height: 34,
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.15),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: const Icon(Icons.business_center_rounded, color: Colors.white, size: 18),
                             ),
-                            child: const Icon(Icons.business_center_rounded, color: Colors.white, size: 18),
-                          ),
-                          const SizedBox(width: 10),
-                          const Text(
-                            'EthioWorkforce',
-                            style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700, letterSpacing: 0.3),
-                          ),
-                        ],
+                            const SizedBox(width: 10),
+                            const Text(
+                              'EthioWorkforce',
+                              style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700, letterSpacing: 0.3),
+                            ),
+                          ],
+                        ),
                       ),
                       if (_isLoadingUser)
                         const SizedBox(

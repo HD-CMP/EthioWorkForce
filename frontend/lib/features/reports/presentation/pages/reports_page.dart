@@ -1238,31 +1238,39 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.shield_rounded, color: Color(0xFFFFD54F), size: 24),
+                    const Icon(Icons.shield_rounded, color: Color(0xFFFFD54F), size: 22),
                     const SizedBox(width: 10),
-                    const Text(
-                      'Statutory Remittance Summary (ERCA & POESSA)',
-                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
-                    ),
-                    const Spacer(),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(12)),
+                    const Expanded(
                       child: Text(
-                        'Total Remittance: ETB ${_currencyFormat.format(summary['total_statutory_remittance'] ?? 0)}',
-                        style: const TextStyle(color: Color(0xFFFFD54F), fontWeight: FontWeight.bold, fontSize: 13),
+                        'Statutory Remittance Summary',
+                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(10)),
+                      child: Text(
+                        'ETB ${_currencyFormat.format(summary['total_statutory_remittance'] ?? 0)}',
+                        style: const TextStyle(color: Color(0xFFFFD54F), fontWeight: FontWeight.bold, fontSize: 12),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],
                 ),
+                const SizedBox(height: 4),
+                const Text('ERCA & POESSA', style: TextStyle(color: Colors.white60, fontSize: 12)),
                 const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 12,
                   children: [
-                    _buildStatutoryMetricItem('Total Gross Pay', summary['total_gross_salary']),
+                    _buildStatutoryMetricItem('Gross Pay', summary['total_gross_salary']),
                     _buildStatutoryMetricItem('Emp. Pension (7%)', summary['total_employee_pension']),
                     _buildStatutoryMetricItem('Taxable Base', summary['total_taxable_income']),
-                    _buildStatutoryMetricItem('Income Tax (ERCA)', summary['total_income_tax']),
+                    _buildStatutoryMetricItem('Income Tax', summary['total_income_tax']),
                     _buildStatutoryMetricItem('Empr. Pension (11%)', summary['total_employer_pension']),
                   ],
                 ),
@@ -1456,57 +1464,69 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
-        // Date Range Selector Card
+        // Date range card
         Card(
           elevation: 1,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           child: Padding(
-            padding: const EdgeInsets.all(18),
-            child: Row(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.date_range_rounded, color: Color(0xFF2E7D32)),
-                const SizedBox(width: 12),
-                const Text('Period Date Range:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                const SizedBox(width: 16),
-                OutlinedButton.icon(
-                  icon: const Icon(Icons.calendar_today, size: 16),
-                  label: Text(
-                    '${DateFormat('MMM dd, yyyy').format(_attendanceDateFrom)} - ${DateFormat('MMM dd, yyyy').format(_attendanceDateTo)}',
-                  ),
-                  onPressed: () async {
-                    final picked = await showDateRangePicker(
-                      context: context,
-                      firstDate: DateTime(2020),
-                      lastDate: DateTime.now().add(const Duration(days: 365)),
-                      initialDateRange: DateTimeRange(start: _attendanceDateFrom, end: _attendanceDateTo),
-                    );
-                    if (picked != null) {
-                      setState(() {
-                        _attendanceDateFrom = picked.start;
-                        _attendanceDateTo = picked.end;
-                      });
-                      _loadAttendanceRoster();
-                    }
-                  },
+                Row(
+                  children: [
+                    const Icon(Icons.date_range_rounded, color: Color(0xFF007A3D)),
+                    const SizedBox(width: 10),
+                    const Text('Period Date Range:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                  ],
                 ),
-                const Spacer(),
-                ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF1B5E20)),
-                  icon: const Icon(Icons.download_rounded, color: Colors.white),
-                  label: const Text('Export Attendance Ledger (Excel)'),
-                  onPressed: () {
-                    final fromStr = DateFormat('yyyy-MM-dd').format(_attendanceDateFrom);
-                    final toStr = DateFormat('yyyy-MM-dd').format(_attendanceDateTo);
-                    _downloadFile(
-                      urlPath: '/reports/attendance-roster/excel',
-                      filename: 'Attendance_Roster_${_selectedSiteId}_$fromStr.xlsx',
-                      queryParams: {
-                        'site_id': _selectedSiteId,
-                        'date_from': fromStr,
-                        'date_to': toStr,
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        icon: const Icon(Icons.calendar_today, size: 16),
+                        label: Text(
+                          '${DateFormat('MMM dd, yyyy').format(_attendanceDateFrom)} – ${DateFormat('MMM dd, yyyy').format(_attendanceDateTo)}',
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        onPressed: () async {
+                          final picked = await showDateRangePicker(
+                            context: context,
+                            firstDate: DateTime(2020),
+                            lastDate: DateTime.now().add(const Duration(days: 365)),
+                            initialDateRange: DateTimeRange(start: _attendanceDateFrom, end: _attendanceDateTo),
+                          );
+                          if (picked != null) {
+                            setState(() {
+                              _attendanceDateFrom = picked.start;
+                              _attendanceDateTo = picked.end;
+                            });
+                            _loadAttendanceRoster();
+                          }
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF007A3D)),
+                      icon: const Icon(Icons.download_rounded, color: Colors.white, size: 16),
+                      label: const Text('Export', style: TextStyle(color: Colors.white)),
+                      onPressed: () {
+                        final fromStr = DateFormat('yyyy-MM-dd').format(_attendanceDateFrom);
+                        final toStr = DateFormat('yyyy-MM-dd').format(_attendanceDateTo);
+                        _downloadFile(
+                          urlPath: '/reports/attendance-roster/excel',
+                          filename: 'Attendance_Roster_${_selectedSiteId}_$fromStr.xlsx',
+                          queryParams: {
+                            'site_id': _selectedSiteId,
+                            'date_from': fromStr,
+                            'date_to': toStr,
+                          },
+                        );
                       },
-                    );
-                  },
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -1514,17 +1534,21 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
         ),
         const SizedBox(height: 20),
 
-        // Search Bar & Table Header
+        // Section title
         Row(
           children: [
-            Text(
-              'Worker Attendance & Overtime Breakdown (${roster.length} workers)',
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            Expanded(
+              child: Text(
+                'Worker Attendance & Overtime Breakdown (${roster.length} workers)',
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
-            const Spacer(),
+            const SizedBox(width: 8),
             SizedBox(
-              width: 250,
-              height: 40,
+              width: 180,
+              height: 38,
               child: TextField(
                 decoration: InputDecoration(
                   hintText: 'Search worker...',

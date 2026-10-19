@@ -2342,9 +2342,10 @@ class _AdminDetailsDialogState extends State<_AdminDetailsDialog> {
     return Dialog(
       backgroundColor: Colors.transparent,
       elevation: 0,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
       child: Container(
-        width: 750,
-        constraints: const BoxConstraints(maxWidth: 750, maxHeight: 700),
+        width: double.infinity,
+        constraints: const BoxConstraints(maxWidth: 560, maxHeight: 700),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
@@ -2383,146 +2384,112 @@ class _AdminDetailsDialogState extends State<_AdminDetailsDialog> {
                   ),
                 ],
               ),
-              child: Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.2),
-                          blurRadius: 8,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: CircleAvatar(
-                      radius: 35,
-                      backgroundColor: Colors.white,
-                      child: Text(
-                        (widget.admin['full_name'] as String? ?? 'U')[0].toUpperCase(),
-                        style: TextStyle(
-                          color: Theme.of(context).primaryColor,
-                          fontSize: 32,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 18),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          widget.admin['full_name'] as String? ?? 'Unknown',
-                          style: const TextStyle(
+                  // Row 1: avatar + name/username + close button
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      CircleAvatar(
+                        radius: 28,
+                        backgroundColor: Colors.white,
+                        child: Text(
+                          (widget.admin['full_name'] as String? ?? 'U')[0].toUpperCase(),
+                          style: TextStyle(
+                            color: Theme.of(context).primaryColor,
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                            letterSpacing: 0.5,
                           ),
                         ),
-                        const SizedBox(height: 6),
-                        Row(
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 4,
+                            Text(
+                              widget.admin['full_name'] as String? ?? 'Unknown',
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                                letterSpacing: 0.3,
                               ),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: Colors.white.withOpacity(0.3),
-                                  width: 1,
-                                ),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Icon(
-                                    Icons.alternate_email,
-                                    size: 14,
-                                    color: Colors.white,
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Text(
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 3),
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.alternate_email, size: 13, color: Colors.white70),
+                                const SizedBox(width: 3),
+                                Flexible(
+                                  child: Text(
                                     widget.admin['username'] as String? ?? 'N/A',
                                     style: const TextStyle(
-                                      fontSize: 14,
+                                      fontSize: 13,
                                       color: Colors.white,
-                                      fontWeight: FontWeight.w500,
+                                      fontWeight: FontWeight.w400,
                                     ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
-                      ],
-                    ),
-                  ),
-                  Container(
-                    margin: const EdgeInsets.only(right: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.15),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: IconButton(
-                      onPressed: _resetPassword,
-                      icon: const Icon(Icons.lock_reset, color: Colors.white),
-                      tooltip: 'Reset Password',
-                    ),
-                  ),
-                  if (!_deleting)
-                    Container(
-                      margin: const EdgeInsets.only(right: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(8),
                       ),
-                      child: IconButton(
-                        onPressed: _deleteAdmin,
-                        icon: const Icon(Icons.delete_outline, color: Colors.white),
-                        tooltip: 'Delete Admin',
+                      IconButton(
+                        onPressed: () => Navigator.pop(context),
+                        icon: const Icon(Icons.close, color: Colors.white),
+                        visualDensity: VisualDensity.compact,
                       ),
-                    ),
-                  Container(
-                    margin: const EdgeInsets.only(right: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.15),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: IconButton(
-                      onPressed: _isEditing && !_saving
-                          ? () {
-                              setState(() {
-                                _isEditing = false;
-                              });
-                            }
-                          : () {
-                              setState(() {
-                                _isEditing = true;
-                              });
-                            },
-                      icon: Icon(
-                        _isEditing ? Icons.cancel : Icons.edit_outlined,
-                        color: Colors.white,
-                      ),
-                      tooltip: _isEditing ? 'Cancel' : 'Edit',
-                    ),
+                    ],
                   ),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.15),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: IconButton(
-                      onPressed: () => Navigator.pop(context),
-                      icon: const Icon(Icons.close, color: Colors.white),
-                    ),
+                  const SizedBox(height: 12),
+                  // Row 2: action buttons
+                  Row(
+                    children: [
+                      OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.white,
+                          side: const BorderSide(color: Colors.white54),
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          visualDensity: VisualDensity.compact,
+                        ),
+                        onPressed: _resetPassword,
+                        icon: const Icon(Icons.lock_reset, size: 16),
+                        label: const Text('Reset Pwd', style: TextStyle(fontSize: 12)),
+                      ),
+                      const SizedBox(width: 8),
+                      if (!_deleting)
+                        OutlinedButton.icon(
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: Colors.red[200],
+                            side: BorderSide(color: Colors.red.shade300),
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            visualDensity: VisualDensity.compact,
+                          ),
+                          onPressed: _deleteAdmin,
+                          icon: const Icon(Icons.delete_outline, size: 16),
+                          label: const Text('Delete', style: TextStyle(fontSize: 12)),
+                        ),
+                      const SizedBox(width: 8),
+                      OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.white,
+                          side: const BorderSide(color: Colors.white54),
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          visualDensity: VisualDensity.compact,
+                        ),
+                        onPressed: () => setState(() => _isEditing = !_isEditing),
+                        icon: Icon(_isEditing ? Icons.cancel_outlined : Icons.edit_outlined, size: 16),
+                        label: Text(_isEditing ? 'Cancel' : 'Edit', style: const TextStyle(fontSize: 12)),
+                      ),
+                    ],
                   ),
                 ],
               ),
