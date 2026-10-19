@@ -251,22 +251,37 @@ def calculate_payroll(
 
 @router.get("/", response_model=List[PayrollResponse])
 def get_payrolls(
-    site_id: int,
+    site_id: Optional[int] = None,
     skip: int = 0,
     limit: int = 100,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    if not verify_site_access(current_user, site_id, db):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You don't have access to this site"
-        )
-    
-    payrolls = db.query(Payroll).filter(
-        Payroll.site_id == site_id
-    ).order_by(Payroll.period_start.desc()).offset(skip).limit(limit).all()
-    
+    if site_id is not None:
+        if not verify_site_access(current_user, site_id, db):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You don't have access to this site"
+            )
+        payrolls = db.query(Payroll).filter(
+            Payroll.site_id == site_id
+        ).order_by(Payroll.period_start.desc()).offset(skip).limit(limit).all()
+    else:
+        accessible_site_ids = get_user_accessible_sites(current_user, db)
+        if accessible_site_ids is None:
+            # Super admin / admin: return all payrolls
+            payrolls = db.query(Payroll).order_by(
+                Payroll.period_start.desc()
+            ).offset(skip).limit(limit).all()
+        elif accessible_site_ids:
+            # Site-restricted user with assigned sites
+            payrolls = db.query(Payroll).filter(
+                Payroll.site_id.in_(accessible_site_ids)
+            ).order_by(Payroll.period_start.desc()).offset(skip).limit(limit).all()
+        else:
+            # No site access at all
+            payrolls = []
+
     return payrolls
 
 

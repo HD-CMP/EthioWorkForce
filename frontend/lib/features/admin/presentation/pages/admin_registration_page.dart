@@ -1816,11 +1816,15 @@ class _AdminDetailsTabState extends State<_AdminDetailsTab> {
                       children: [
                         Icon(Icons.person, size: 14, color: Colors.grey[600]),
                         const SizedBox(width: 4),
-                        Text(
-                          '@${admin['username'] as String? ?? 'N/A'}',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: Colors.grey[700],
+                        Flexible(
+                          child: Text(
+                            '@${admin['username'] as String? ?? 'N/A'}',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.grey[700],
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                         const SizedBox(width: 16),

@@ -115,9 +115,16 @@ class _SettingsPageState extends State<SettingsPage> {
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Backend URL updated successfully'),
-            backgroundColor: Colors.green,
+          SnackBar(
+            content: const Row(children: [
+              Icon(Icons.check_circle_outline, color: Colors.white, size: 18),
+              SizedBox(width: 10),
+              Text('Backend URL updated successfully'),
+            ]),
+            backgroundColor: const Color(0xFF007A3D),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
           ),
         );
       }
@@ -449,10 +456,10 @@ class _SettingsPageState extends State<SettingsPage> {
                   leading: Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: Colors.blue.withOpacity(0.1),
+                      color: const Color(0xFF007A3D).withOpacity(0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Icon(Icons.account_circle, color: Colors.blue),
+                    child: const Icon(Icons.account_circle, color: Color(0xFF007A3D)),
                   ),
                   title: const Text('My Profile'),
                   subtitle: const Text('Update your personal information'),
@@ -518,10 +525,10 @@ class _SettingsPageState extends State<SettingsPage> {
                     leading: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: Colors.orange.withOpacity(0.1),
+                        color: const Color(0xFF0A192F).withOpacity(0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const Icon(Icons.refresh, color: Colors.orange),
+                      child: const Icon(Icons.refresh, color: Color(0xFF0A192F)),
                     ),
                     title: const Text('Reset to Production'),
                     subtitle: const Text('Use production server'),
@@ -532,9 +539,16 @@ class _SettingsPageState extends State<SettingsPage> {
                       
                       if (mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Backend URL reset to production'),
-                            backgroundColor: Colors.green,
+                          SnackBar(
+                            content: const Row(children: [
+                              Icon(Icons.check_circle_outline, color: Colors.white, size: 18),
+                              SizedBox(width: 10),
+                              Text('Backend URL reset to production'),
+                            ]),
+                            backgroundColor: const Color(0xFF007A3D),
+                            behavior: SnackBarBehavior.floating,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            margin: const EdgeInsets.all(16),
                           ),
                         );
                       }
@@ -551,10 +565,10 @@ class _SettingsPageState extends State<SettingsPage> {
                     leading: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: Colors.blue.withOpacity(0.1),
+                        color: const Color(0xFF007A3D).withOpacity(0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const Icon(Icons.upload, color: Colors.blue),
+                      child: const Icon(Icons.upload, color: Color(0xFF007A3D)),
                     ),
                     title: Text(localizations?.exportToUSB ?? 'Export to USB'),
                     subtitle: const Text('Create encrypted backup for offline sync'),
@@ -565,10 +579,10 @@ class _SettingsPageState extends State<SettingsPage> {
                     leading: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: Colors.green.withOpacity(0.1),
+                        color: const Color(0xFF0A192F).withOpacity(0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const Icon(Icons.download, color: Colors.green),
+                      child: const Icon(Icons.download, color: Color(0xFF0A192F)),
                     ),
                     title: Text(localizations?.importFromUSB ?? 'Import from USB'),
                     subtitle: const Text('Load data from USB drive'),

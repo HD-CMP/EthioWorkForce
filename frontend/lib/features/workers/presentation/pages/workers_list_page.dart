@@ -354,15 +354,15 @@ class _WorkersListPageState extends State<WorkersListPage> {
         margin: const EdgeInsets.only(top: 8, bottom: 4, left: 16, right: 16),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.teal[700]!, Colors.teal[500]!],
+          gradient: const LinearGradient(
+            colors: [Color(0xFF004D40), Color(0xFF00796B)],
             begin: Alignment.centerLeft,
             end: Alignment.centerRight,
           ),
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: Colors.teal.withOpacity(0.3),
+              color: const Color(0xFF004D40).withOpacity(0.3),
               blurRadius: 6,
               offset: const Offset(0, 2),
             ),
@@ -408,8 +408,8 @@ class _WorkersListPageState extends State<WorkersListPage> {
               ),
               child: Text(
                 '$count',
-                style: TextStyle(
-                  color: Colors.teal[700],
+                style: const TextStyle(
+                  color: Color(0xFF007A3D),
                   fontSize: 13,
                   fontWeight: FontWeight.bold,
                 ),
@@ -521,12 +521,16 @@ class _WorkersListPageState extends State<WorkersListPage> {
                     color: Colors.grey[600],
                   ),
                   const SizedBox(width: 4),
-                  Text(
-                    'Reports to: ${worker.supervisorName}',
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: Colors.grey[700],
-                      fontStyle: FontStyle.italic,
+                  Flexible(
+                    child: Text(
+                      'Reports to: ${worker.supervisorName}',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Colors.grey[700],
+                        fontStyle: FontStyle.italic,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ],

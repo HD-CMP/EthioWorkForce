@@ -7,6 +7,7 @@ import '../../../../core/router/app_router.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_event.dart';
 import '../../../auth/presentation/bloc/auth_state.dart';
+import '../../../../core/theme/app_theme.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -291,7 +292,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         'icon': Icons.people_alt_rounded,
         'title': 'Workers',
         'subtitle': 'Manage workforce',
-        'gradient': [const Color(0xFF1565C0), const Color(0xFF42A5F5)],
+        'gradient': [const Color(0xFF005C2E), const Color(0xFF007A3D)],
         'onTap': () => Navigator.pushNamed(context, AppRouter.workers),
         'adminOnly': false,
       },
@@ -299,7 +300,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         'icon': Icons.fact_check_rounded,
         'title': 'Attendance',
         'subtitle': 'Mark & verify',
-        'gradient': [const Color(0xFF2E7D32), const Color(0xFF66BB6A)],
+        'gradient': [const Color(0xFF004D40), const Color(0xFF00796B)],
         'onTap': () => Navigator.pushNamed(context, AppRouter.attendance),
         'adminOnly': false,
       },
@@ -307,7 +308,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         'icon': Icons.payments_rounded,
         'title': 'Payroll',
         'subtitle': 'Process payments',
-        'gradient': [const Color(0xFFE65100), const Color(0xFFFF8A65)],
+        'gradient': [const Color(0xFF0A192F), const Color(0xFF1E3A5F)],
         'onTap': () => Navigator.pushNamed(context, AppRouter.payroll),
         'adminOnly': true,
       },
@@ -315,7 +316,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         'icon': Icons.location_city_rounded,
         'title': 'Sites',
         'subtitle': 'Manage locations',
-        'gradient': [const Color(0xFF6A1B9A), const Color(0xFFBA68C8)],
+        'gradient': [const Color(0xFF1B4332), const Color(0xFF2D6A4F)],
         'onTap': () => Navigator.pushNamed(context, AppRouter.sites),
         'adminOnly': true,
       },
@@ -323,7 +324,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         'icon': Icons.work_history_rounded,
         'title': 'Work Types',
         'subtitle': 'Define roles',
-        'gradient': [const Color(0xFF00695C), const Color(0xFF4DB6AC)],
+        'gradient': [const Color(0xFF003049), const Color(0xFF005F73)],
         'onTap': () => Navigator.pushNamed(context, AppRouter.workTypes),
         'adminOnly': true,
       },
@@ -331,7 +332,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         'icon': Icons.bar_chart_rounded,
         'title': 'Reports',
         'subtitle': 'Analytics & insights',
-        'gradient': [const Color(0xFFC62828), const Color(0xFFEF9A9A)],
+        'gradient': [const Color(0xFF1A237E), const Color(0xFF283593)],
         'onTap': () => Navigator.pushNamed(context, AppRouter.reports),
         'adminOnly': true,
       },
@@ -339,7 +340,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         'icon': Icons.admin_panel_settings_rounded,
         'title': 'Admins',
         'subtitle': 'Manage administrators',
-        'gradient': [const Color(0xFF1A237E), const Color(0xFF5C6BC0)],
+        'gradient': [const Color(0xFF1B5E20), const Color(0xFF2E7D32)],
         'onTap': () => Navigator.pushNamed(context, AppRouter.adminRegistration),
         'adminOnly': true,
       },
@@ -347,7 +348,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         'icon': Icons.settings_rounded,
         'title': 'Settings',
         'subtitle': 'Configure app',
-        'gradient': [const Color(0xFF37474F), const Color(0xFF90A4AE)],
+        'gradient': [const Color(0xFF2D3436), const Color(0xFF4A5568)],
         'onTap': () => Navigator.pushNamed(context, AppRouter.settings),
         'adminOnly': false,
       },
@@ -532,19 +533,27 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                           builder: (ctx) => GestureDetector(
                             onTap: () => _showUserMenu(ctx),
                             child: Row(
+                              mainAxisSize: MainAxisSize.min,
                               children: [
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: [
-                                    Text(
-                                      _userData?['full_name'] ?? 'User',
-                                      style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600),
-                                    ),
-                                    Text(
-                                      _getRoleLabel(_userData?['role']),
-                                      style: TextStyle(color: Colors.white.withOpacity(0.75), fontSize: 10),
-                                    ),
-                                  ],
+                                ConstrainedBox(
+                                  constraints: const BoxConstraints(maxWidth: 130),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [
+                                      Text(
+                                        _userData?['full_name'] ?? 'User',
+                                        style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      Text(
+                                        _getRoleLabel(_userData?['role']),
+                                        style: TextStyle(color: Colors.white.withOpacity(0.75), fontSize: 10),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ],
+                                  ),
                                 ),
                                 const SizedBox(width: 10),
                                 Container(
@@ -559,7 +568,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                   child: Center(
                                     child: Text(
                                       _getInitials(_userData?['full_name']),
-                                      style: const TextStyle(color: Color(0xFF1B5E20), fontSize: 14, fontWeight: FontWeight.bold),
+                                      style: const TextStyle(color: Color(0xFF007A3D), fontSize: 14, fontWeight: FontWeight.bold),
                                     ),
                                   ),
                                 ),
@@ -620,24 +629,24 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             'Total Workers',
             _statsLoaded ? '$_totalWorkers' : '—',
             Icons.groups_rounded,
-            const Color(0xFF1565C0),
-            const Color(0xFFE3F2FD),
+            const Color(0xFF007A3D),
+            const Color(0xFFE8F5EE),
           ),
           const SizedBox(width: 12),
           _buildStatCard(
             'Present Today',
             _statsLoaded ? '$_presentToday' : '—',
             Icons.how_to_reg_rounded,
-            const Color(0xFF2E7D32),
-            const Color(0xFFE8F5E9),
+            const Color(0xFF004D40),
+            const Color(0xFFE0F2F1),
           ),
           const SizedBox(width: 12),
           _buildStatCard(
             'Active Sites',
             '—',
             Icons.location_city_rounded,
-            const Color(0xFF6A1B9A),
-            const Color(0xFFF3E5F5),
+            const Color(0xFF0A192F),
+            const Color(0xFFE8EDF4),
           ),
         ],
       ),
@@ -678,7 +687,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       padding: const EdgeInsets.fromLTRB(20, 24, 20, 14),
       child: Row(
         children: [
-          Container(width: 4, height: 18, decoration: BoxDecoration(color: const Color(0xFF2E7D32), borderRadius: BorderRadius.circular(2))),
+          Container(width: 4, height: 18, decoration: BoxDecoration(color: const Color(0xFF007A3D), borderRadius: BorderRadius.circular(2))),
           const SizedBox(width: 10),
           Text(title, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: Color(0xFF1A1A1A), letterSpacing: -0.2)),
         ],

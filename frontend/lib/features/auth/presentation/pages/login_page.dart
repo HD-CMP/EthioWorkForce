@@ -249,7 +249,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                                         // Footer
                                         Center(
                                           child: Text(
-                                            '© 2025 EthioWorkforce. All rights reserved.',
+                                            '© 2026 EthioWorkforce. All rights reserved.',
                                             style: TextStyle(fontSize: 11, color: Colors.grey[400]),
                                           ),
                                         ),

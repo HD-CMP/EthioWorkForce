@@ -729,7 +729,7 @@ def export_worker_census_excel_endpoint(
 
 @router.get("/attendance-roster")
 def get_attendance_roster_report(
-    site_id: int,
+    site_id: Optional[int] = None,
     date_from: date = Query(..., description="Start date (YYYY-MM-DD)"),
     date_to: date = Query(..., description="End date (YYYY-MM-DD)"),
     db: Session = Depends(get_db),
@@ -738,6 +738,16 @@ def get_attendance_roster_report(
     """
     Attendance & Overtime Ledger Summary for a site and date range (JSON)
     """
+    if site_id is None:
+        return {
+            "site_id": None,
+            "site_name": "",
+            "period_start": str(date_from),
+            "period_end": str(date_to),
+            "total_workers": 0,
+            "roster": []
+        }
+
     if not verify_site_access(current_user, site_id, db):
         raise HTTPException(status_code=403, detail="Access denied to this site")
 

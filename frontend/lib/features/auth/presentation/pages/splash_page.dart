@@ -130,7 +130,7 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
                 child: FadeTransition(
                   opacity: _fadeAnim,
                   child: Text(
-                    '© 2025 EthioWorkforce',
+                    '© 2026 EthioWorkforce',
                     textAlign: TextAlign.center,
                     style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 11),
                   ),
