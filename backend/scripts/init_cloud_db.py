@@ -27,6 +27,7 @@ from app.models.site import Site
 from app.models.work_place import WorkPlace
 from app.models.work_type import WorkType, PaymentMode, TaxRule
 from app.models.user_site_assignment import UserSiteAssignment
+import app.models
 
 
 def run_alembic_migrations():
