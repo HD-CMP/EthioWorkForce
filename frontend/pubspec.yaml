@@ -1,7 +1,7 @@
 name: ethioworkforce
 description: Offline-First Workforce Control, Attendance & Payroll System
 publish_to: 'none'
-version: 1.4.3+143
+version: 1.4.4+144
 
 environment:
   sdk: '>=3.0.0 <4.0.0'

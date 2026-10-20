@@ -314,11 +314,20 @@ class _PayrollDetailPageState extends State<PayrollDetailPage> {
         Navigator.pop(context); // close progress
         // Extract useful error detail
         String errMsg = 'Cannot delete this payroll run.';
-        final errStr = e.toString().toLowerCase();
-        if (errStr.contains('locked') || errStr.contains('approved') || errStr.contains('403') || errStr.contains('400')) {
-          errMsg = 'This payroll is locked or approved and cannot be deleted. Only draft payrolls can be deleted.';
-        } else if (errStr.contains('404')) {
-          errMsg = 'Payroll not found — it may have already been deleted.';
+        if (e is DioException && e.response?.data != null) {
+          final data = e.response?.data;
+          if (data is Map && data.containsKey('detail')) {
+            errMsg = data['detail'].toString();
+          } else if (data is String && data.isNotEmpty) {
+            errMsg = data;
+          }
+        } else {
+          final errStr = e.toString().toLowerCase();
+          if (errStr.contains('403')) {
+            errMsg = 'Access denied: You do not have permission to delete this payroll.';
+          } else if (errStr.contains('404')) {
+            errMsg = 'Payroll not found — it may have already been deleted.';
+          }
         }
         showDialog(
           context: context,

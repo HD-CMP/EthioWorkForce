@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
+import 'package:dio/dio.dart';
 
+import '../../../../core/network/dio_client.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/services/storage_service.dart';
@@ -668,8 +670,8 @@ class _PayrollCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
       ),
       child: InkWell(
-        onTap: () {
-          Navigator.push(
+        onTap: () async {
+          final result = await Navigator.push(
             context,
             MaterialPageRoute(
               builder: (_) => PayrollDetailPage(
@@ -679,6 +681,11 @@ class _PayrollCard extends StatelessWidget {
               ),
             ),
           );
+          if (result == true && context.mounted) {
+            context.read<PayrollBloc>().add(
+              RefreshPayrolls(siteId: payroll.siteId),
+            );
+          }
         },
         borderRadius: BorderRadius.circular(12),
         child: Padding(
@@ -698,23 +705,116 @@ class _PayrollCard extends StatelessWidget {
                       ),
                     ),
                   ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Color.fromARGB(26, statusColor.red, statusColor.green, statusColor.blue),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      statusLabel,
-                      style: TextStyle(
-                        color: statusColor,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 5,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Color.fromARGB(26, statusColor.red, statusColor.green, statusColor.blue),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          statusLabel,
+                          style: TextStyle(
+                            color: statusColor,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                        ),
                       ),
-                    ),
+                      PopupMenuButton<String>(
+                        icon: const Icon(Icons.more_vert, size: 20, color: Color(0xFF6B7280)),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(minWidth: 140),
+                        onSelected: (val) async {
+                          if (val == 'delete') {
+                            final confirmed = await showDialog<bool>(
+                              context: context,
+                              builder: (ctx) => AlertDialog(
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                                title: const Row(children: [
+                                  Icon(Icons.warning_amber_rounded, color: Color(0xFFB71C1C), size: 26),
+                                  SizedBox(width: 10),
+                                  Text('Delete Payroll?', style: TextStyle(fontSize: 18)),
+                                ]),
+                                content: Text(
+                                  'Are you sure you want to permanently delete ${payroll.payrollCode}?\n\nThis removes all calculated items and cannot be undone.',
+                                  style: const TextStyle(fontSize: 14, height: 1.4),
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(ctx, false),
+                                    child: const Text('Cancel'),
+                                  ),
+                                  ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: const Color(0xFFB71C1C),
+                                      foregroundColor: Colors.white,
+                                    ),
+                                    onPressed: () => Navigator.pop(ctx, true),
+                                    child: const Text('Delete'),
+                                  ),
+                                ],
+                              ),
+                            );
+                            if (confirmed == true && context.mounted) {
+                              try {
+                                final dio = await DioClient.createDio();
+                                await dio.delete('/payroll/${payroll.id}');
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Row(children: [
+                                        Icon(Icons.check_circle_outline, color: Colors.white, size: 18),
+                                        SizedBox(width: 8),
+                                        Text('Payroll deleted successfully'),
+                                      ]),
+                                      backgroundColor: Color(0xFF007A3D),
+                                      behavior: SnackBarBehavior.floating,
+                                    ),
+                                  );
+                                  context.read<PayrollBloc>().add(
+                                    RefreshPayrolls(siteId: payroll.siteId),
+                                  );
+                                }
+                              } catch (e) {
+                                if (context.mounted) {
+                                  String msg = 'Could not delete payroll';
+                                  if (e is DioException && e.response?.data != null && e.response?.data is Map) {
+                                    msg = e.response?.data['detail'] ?? msg;
+                                  }
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Row(children: [
+                                        const Icon(Icons.error_outline, color: Colors.white, size: 18),
+                                        const SizedBox(width: 8),
+                                        Expanded(child: Text(msg)),
+                                      ]),
+                                      backgroundColor: const Color(0xFFB71C1C),
+                                      behavior: SnackBarBehavior.floating,
+                                    ),
+                                  );
+                                }
+                              }
+                            }
+                          }
+                        },
+                        itemBuilder: (ctx) => [
+                          const PopupMenuItem(
+                            value: 'delete',
+                            child: Row(children: [
+                              Icon(Icons.delete_outline, color: Color(0xFFB71C1C), size: 18),
+                              SizedBox(width: 8),
+                              Text('Delete', style: TextStyle(color: Color(0xFFB71C1C), fontWeight: FontWeight.w600)),
+                            ]),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ],
               ),

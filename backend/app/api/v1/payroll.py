@@ -327,6 +327,60 @@ def get_payroll_items(
     return items
 
 
+@router.delete("/{payroll_id}", status_code=status.HTTP_200_OK)
+def delete_payroll(
+    payroll_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Permanently delete a payroll run, its items, and any related payments.
+    Accessible to super_admin, admin, or site_admin with site access.
+    """
+    payroll = db.query(Payroll).filter(Payroll.id == payroll_id).first()
+    if not payroll:
+        raise HTTPException(status_code=404, detail="Payroll run not found")
+
+    if not verify_site_access(current_user, payroll.site_id, db):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You don't have permission to delete payroll for this site"
+        )
+
+    if current_user.role not in [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.SITE_ADMIN]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only administrators can delete payroll runs"
+        )
+
+    # If already paid, only super admin can delete or reverse
+    if payroll.status == PayrollStatus.PAID and current_user.role != UserRole.SUPER_ADMIN:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Completed/paid payrolls can only be deleted or reversed by a Super Administrator"
+        )
+
+    try:
+        from app.models.payment import Payment
+
+        # Clean up any payments linked to items of this payroll
+        item_ids = [item.id for item in payroll.payroll_items]
+        if item_ids:
+            db.query(Payment).filter(Payment.payroll_item_id.in_(item_ids)).delete(synchronize_session=False)
+
+        # Delete the payroll (payroll_items cascade automatically via relationship)
+        db.delete(payroll)
+        db.commit()
+
+        return {"message": "Payroll deleted successfully", "id": payroll_id}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to delete payroll: {str(e)}"
+        )
+
+
 @router.post("/approve", response_model=PayrollResponse)
 def approve_payroll(
     approve_data: PayrollApprove,
