@@ -1,7 +1,8 @@
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 
-Future<String> saveAndOpenFile(List<int> bytes, String filename) async {
+/// Top-level function — called by FileSaver.saveAndOpenFile via conditional import.
+Future<String> platformSaveAndOpenFile(List<int> bytes, String filename) async {
   Directory? directory;
   try {
     directory = await getDownloadsDirectory();

@@ -282,10 +282,18 @@ class _PayrollDetailPageState extends State<PayrollDetailPage> {
 
     if (confirmed != true || !context.mounted) return;
 
+    // Show progress indicator
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator(color: Color(0xFF007A3D))),
+    );
+
     try {
       final dio = await DioClient.createDio();
       await dio.delete('/payroll/${widget.payrollId}');
       if (context.mounted) {
+        Navigator.pop(context); // close progress
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: const Row(children: [
@@ -299,21 +307,40 @@ class _PayrollDetailPageState extends State<PayrollDetailPage> {
             margin: const EdgeInsets.all(16),
           ),
         );
-        Navigator.pop(context, true);
+        Navigator.pop(context, true); // go back to list
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Row(children: [
-              Icon(Icons.error_outline, color: Colors.white, size: 18),
+        Navigator.pop(context); // close progress
+        // Extract useful error detail
+        String errMsg = 'Cannot delete this payroll run.';
+        final errStr = e.toString().toLowerCase();
+        if (errStr.contains('locked') || errStr.contains('approved') || errStr.contains('403') || errStr.contains('400')) {
+          errMsg = 'This payroll is locked or approved and cannot be deleted. Only draft payrolls can be deleted.';
+        } else if (errStr.contains('404')) {
+          errMsg = 'Payroll not found — it may have already been deleted.';
+        }
+        showDialog(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            title: const Row(children: [
+              Icon(Icons.lock_outline, color: Color(0xFFB71C1C), size: 24),
               SizedBox(width: 10),
-              Expanded(child: Text('Cannot delete — payroll may be locked or approved.')),
+              Text('Cannot Delete', style: TextStyle(fontSize: 17)),
             ]),
-            backgroundColor: const Color(0xFFB71C1C),
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            margin: const EdgeInsets.all(16),
+            content: Text(errMsg, style: const TextStyle(fontSize: 14, height: 1.5)),
+            actions: [
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF007A3D),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('Understood'),
+              ),
+            ],
           ),
         );
       }
@@ -347,22 +374,14 @@ class _PayrollDetailPageState extends State<PayrollDetailPage> {
               icon: const Icon(Icons.share_outlined),
               tooltip: 'Share Payroll Report',
               onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: const Row(children: [
-                      Icon(Icons.info_outline, color: Colors.white, size: 18),
-                      SizedBox(width: 10),
-                      Text('Export to PDF or Excel to share'),
-                    ]),
-                    backgroundColor: const Color(0xFF007A3D),
-                    behavior: SnackBarBehavior.floating,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    margin: const EdgeInsets.all(16),
-                    action: SnackBarAction(
-                      label: 'EXPORT',
-                      textColor: const Color(0xFFFFD54F),
-                      onPressed: () {},
-                    ),
+                showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (_) => _ShareBottomSheet(
+                    payrollId: widget.payrollId,
+                    payrollCode: widget.payrollCode,
+                    dataSource: _dataSource,
                   ),
                 );
               },
@@ -390,8 +409,18 @@ class _PayrollDetailPageState extends State<PayrollDetailPage> {
         ),
         body: BlocBuilder<PayrollBloc, PayrollState>(
           builder: (context, state) {
-            if (state is PayrollLoading || state is PayrollInitial || state is PayrollLoaded || state is PayrollDetailsLoaded || state is PayrollCalculating || state is PayrollCalculated || state is PayrollApproving || state is PayrollApproved) {
-              return const Center(child: CircularProgressIndicator());
+            // Only show spinner while actively loading — NOT for terminal states
+            if (state is PayrollLoading || state is PayrollInitial) {
+              return const Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CircularProgressIndicator(color: Color(0xFF007A3D)),
+                    SizedBox(height: 16),
+                    Text('Loading payroll details…', style: TextStyle(color: Color(0xFF6B7280))),
+                  ],
+                ),
+              );
             }
 
             if (state is PayrollError) {
@@ -401,8 +430,15 @@ class _PayrollDetailPageState extends State<PayrollDetailPage> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.error_outline, size: 64, color: Color(0xFFB71C1C)),
-                      const SizedBox(height: 16),
+                      Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFFEBEE),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: const Icon(Icons.error_outline, size: 56, color: Color(0xFFB71C1C)),
+                      ),
+                      const SizedBox(height: 20),
                       const Text(
                         'Could not load payroll details',
                         style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -411,11 +447,17 @@ class _PayrollDetailPageState extends State<PayrollDetailPage> {
                       const SizedBox(height: 8),
                       Text(
                         state.message,
-                        style: TextStyle(color: const Color(0xFF6B7280), fontSize: 13),
+                        style: const TextStyle(color: Color(0xFF6B7280), fontSize: 13),
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 24),
                       ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF007A3D),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
                         onPressed: () => context.read<PayrollBloc>().add(LoadPayrollWithItems(widget.payrollId)),
                         icon: const Icon(Icons.refresh),
                         label: const Text('Retry'),
@@ -427,7 +469,22 @@ class _PayrollDetailPageState extends State<PayrollDetailPage> {
             }
 
             if (state is! PayrollWithItemsLoaded) {
-              return const Center(child: CircularProgressIndicator());
+              // For any other intermediate state (Calculating, Approving, etc.) reload
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (mounted) {
+                  context.read<PayrollBloc>().add(LoadPayrollWithItems(widget.payrollId));
+                }
+              });
+              return const Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CircularProgressIndicator(color: Color(0xFF007A3D)),
+                    SizedBox(height: 16),
+                    Text('Refreshing payroll…', style: TextStyle(color: Color(0xFF6B7280))),
+                  ],
+                ),
+              );
             }
             
             final payroll = state.payroll;
@@ -821,6 +878,212 @@ class _ExportButton extends StatelessWidget {
                 Icon(Icons.chevron_right, color: const Color(0xFF9CA3AF)),
               ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ShareBottomSheet extends StatelessWidget {
+  final int payrollId;
+  final String payrollCode;
+  final PayrollRemoteDataSource dataSource;
+
+  const _ShareBottomSheet({
+    required this.payrollId,
+    required this.payrollCode,
+    required this.dataSource,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      padding: const EdgeInsets.fromLTRB(24, 12, 24, 32),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Drag handle
+          Center(
+            child: Container(
+              width: 44,
+              height: 4,
+              margin: const EdgeInsets.only(bottom: 20),
+              decoration: BoxDecoration(
+                color: const Color(0xFFE5E7EB),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          // Title row
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE8F5EE),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.share_outlined, color: Color(0xFF007A3D), size: 22),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Share Payroll Report',
+                      style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+                    ),
+                    Text(
+                      payrollCode,
+                      style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          const Divider(height: 1),
+          const SizedBox(height: 16),
+          const Text(
+            'Choose export format to share',
+            style: TextStyle(fontSize: 13, color: Color(0xFF6B7280), fontWeight: FontWeight.w500),
+          ),
+          const SizedBox(height: 12),
+          // Export options
+          _ShareOption(
+            icon: Icons.table_chart_outlined,
+            label: 'Export Full Payroll (Excel)',
+            subtitle: 'All worker details, deductions & net pay',
+            color: const Color(0xFF007A3D),
+            onTap: () {
+              Navigator.pop(context);
+              // Trigger Excel export via the export section on the page
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Scroll down to Export Options to download Excel'),
+                  backgroundColor: Color(0xFF007A3D),
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 8),
+          _ShareOption(
+            icon: Icons.picture_as_pdf_outlined,
+            label: 'Pension Declaration (PDF)',
+            subtitle: 'Formal pension report for submission',
+            color: const Color(0xFFB71C1C),
+            onTap: () {
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Scroll down to Export Options to download PDF'),
+                  backgroundColor: Color(0xFF007A3D),
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 8),
+          _ShareOption(
+            icon: Icons.account_balance_outlined,
+            label: 'Bank Transfer Files',
+            subtitle: 'CBE, Dashen, Awash or Telebirr formats',
+            color: const Color(0xFF0A192F),
+            onTap: () {
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Scroll down to Export Options to choose your bank'),
+                  backgroundColor: Color(0xFF007A3D),
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 8),
+          _ShareOption(
+            icon: Icons.payments_outlined,
+            label: 'Cash Payment Sheet',
+            subtitle: 'Physical payment tracking sheet',
+            color: const Color(0xFFE65100),
+            onTap: () {
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Scroll down to Export Options → Cash Payment Sheet'),
+                  backgroundColor: Color(0xFF007A3D),
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ShareOption extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String subtitle;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _ShareOption({
+    required this.icon,
+    required this.label,
+    required this.subtitle,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          decoration: BoxDecoration(
+            border: Border.all(color: color.withValues(alpha: 0.2)),
+            borderRadius: BorderRadius.circular(12),
+            color: color.withValues(alpha: 0.04),
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(icon, color: color, size: 20),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(label, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                    const SizedBox(height: 2),
+                    Text(subtitle, style: const TextStyle(fontSize: 11, color: Color(0xFF9CA3AF))),
+                  ],
+                ),
+              ),
+              Icon(Icons.chevron_right, color: color.withValues(alpha: 0.7), size: 20),
+            ],
           ),
         ),
       ),

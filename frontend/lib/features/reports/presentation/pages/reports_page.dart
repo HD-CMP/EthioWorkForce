@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import 'package:intl/intl.dart';
 
@@ -318,52 +318,51 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
       title: const Padding(
         padding: EdgeInsets.only(left: 4),
         child: Text(
-          'Reports & Analytics',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
+          'Reports',
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
           overflow: TextOverflow.ellipsis,
+          maxLines: 1,
         ),
       ),
       actions: [
-        // Site filter pill — fixed width so it never crushes the title
-        ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 170),
-          child: Container(
-            margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
-            padding: const EdgeInsets.symmetric(horizontal: 10),
-            decoration: BoxDecoration(
-              color: const Color(0x26FFFFFF),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: Colors.white24),
-            ),
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton<int?>(
-                value: _selectedSiteId,
-                dropdownColor: const Color(0xFF007A3D),
-                icon: const Icon(Icons.arrow_drop_down, color: Colors.white, size: 18),
-                style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
-                hint: const Text('All Sites', style: TextStyle(color: const Color(0xB3FFFFFF), fontSize: 12)),
-                isExpanded: true,
-                items: [
-                  const DropdownMenuItem<int?>(
-                    value: null,
-                    child: Text('All Sites', style: TextStyle(color: Colors.white, fontSize: 12), overflow: TextOverflow.ellipsis),
-                  ),
-                  ..._sites.map((s) => DropdownMenuItem<int?>(
-                        value: s['id'] as int,
-                        child: Text(
-                          s['name'] ?? 'Site #${s['id']}',
-                          style: const TextStyle(color: Colors.white, fontSize: 12),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      )),
-                ],
-                onChanged: (newSiteId) {
-                  setState(() => _selectedSiteId = newSiteId);
-                  _loadDashboardData();
-                  if (_tabController.index == 3) _loadAttendanceRoster();
-                  if (_tabController.index == 4) _loadCensusData();
-                },
-              ),
+        // Site filter pill — compact, never crushes title
+        Container(
+          margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          constraints: const BoxConstraints(maxWidth: 160),
+          decoration: BoxDecoration(
+            color: const Color(0x26FFFFFF),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: Colors.white24),
+          ),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<int?>(
+              value: _selectedSiteId,
+              dropdownColor: const Color(0xFF005C2E),
+              icon: const Icon(Icons.arrow_drop_down, color: Colors.white, size: 18),
+              style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
+              hint: const Text('All Sites', style: TextStyle(color: Color(0xB3FFFFFF), fontSize: 12)),
+              isExpanded: true,
+              items: [
+                const DropdownMenuItem<int?>(
+                  value: null,
+                  child: Text('All Sites', style: TextStyle(color: Colors.white, fontSize: 12), overflow: TextOverflow.ellipsis),
+                ),
+                ..._sites.map((s) => DropdownMenuItem<int?>(
+                      value: s['id'] as int,
+                      child: Text(
+                        s['name'] ?? 'Site #${s['id']}',
+                        style: const TextStyle(color: Colors.white, fontSize: 12),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    )),
+              ],
+              onChanged: (newSiteId) {
+                setState(() => _selectedSiteId = newSiteId);
+                _loadDashboardData();
+                if (_tabController.index == 3) _loadAttendanceRoster();
+                if (_tabController.index == 4) _loadCensusData();
+              },
             ),
           ),
         ),
@@ -387,16 +386,18 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
         tabAlignment: TabAlignment.start,
         indicatorColor: const Color(0xFFFFD54F),
         indicatorWeight: 3,
+        indicatorSize: TabBarIndicatorSize.tab,
         labelColor: const Color(0xFFFFD54F),
-        unselectedLabelColor: const Color(0x99FFFFFF),
-        labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
-        unselectedLabelStyle: const TextStyle(fontSize: 12),
+        unselectedLabelColor: const Color(0xB3FFFFFF),
+        labelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 11, letterSpacing: 0.2),
+        unselectedLabelStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500),
+        padding: const EdgeInsets.symmetric(horizontal: 4),
         tabs: const [
-          Tab(icon: Icon(Icons.dashboard_rounded, size: 18), text: 'Overview'),
-          Tab(icon: Icon(Icons.account_balance_rounded, size: 18), text: 'Banking'),
-          Tab(icon: Icon(Icons.verified_user_rounded, size: 18), text: 'Tax'),
-          Tab(icon: Icon(Icons.fact_check_rounded, size: 18), text: 'Attendance'),
-          Tab(icon: Icon(Icons.badge_rounded, size: 18), text: 'Census'),
+          Tab(icon: Icon(Icons.dashboard_rounded, size: 20), text: 'Overview', height: 52),
+          Tab(icon: Icon(Icons.account_balance_rounded, size: 20), text: 'Banking', height: 52),
+          Tab(icon: Icon(Icons.verified_user_rounded, size: 20), text: 'Tax', height: 52),
+          Tab(icon: Icon(Icons.fact_check_rounded, size: 20), text: 'Attendance', height: 52),
+          Tab(icon: Icon(Icons.badge_rounded, size: 20), text: 'Census', height: 52),
         ],
       ),
     );
@@ -1057,26 +1058,36 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
         const SizedBox(height: 24),
 
         // Search & In-App Table Preview
-        Row(
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
               'Disbursement Roster Preview',
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
-            const Spacer(),
-            SizedBox(
-              width: 250,
-              height: 40,
-              child: TextField(
-                decoration: InputDecoration(
-                  hintText: 'Search employee or account...',
-                  hintStyle: const TextStyle(fontSize: 12),
-                  prefixIcon: const Icon(Icons.search, size: 18),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+            const SizedBox(height: 10),
+            TextField(
+              decoration: InputDecoration(
+                hintText: 'Search employee or account number...',
+                hintStyle: const TextStyle(fontSize: 13, color: Color(0xFF9CA3AF)),
+                prefixIcon: const Icon(Icons.search, size: 20, color: Color(0xFF007A3D)),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                filled: true,
+                fillColor: Colors.white,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
                 ),
-                onChanged: (v) => setState(() => _bankingSearchQuery = v),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Color(0xFF007A3D), width: 2),
+                ),
               ),
+              onChanged: (v) => setState(() => _bankingSearchQuery = v),
             ),
           ],
         ),
@@ -1357,26 +1368,36 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
         const SizedBox(height: 24),
 
         // Compliance Table Header & Search
-        Row(
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
               'Detailed ERCA Tax & Pension Schedule',
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
-            const Spacer(),
-            SizedBox(
-              width: 250,
-              height: 40,
-              child: TextField(
-                decoration: InputDecoration(
-                  hintText: 'Search employee...',
-                  hintStyle: const TextStyle(fontSize: 12),
-                  prefixIcon: const Icon(Icons.search, size: 18),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+            const SizedBox(height: 10),
+            TextField(
+              decoration: InputDecoration(
+                hintText: 'Search employee name or ID...',
+                hintStyle: const TextStyle(fontSize: 13, color: Color(0xFF9CA3AF)),
+                prefixIcon: const Icon(Icons.search, size: 20, color: Color(0xFF007A3D)),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                filled: true,
+                fillColor: Colors.white,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
                 ),
-                onChanged: (v) => setState(() => _taxSearchQuery = v),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Color(0xFF007A3D), width: 2),
+                ),
               ),
+              onChanged: (v) => setState(() => _taxSearchQuery = v),
             ),
           ],
         ),
@@ -1542,31 +1563,39 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
         ),
         const SizedBox(height: 20),
 
-        // Section title
-        Row(
+        // Section title + full-width search bar
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
-              child: Text(
-                'Worker Attendance & Overtime Breakdown (${roster.length} workers)',
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
+            Text(
+              'Worker Attendance & Overtime Breakdown (${roster.length} workers)',
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
-            const SizedBox(width: 8),
-            SizedBox(
-              width: 180,
-              height: 38,
-              child: TextField(
-                decoration: InputDecoration(
-                  hintText: 'Search worker...',
-                  hintStyle: const TextStyle(fontSize: 12),
-                  prefixIcon: const Icon(Icons.search, size: 18),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+            const SizedBox(height: 10),
+            TextField(
+              decoration: InputDecoration(
+                hintText: 'Search worker name or ID...',
+                hintStyle: const TextStyle(fontSize: 13, color: Color(0xFF9CA3AF)),
+                prefixIcon: const Icon(Icons.search, size: 20, color: Color(0xFF007A3D)),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+                filled: true,
+                fillColor: Colors.white,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
                 ),
-                onChanged: (v) => setState(() => _attendanceSearchQuery = v),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Color(0xFF007A3D), width: 2),
+                ),
               ),
+              onChanged: (v) => setState(() => _attendanceSearchQuery = v),
             ),
           ],
         ),
@@ -1729,31 +1758,39 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
         ),
         const SizedBox(height: 20),
 
-        // Section title + Search bar
-        Row(
+        // Section title + full-width search bar
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
-              child: Text(
-                'Census Master List (${_censusWorkers.length} workers)',
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
+            Text(
+              'Census Master List (${_censusWorkers.length} workers)',
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
-            const SizedBox(width: 8),
-            SizedBox(
-              width: 170,
-              height: 38,
-              child: TextField(
-                decoration: InputDecoration(
-                  hintText: 'Search...',
-                  hintStyle: const TextStyle(fontSize: 12),
-                  prefixIcon: const Icon(Icons.search, size: 18),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+            const SizedBox(height: 10),
+            TextField(
+              decoration: InputDecoration(
+                hintText: 'Search worker name, ID or work type...',
+                hintStyle: const TextStyle(fontSize: 13, color: Color(0xFF9CA3AF)),
+                prefixIcon: const Icon(Icons.search, size: 20, color: Color(0xFF007A3D)),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+                filled: true,
+                fillColor: Colors.white,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
                 ),
-                onChanged: (v) => setState(() => _censusSearchQuery = v),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Color(0xFF007A3D), width: 2),
+                ),
               ),
+              onChanged: (v) => setState(() => _censusSearchQuery = v),
             ),
           ],
         ),
