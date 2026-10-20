@@ -267,12 +267,20 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           ),
         ),
       ],
-    ).then((value) {
+    ).then((value) async {
       if (value == null) return;
       switch (value) {
-        case 'profile': Navigator.pushNamed(context, AppRouter.profile); break;
-        case 'settings': Navigator.pushNamed(context, AppRouter.settings); break;
-        case 'logout': _handleLogout(); break;
+        case 'profile':
+          await Navigator.pushNamed(context, AppRouter.profile);
+          if (mounted) _loadUserData();
+          break;
+        case 'settings':
+          await Navigator.pushNamed(context, AppRouter.settings);
+          if (mounted) _loadUserData();
+          break;
+        case 'logout':
+          _handleLogout();
+          break;
       }
     });
   }
@@ -537,9 +545,13 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                               child: const Icon(Icons.business_center_rounded, color: Colors.white, size: 18),
                             ),
                             const SizedBox(width: 10),
-                            const Text(
-                              'EthioWorkforce',
-                              style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700, letterSpacing: 0.3),
+                            const Flexible(
+                              child: Text(
+                                'EthioWorkforce',
+                                style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700, letterSpacing: 0.3),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
                           ],
                         ),
@@ -553,49 +565,36 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                         Builder(
                           builder: (ctx) => GestureDetector(
                             onTap: () => _showUserMenu(ctx),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                ConstrainedBox(
-                                  constraints: const BoxConstraints(maxWidth: 130),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.end,
-                                    children: [
-                                      Text(
-                                        _userData?['full_name'] ?? 'User',
-                                        style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: const Color(0x26FFFFFF),
+                                borderRadius: BorderRadius.circular(24),
+                                border: Border.all(color: const Color(0x40FFFFFF)),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Container(
+                                    width: 34, height: 34,
+                                    decoration: const BoxDecoration(
+                                      color: Colors.white,
+                                      shape: BoxShape.circle,
+                                      boxShadow: [
+                                        BoxShadow(color: Color(0x26000000), blurRadius: 6, offset: Offset(0, 2)),
+                                      ],
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        _getInitials(_userData?['full_name']),
+                                        style: const TextStyle(color: Color(0xFF007A3D), fontSize: 13, fontWeight: FontWeight.bold),
                                       ),
-                                      Text(
-                                        _getRoleLabel(_userData?['role']),
-                                        style: const TextStyle(color: Color(0xBFFFFFFF), fontSize: 10),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(width: 10),
-                                Container(
-                                  width: 38, height: 38,
-                                  decoration: const BoxDecoration(
-                                    color: Colors.white,
-                                    shape: BoxShape.circle,
-                                    boxShadow: [
-                                      BoxShadow(color: Color(0x26000000), blurRadius: 8, offset: Offset(0, 3)),
-                                    ],
-                                  ),
-                                  child: Center(
-                                    child: Text(
-                                      _getInitials(_userData?['full_name']),
-                                      style: const TextStyle(color: Color(0xFF007A3D), fontSize: 14, fontWeight: FontWeight.bold),
                                     ),
                                   ),
-                                ),
-                                const SizedBox(width: 4),
-                                const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xCCFFFFFF), size: 20),
-                              ],
+                                  const SizedBox(width: 6),
+                                  const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xCCFFFFFF), size: 18),
+                                ],
+                              ),
                             ),
                           ),
                         ),

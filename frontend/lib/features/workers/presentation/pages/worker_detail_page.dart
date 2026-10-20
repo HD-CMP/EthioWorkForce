@@ -816,7 +816,6 @@ class _SupervisorCard extends StatefulWidget {
 class _SupervisorCardState extends State<_SupervisorCard> {
   Worker? _supervisor;
   bool _loading = false;
-  bool _error = false;
 
   @override
   void initState() {
@@ -839,7 +838,6 @@ class _SupervisorCardState extends State<_SupervisorCard> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _error = true;
           _loading = false;
         });
       }

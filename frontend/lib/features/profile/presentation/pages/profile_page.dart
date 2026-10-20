@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 import '../../../../core/network/dio_client.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -13,24 +15,36 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
   final _formKey = GlobalKey<FormState>();
   final _passwordFormKey = GlobalKey<FormState>();
-  
+
   final _usernameController = TextEditingController();
   final _emailController = TextEditingController();
   final _fullNameController = TextEditingController();
   final _phoneController = TextEditingController();
-  
+
   final _currentPasswordController = TextEditingController();
   final _newPasswordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  
+
   bool _isLoading = false;
   bool _isPasswordVisible = false;
   Map<String, dynamic>? _userData;
+  File? _pickedImage;
 
   @override
   void initState() {
     super.initState();
+    _loadLocalAvatar();
     _loadUserData();
+  }
+
+  Future<void> _loadLocalAvatar() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final path = prefs.getString('user_profile_photo_path');
+      if (path != null && File(path).existsSync()) {
+        setState(() => _pickedImage = File(path));
+      }
+    } catch (_) {}
   }
 
   @override
@@ -47,17 +61,17 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Future<void> _loadUserData() async {
     setState(() => _isLoading = true);
-    
+
     try {
       final dio = await DioClient.createDio();
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('auth_token');
-      
+
       final response = await dio.get(
         '/users/me',
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
-      
+
       setState(() {
         _userData = response.data;
         _usernameController.text = _userData?['username'] ?? '';
@@ -86,30 +100,178 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
+  Future<void> _showPhotoOptions() async {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.all(24),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              margin: const EdgeInsets.only(bottom: 20),
+              decoration: BoxDecoration(
+                color: const Color(0xFFE5E7EB),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const Text(
+              'Profile Photo',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1A1A1A)),
+            ),
+            const SizedBox(height: 20),
+            ListTile(
+              leading: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE8F5EE),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.camera_alt_outlined, color: Color(0xFF007A3D)),
+              ),
+              title: const Text('Take Photo', style: TextStyle(fontWeight: FontWeight.w600)),
+              onTap: () {
+                Navigator.pop(ctx);
+                _pickImageFromSource(ImageSource.camera);
+              },
+            ),
+            ListTile(
+              leading: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE8EDF4),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.photo_library_outlined, color: Color(0xFF0A192F)),
+              ),
+              title: const Text('Choose from Gallery', style: TextStyle(fontWeight: FontWeight.w600)),
+              onTap: () {
+                Navigator.pop(ctx);
+                _pickImageFromSource(ImageSource.gallery);
+              },
+            ),
+            if (_pickedImage != null)
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFEBEE),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.delete_outline, color: Color(0xFFB71C1C)),
+                ),
+                title: const Text('Remove Photo', style: TextStyle(fontWeight: FontWeight.w600, color: Color(0xFFB71C1C))),
+                onTap: () async {
+                  Navigator.pop(ctx);
+                  final prefs = await SharedPreferences.getInstance();
+                  await prefs.remove('user_profile_photo_path');
+                  setState(() => _pickedImage = null);
+                },
+              ),
+            const SizedBox(height: 12),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickImageFromSource(ImageSource source) async {
+    try {
+      final picker = ImagePicker();
+      final picked = await picker.pickImage(
+        source: source,
+        maxWidth: 800,
+        maxHeight: 800,
+        imageQuality: 85,
+      );
+      if (picked != null && mounted) {
+        final file = File(picked.path);
+        setState(() => _pickedImage = file);
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('user_profile_photo_path', picked.path);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Row(children: [
+                Icon(Icons.check_circle_outline, color: Colors.white, size: 18),
+                SizedBox(width: 10),
+                Text('Profile photo updated'),
+              ]),
+              backgroundColor: const Color(0xFF007A3D),
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              margin: const EdgeInsets.all(16),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(children: [
+              const Icon(Icons.error_outline, color: Colors.white, size: 18),
+              const SizedBox(width: 10),
+              Expanded(child: Text('Could not access image: $e')),
+            ]),
+            backgroundColor: const Color(0xFFB71C1C),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
+          ),
+        );
+      }
+    }
+  }
+
   Future<void> _updateProfile() async {
     if (!_formKey.currentState!.validate()) return;
-    
+
     setState(() => _isLoading = true);
-    
+
     try {
       final dio = await DioClient.createDio();
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('auth_token');
-      
+
       final updateData = {
         'username': _usernameController.text.trim(),
         'email': _emailController.text.trim(),
         'full_name': _fullNameController.text.trim(),
         'phone_number': _phoneController.text.trim(),
       };
-      
-      await dio.patch(
+
+      final response = await dio.patch(
         '/users/me/profile',
         data: updateData,
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
-      
+
+      final updated = response.data is Map<String, dynamic>
+          ? response.data as Map<String, dynamic>
+          : updateData;
+
+      // Immediately process and reflect changes in UI without delay
       if (mounted) {
+        setState(() {
+          _userData = {
+            ...?_userData,
+            ...updated,
+          };
+          _usernameController.text = _userData?['username'] ?? '';
+          _emailController.text = _userData?['email'] ?? '';
+          _fullNameController.text = _userData?['full_name'] ?? '';
+          _phoneController.text = _userData?['phone_number'] ?? '';
+          _isLoading = false;
+        });
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: const Row(children: [
@@ -123,7 +285,6 @@ class _ProfilePageState extends State<ProfilePage> {
             margin: const EdgeInsets.all(16),
           ),
         );
-        await _loadUserData();
       }
     } on DioException catch (e) {
       if (mounted) {
@@ -143,13 +304,13 @@ class _ProfilePageState extends State<ProfilePage> {
         );
       }
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
   Future<void> _changePassword() async {
     if (!_passwordFormKey.currentState!.validate()) return;
-    
+
     if (_newPasswordController.text != _confirmPasswordController.text) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -166,31 +327,31 @@ class _ProfilePageState extends State<ProfilePage> {
       );
       return;
     }
-    
+
     setState(() => _isLoading = true);
-    
+
     try {
       final dio = await DioClient.createDio();
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('auth_token');
-      
+
       final passwordData = {
         'current_password': _currentPasswordController.text,
         'new_password': _newPasswordController.text,
         'confirm_password': _confirmPasswordController.text,
       };
-      
+
       await dio.post(
         '/auth/change-password',
         data: passwordData,
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
-      
+
       if (mounted) {
         _currentPasswordController.clear();
         _newPasswordController.clear();
         _confirmPasswordController.clear();
-        
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: const Row(children: [
@@ -204,7 +365,7 @@ class _ProfilePageState extends State<ProfilePage> {
             margin: const EdgeInsets.all(16),
           ),
         );
-        
+
         Navigator.of(context).pop();
       }
     } on DioException catch (e) {
@@ -240,11 +401,11 @@ class _ProfilePageState extends State<ProfilePage> {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(20),
-            boxShadow: [
+            boxShadow: const [
               BoxShadow(
-                color: const Color(0x1A000000),
+                color: Color(0x1A000000),
                 blurRadius: 20,
-                offset: const Offset(0, 10),
+                offset: Offset(0, 10),
               ),
             ],
           ),
@@ -258,26 +419,26 @@ class _ProfilePageState extends State<ProfilePage> {
                   children: [
                     Container(
                       padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: const Color(0x1A007A3D),
+                      decoration: const BoxDecoration(
+                        color: Color(0x1A007A3D),
                         shape: BoxShape.circle,
                       ),
-                      child: Icon(Icons.lock_reset, color: const Color(0xFF007A3D), size: 28),
+                      child: const Icon(Icons.lock_reset, color: Color(0xFF007A3D), size: 28),
                     ),
                     const SizedBox(width: 16),
                     Text(
                       'Change Password',
                       style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: const Color(0xFF1F2937),
-                      ),
+                            fontWeight: FontWeight.bold,
+                            color: const Color(0xFF1F2937),
+                          ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 8),
-                Text(
+                const Text(
                   'Update your credentials securely. Use a strong password to protect your account.',
-                  style: TextStyle(color: const Color(0xFF6B7280), fontSize: 14),
+                  style: TextStyle(color: Color(0xFF6B7280), fontSize: 14),
                 ),
                 const SizedBox(height: 24),
                 TextFormField(
@@ -398,130 +559,307 @@ class _ProfilePageState extends State<ProfilePage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // ── Avatar Section ──────────────────────────────────────
                     Center(
-                      child: Stack(
+                      child: Column(
                         children: [
-                          CircleAvatar(
-                            radius: 60,
-                            backgroundColor: const Color(0x1A007A3D),
-                            child: Icon(
-                              Icons.person,
-                              size: 60,
-                              color: const Color(0xFF007A3D),
+                          GestureDetector(
+                            onTap: _showPhotoOptions,
+                            child: Stack(
+                              children: [
+                                // Gradient shine ring around avatar
+                                Container(
+                                  width: 132,
+                                  height: 132,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    gradient: const LinearGradient(
+                                      colors: [Color(0xFF007A3D), Color(0xFF00C964)],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    ),
+                                    boxShadow: const [
+                                      BoxShadow(
+                                        color: Color(0x33007A3D),
+                                        blurRadius: 16,
+                                        spreadRadius: 2,
+                                      ),
+                                    ],
+                                  ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(3),
+                                    child: CircleAvatar(
+                                      radius: 60,
+                                      backgroundColor: const Color(0x1A007A3D),
+                                      backgroundImage: _pickedImage != null
+                                          ? FileImage(_pickedImage!)
+                                          : null,
+                                      child: _pickedImage == null
+                                          ? const Icon(
+                                              Icons.person,
+                                              size: 60,
+                                              color: Color(0xFF007A3D),
+                                            )
+                                          : null,
+                                    ),
+                                  ),
+                                ),
+                                // Camera badge
+                                Positioned(
+                                  bottom: 2,
+                                  right: 2,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFF007A3D),
+                                      shape: BoxShape.circle,
+                                      border: Border.all(color: Colors.white, width: 2),
+                                    ),
+                                    child: const Icon(
+                                      Icons.camera_alt,
+                                      size: 18,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                          Positioned(
-                            bottom: 0,
-                            right: 0,
-                            child: Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF007A3D),
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(
-                                Icons.camera_alt,
-                                size: 20,
-                                color: Colors.white,
-                              ),
-                            ),
+                          const SizedBox(height: 8),
+                          const Text(
+                            'Tap to change photo',
+                            style: TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
                           ),
                         ],
                       ),
                     ),
-                    const SizedBox(height: 32),
-                    Text(
-                      'Account Information',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                    ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _usernameController,
-                      decoration: const InputDecoration(
-                        labelText: 'Username',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.person_outline),
+                    const SizedBox(height: 28),
+
+                    // ── Account Information header ──────────────────────────
+                    Row(children: [
+                      Container(
+                        width: 4,
+                        height: 20,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF007A3D),
+                          borderRadius: BorderRadius.circular(2),
+                        ),
                       ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter username';
-                        }
-                        if (value.length < 3) {
-                          return 'Username must be at least 3 characters';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _emailController,
-                      decoration: const InputDecoration(
-                        labelText: 'Email',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.email_outlined),
+                      const SizedBox(width: 10),
+                      const Text(
+                        'Account Information',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF1A1A1A),
+                        ),
                       ),
-                      keyboardType: TextInputType.emailAddress,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter email';
-                        }
-                        if (!value.contains('@')) {
-                          return 'Please enter valid email';
-                        }
-                        return null;
-                      },
-                    ),
+                    ]),
                     const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _fullNameController,
-                      decoration: const InputDecoration(
-                        labelText: 'Full Name',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.badge_outlined),
+
+                    // ── Form Card ───────────────────────────────────────────
+                    Card(
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      color: const Color(0xFFF8FAF8),
+                      child: Padding(
+                        padding: const EdgeInsets.all(20),
+                        child: Column(
+                          children: [
+                            // Username
+                            TextFormField(
+                              controller: _usernameController,
+                              decoration: InputDecoration(
+                                labelText: 'Username',
+                                labelStyle: const TextStyle(color: Color(0xFF6B7280), fontSize: 14),
+                                prefixIcon: const Icon(Icons.person_outline, color: Color(0xFF007A3D), size: 20),
+                                filled: true,
+                                fillColor: Colors.white,
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(color: Color(0xFF007A3D), width: 2),
+                                ),
+                                errorBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(color: Color(0xFFB71C1C)),
+                                ),
+                                focusedErrorBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(color: Color(0xFFB71C1C), width: 2),
+                                ),
+                              ),
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Please enter username';
+                                }
+                                if (value.length < 3) {
+                                  return 'Username must be at least 3 characters';
+                                }
+                                return null;
+                              },
+                            ),
+                            const SizedBox(height: 16),
+
+                            // Email
+                            TextFormField(
+                              controller: _emailController,
+                              keyboardType: TextInputType.emailAddress,
+                              decoration: InputDecoration(
+                                labelText: 'Email',
+                                labelStyle: const TextStyle(color: Color(0xFF6B7280), fontSize: 14),
+                                prefixIcon: const Icon(Icons.email_outlined, color: Color(0xFF007A3D), size: 20),
+                                filled: true,
+                                fillColor: Colors.white,
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(color: Color(0xFF007A3D), width: 2),
+                                ),
+                                errorBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(color: Color(0xFFB71C1C)),
+                                ),
+                                focusedErrorBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(color: Color(0xFFB71C1C), width: 2),
+                                ),
+                              ),
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Please enter email';
+                                }
+                                if (!value.contains('@')) {
+                                  return 'Please enter valid email';
+                                }
+                                return null;
+                              },
+                            ),
+                            const SizedBox(height: 16),
+
+                            // Full Name
+                            TextFormField(
+                              controller: _fullNameController,
+                              decoration: InputDecoration(
+                                labelText: 'Full Name',
+                                labelStyle: const TextStyle(color: Color(0xFF6B7280), fontSize: 14),
+                                prefixIcon: const Icon(Icons.badge_outlined, color: Color(0xFF007A3D), size: 20),
+                                filled: true,
+                                fillColor: Colors.white,
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(color: Color(0xFF007A3D), width: 2),
+                                ),
+                                errorBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(color: Color(0xFFB71C1C)),
+                                ),
+                                focusedErrorBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(color: Color(0xFFB71C1C), width: 2),
+                                ),
+                              ),
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Please enter full name';
+                                }
+                                return null;
+                              },
+                            ),
+                            const SizedBox(height: 16),
+
+                            // Phone
+                            TextFormField(
+                              controller: _phoneController,
+                              keyboardType: TextInputType.phone,
+                              decoration: InputDecoration(
+                                labelText: 'Phone Number',
+                                labelStyle: const TextStyle(color: Color(0xFF6B7280), fontSize: 14),
+                                prefixIcon: const Icon(Icons.phone_outlined, color: Color(0xFF007A3D), size: 20),
+                                filled: true,
+                                fillColor: Colors.white,
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(color: Color(0xFF007A3D), width: 2),
+                                ),
+                                errorBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(color: Color(0xFFB71C1C)),
+                                ),
+                                focusedErrorBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(color: Color(0xFFB71C1C), width: 2),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter full name';
-                        }
-                        return null;
-                      },
                     ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _phoneController,
-                      decoration: const InputDecoration(
-                        labelText: 'Phone Number',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.phone_outlined),
-                      ),
-                      keyboardType: TextInputType.phone,
-                    ),
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 24),
+
+                    // ── Update Profile Button ───────────────────────────────
                     SizedBox(
                       width: double.infinity,
-                      height: 50,
+                      height: 54,
                       child: ElevatedButton.icon(
                         onPressed: _isLoading ? null : _updateProfile,
                         icon: _isLoading
                             ? const SizedBox(
                                 width: 20,
                                 height: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.white,
-                                ),
+                                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                               )
-                            : const Icon(Icons.save),
-                        label: const Text('Update Profile'),
+                            : const Icon(Icons.save_rounded),
+                        label: const Text(
+                          'Update Profile',
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
                         style: ElevatedButton.styleFrom(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
+                          backgroundColor: const Color(0xFF007A3D),
+                          foregroundColor: Colors.white,
+                          elevation: 3,
+                          shadowColor: const Color(0x4D007A3D),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                         ),
                       ),
                     ),
+
+                    // ── Change Password Button (admin / super_admin only) ───
                     if (_userData?['role'] == 'super_admin' || _userData?['role'] == 'admin') ...[
                       const SizedBox(height: 16),
                       SizedBox(
@@ -530,10 +868,13 @@ class _ProfilePageState extends State<ProfilePage> {
                         child: OutlinedButton.icon(
                           onPressed: _showChangePasswordDialog,
                           icon: const Icon(Icons.lock_reset),
-                          label: const Text('Change Password', style: TextStyle(fontWeight: FontWeight.bold)),
+                          label: const Text(
+                            'Change Password',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
                           style: OutlinedButton.styleFrom(
                             foregroundColor: const Color(0xFF007A3D),
-                            side: BorderSide(color: const Color(0x80007A3D), width: 1.5),
+                            side: const BorderSide(color: Color(0x80007A3D), width: 1.5),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
@@ -541,20 +882,47 @@ class _ProfilePageState extends State<ProfilePage> {
                         ),
                       ),
                     ],
-                    const SizedBox(height: 24),
+
+                    // ── Account Details Section ────────────────────────────
                     if (_userData != null) ...[
-                      const Divider(),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Account Details',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                      ),
+                      const SizedBox(height: 28),
+                      Row(children: [
+                        Container(
+                          width: 4,
+                          height: 20,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF007A3D),
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        const Text(
+                          'Account Details',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF1A1A1A),
+                          ),
+                        ),
+                      ]),
                       const SizedBox(height: 12),
-                      _buildInfoRow('Role', _userData?['role'] ?? 'N/A'),
-                      _buildInfoRow('Status', _userData?['is_active'] == true ? 'Active' : 'Inactive'),
-                      _buildInfoRow('Created', _formatDate(_userData?['created_at'])),
+                      _buildInfoCard('Role', _userData?['role'] ?? 'N/A', Icons.badge_outlined),
+                      const SizedBox(height: 8),
+                      _buildInfoCard(
+                        'Status',
+                        _userData?['is_active'] == true ? 'Active' : 'Inactive',
+                        Icons.circle_outlined,
+                        valueColor: _userData?['is_active'] == true
+                            ? const Color(0xFF007A3D)
+                            : const Color(0xFFB71C1C),
+                      ),
+                      const SizedBox(height: 8),
+                      _buildInfoCard(
+                        'Member Since',
+                        _formatDate(_userData?['created_at']),
+                        Icons.calendar_today_outlined,
+                      ),
+                      const SizedBox(height: 16),
                     ],
                   ],
                 ),
@@ -563,32 +931,33 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _buildInfoRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            label,
-            style: const TextStyle(
-              fontWeight: FontWeight.w500,
-              color: const Color(0xFF9CA3AF),
+  Widget _buildInfoCard(String label, String value, IconData icon, {Color? valueColor}) {
+    return Card(
+      elevation: 1,
+      shadowColor: const Color(0x1A000000),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      color: Colors.white,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        child: Row(
+          children: [
+            Icon(icon, size: 18, color: const Color(0xFF9CA3AF)),
+            const SizedBox(width: 12),
+            Text(
+              label,
+              style: const TextStyle(fontSize: 14, color: Color(0xFF6B7280)),
             ),
-          ),
-          const SizedBox(width: 16),
-          Flexible(
-            child: Text(
+            const Spacer(),
+            Text(
               value,
-              style: const TextStyle(
+              style: TextStyle(
+                fontSize: 14,
                 fontWeight: FontWeight.w600,
+                color: valueColor ?? const Color(0xFF1A1A1A),
               ),
-              textAlign: TextAlign.right,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

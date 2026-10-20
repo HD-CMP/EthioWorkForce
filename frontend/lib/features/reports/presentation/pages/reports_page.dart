@@ -53,6 +53,7 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
   // Tab 4: Workforce Census State
   List<dynamic> _censusWorkers = [];
   bool _isLoadingCensus = false;
+  bool _censusInitialLoadDone = false;
   String _censusStatusFilter = 'all';
   String _censusSearchQuery = '';
   List<dynamic> _workTypes = [];
@@ -87,7 +88,7 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
       if (index == 1 && _selectedPayrollDetails == null && _selectedPayrollId != null) _loadPayrollBatchData(_selectedPayrollId!);
       if (index == 2 && _taxComplianceData == null && _selectedPayrollId != null) _loadTaxComplianceData(_selectedPayrollId!);
       if (index == 3 && _attendanceRosterData == null && _selectedSiteId != null) _loadAttendanceRoster();
-      if (index == 4 && _censusWorkers.isEmpty) _loadCensusData();
+      if (index == 4 && !_censusInitialLoadDone && !_isLoadingCensus) _loadCensusData();
     }
   }
 
@@ -217,10 +218,14 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
         setState(() {
           _censusWorkers = data;
           _isLoadingCensus = false;
+          _censusInitialLoadDone = true;
         });
       }
     } catch (e) {
-      if (mounted) setState(() => _isLoadingCensus = false);
+      if (mounted) setState(() {
+        _isLoadingCensus = false;
+        _censusInitialLoadDone = true;
+      });
     }
   }
 
@@ -361,6 +366,7 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
                 setState(() => _selectedSiteId = newSiteId);
                 _loadDashboardData();
                 if (_tabController.index == 3) _loadAttendanceRoster();
+                _censusInitialLoadDone = false;
                 if (_tabController.index == 4) _loadCensusData();
               },
             ),
@@ -1663,9 +1669,7 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
   // TAB 4: WORKFORCE CENSUS & HR REGISTRY
   // ═══════════════════════════════════════════════════════════════════════════
   Widget _buildWorkforceCensusTab() {
-    if (_censusWorkers.isEmpty && !_isLoadingCensus) {
-      _loadCensusData();
-    }
+    // Note: data loading is triggered by _onTabChanged, not here
 
     final filteredWorkers = _censusWorkers.where((w) {
       if (_censusSearchQuery.isEmpty) return true;
@@ -1797,12 +1801,31 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
         const SizedBox(height: 12),
 
         if (_isLoadingCensus)
-          const Center(child: Padding(padding: EdgeInsets.all(32), child: CircularProgressIndicator()))
+          const Center(child: Padding(padding: EdgeInsets.all(32), child: CircularProgressIndicator(color: Color(0xFF007A3D))))
         else if (filteredWorkers.isEmpty)
-          const Card(
+          Center(
             child: Padding(
-              padding: EdgeInsets.all(32),
-              child: Center(child: Text('No workers matching census filter criteria')),
+              padding: const EdgeInsets.all(40),
+              child: Column(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(color: const Color(0xFFE8F5EE), shape: BoxShape.circle),
+                    child: const Icon(Icons.people_outline, size: 48, color: Color(0xFF007A3D)),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text('No workers found', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF374151))),
+                  const SizedBox(height: 8),
+                  const Text('Try adjusting your filters or select a different site', style: TextStyle(fontSize: 13, color: Color(0xFF9CA3AF)), textAlign: TextAlign.center),
+                  const SizedBox(height: 20),
+                  ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF007A3D), foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Refresh'),
+                    onPressed: _loadCensusData,
+                  ),
+                ],
+              ),
             ),
           )
         else
