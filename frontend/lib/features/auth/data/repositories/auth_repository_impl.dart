@@ -47,10 +47,23 @@ class AuthRepositoryImpl implements AuthRepository {
       return true;
     } catch (e) {
       if (e is DioException) {
-        // Log but don't crash
-        print('Login failed: ${e.response?.statusCode ?? e.type}');
+        final statusCode = e.response?.statusCode;
+        if (statusCode == 401) {
+          throw Exception('Incorrect username or password');
+        } else if (statusCode == 403) {
+          throw Exception(e.response?.data?['detail'] ?? 'Account is disabled');
+        } else if (statusCode == 500) {
+          final detail = e.response?.data?['detail'] ?? e.response?.data?['error'] ?? 'Server internal error';
+          throw Exception('Server Error (500): $detail');
+        } else if (e.type == DioExceptionType.connectionTimeout ||
+                   e.type == DioExceptionType.receiveTimeout ||
+                   e.type == DioExceptionType.connectionError) {
+          throw Exception('Cannot reach server. Please check your network or server settings.');
+        } else if (e.response?.data is Map && (e.response!.data as Map).containsKey('detail')) {
+          throw Exception(e.response!.data['detail'].toString());
+        }
       }
-      return false;
+      rethrow;
     }
   }
 

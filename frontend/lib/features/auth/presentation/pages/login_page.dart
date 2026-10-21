@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/router/app_router.dart';
+import 'package:dio/dio.dart';
+import '../../../../core/network/dio_client.dart';
+
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
@@ -61,6 +64,198 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
     }
   }
 
+
+  Future<void> _showServerConfigDialog() async {
+    final currentUrl = await DioClient.getBackendUrl();
+    final urlController = TextEditingController(text: currentUrl);
+    String? pingResult;
+    bool isPinging = false;
+    bool? isSuccess;
+
+    if (!mounted) return;
+
+    await showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setDialogState) => Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: const Color(0x1A007A3D),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(Icons.dns_rounded, color: Color(0xFF007A3D)),
+                    ),
+                    const SizedBox(width: 14),
+                    const Expanded(
+                      child: Text(
+                        'Backend Server',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Select or enter the API server URL:',
+                  style: TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: urlController,
+                  decoration: InputDecoration(
+                    labelText: 'API Base URL',
+                    hintText: 'https://ethioworkforce-api.onrender.com/api/v1',
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  ),
+                  style: const TextStyle(fontSize: 13),
+                ),
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: [
+                    ActionChip(
+                      label: const Text('☁️ Cloud Production', style: TextStyle(fontSize: 11)),
+                      onPressed: () {
+                        urlController.text = 'https://ethioworkforce-api.onrender.com/api/v1';
+                        setDialogState(() {
+                          pingResult = null;
+                          isSuccess = null;
+                        });
+                      },
+                    ),
+                    ActionChip(
+                      label: const Text('🏠 Local PC (192.168.8.250)', style: TextStyle(fontSize: 11)),
+                      onPressed: () {
+                        urlController.text = 'http://192.168.8.250:8000/api/v1';
+                        setDialogState(() {
+                          pingResult = null;
+                          isSuccess = null;
+                        });
+                      },
+                    ),
+                    ActionChip(
+                      label: const Text('📱 Emulator (10.0.2.2)', style: TextStyle(fontSize: 11)),
+                      onPressed: () {
+                        urlController.text = 'http://10.0.2.2:8000/api/v1';
+                        setDialogState(() {
+                          pingResult = null;
+                          isSuccess = null;
+                        });
+                      },
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    OutlinedButton.icon(
+                      onPressed: isPinging
+                          ? null
+                          : () async {
+                              setDialogState(() {
+                                isPinging = true;
+                                pingResult = 'Testing connection...';
+                                isSuccess = null;
+                              });
+                              try {
+                                final baseUrl = urlController.text.trim().replaceAll(RegExp(r'/api/v1/?$'), '');
+                                final dio = Dio(BaseOptions(
+                                  connectTimeout: const Duration(seconds: 6),
+                                  receiveTimeout: const Duration(seconds: 6),
+                                ));
+                                final sw = Stopwatch()..start();
+                                final res = await dio.get('$baseUrl/health');
+                                sw.stop();
+                                setDialogState(() {
+                                  isPinging = false;
+                                  isSuccess = res.statusCode == 200;
+                                  pingResult = 'Connected! (${sw.elapsedMilliseconds}ms)';
+                                });
+                              } catch (e) {
+                                setDialogState(() {
+                                  isPinging = false;
+                                  isSuccess = false;
+                                  pingResult = 'Cannot reach server: ${e is DioException ? (e.message ?? e.type.name) : e.toString()}';
+                                });
+                              }
+                            },
+                      icon: isPinging
+                          ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2))
+                          : const Icon(Icons.network_check_rounded, size: 16),
+                      label: const Text('Test Connection'),
+                      style: OutlinedButton.styleFrom(
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    if (pingResult != null)
+                      Expanded(
+                        child: Text(
+                          pingResult!,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: isSuccess == true
+                                ? const Color(0xFF007A3D)
+                                : isSuccess == false
+                                    ? const Color(0xFFB71C1C)
+                                    : const Color(0xFF6B7280),
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      child: const Text('Cancel'),
+                    ),
+                    const SizedBox(width: 10),
+                    ElevatedButton(
+                      onPressed: () async {
+                        final trimmed = urlController.text.trim();
+                        if (trimmed.isNotEmpty) {
+                          await DioClient.setBackendUrl(trimmed);
+                          if (mounted) {
+                            Navigator.pop(ctx);
+                            AppSnackBar.showSuccess(context, 'Server configured to: $trimmed');
+                          }
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF007A3D),
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                      child: const Text('Save & Apply'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -97,6 +292,26 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
               Positioned(bottom: -60, left: -40,
                 child: Container(width: 200, height: 200,
                   decoration: BoxDecoration(shape: BoxShape.circle, color: const Color(0x0DFFFFFF)))),
+              // Top server settings button
+              Positioned(
+                top: 10,
+                right: 14,
+                child: SafeArea(
+                  child: IconButton(
+                    icon: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: const Color(0x33FFFFFF),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: const Color(0x4DFFFFFF)),
+                      ),
+                      child: const Icon(Icons.dns_rounded, color: Colors.white, size: 18),
+                    ),
+                    tooltip: 'Server Connection Settings',
+                    onPressed: _showServerConfigDialog,
+                  ),
+                ),
+              ),
               // Content
               SafeArea(
                 child: SingleChildScrollView(
