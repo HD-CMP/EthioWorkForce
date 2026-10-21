@@ -195,7 +195,17 @@ class _AdminRegistrationPageContentState
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Admin Registration'),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Admin Registration'),
+            if (_userRole != null)
+              Text(
+                _userRole!.replaceAll('_', ' ').toUpperCase(),
+                style: const TextStyle(fontSize: 11, color: Color(0xCCFFFFFF)),
+              ),
+          ],
+        ),
         actions: [
           if (_isSuperAdmin && _sites.length > 1)
             IconButton(
@@ -249,7 +259,6 @@ class _RegisterAdminTabState extends State<_RegisterAdminTab> {
 
   String _selectedRole = 'admin';
   final List<int> _selectedWorkplaces = [];
-  List<WorkPlace> _workplaces = [];
   List<WorkPlace> _filteredWorkplaces = [];
   List<Site> _sites = [];
   List<RoleModel> _roles = [];
@@ -261,13 +270,26 @@ class _RegisterAdminTabState extends State<_RegisterAdminTab> {
   bool _loadingRoles = false;
   bool _searchingUsers = false;
   bool _isExistingUser = false;
+  String? _currentUserRole;
 
   @override
   void initState() {
     super.initState();
+    _loadCurrentUserContext();
     _loadSites();
     _loadRoles();
     _searchController.addListener(_onSearchChanged);
+  }
+
+  Future<void> _loadCurrentUserContext() async {
+    try {
+      final role = await _storageService.getUserRole();
+      if (mounted) {
+        setState(() {
+          _currentUserRole = role;
+        });
+      }
+    } catch (_) {}
   }
 
   void _onSearchChanged() async {
@@ -372,16 +394,65 @@ class _RegisterAdminTabState extends State<_RegisterAdminTab> {
     }
   }
 
+  String _determineRoleFromHierarchy(int? level, String? workTypeName) {
+    final title = (workTypeName ?? '').toLowerCase();
+    
+    // Level 3 or Site Manager title -> site_admin (Full 8 modules scoped to site)
+    if (level == 3 ||
+        title.contains('site manager') ||
+        title.contains('project manager') ||
+        title.contains('site engineer')) {
+      return 'site_admin';
+    }
+    // Level 1 or 2 -> admin (Executive / Cross-Site)
+    if (level == 1 ||
+        level == 2 ||
+        title.contains('director') ||
+        title.contains('executive')) {
+      return 'admin';
+    }
+    // Level 4 -> supervisor (Field Operations, Timekeeping)
+    if (level == 4 ||
+        title.contains('supervisor') ||
+        title.contains('foreman') ||
+        title.contains('timekeeper') ||
+        title.contains('lead')) {
+      return 'supervisor';
+    }
+    // Level 5, 6 or operational workforce
+    return 'viewer';
+  }
+
+  String _getHierarchyName(int level) {
+    switch (level) {
+      case 1:
+        return 'Executive';
+      case 2:
+        return 'Senior Mgmt';
+      case 3:
+        return 'Site Mgmt';
+      case 4:
+        return 'Supervisory';
+      case 5:
+        return 'Operational';
+      case 6:
+        return 'Trainee';
+      default:
+        return 'Level $level';
+    }
+  }
+
   void _selectUser(UserModel user) async {
     // Generate smart username from full name
     final baseUsername = _generateUsername(user.fullName);
     final uniqueUsername = await _getUniqueUsername(baseUsername);
     
     if (!mounted) return;
-    
+
+    final determinedRole = _determineRoleFromHierarchy(user.hierarchyLevel, user.workTypeName);
+
     setState(() {
       _selectedUser = user;
-      // Workers from search don't have User accounts yet - they need to create one
       _isExistingUser = false;
       _usernameController.text = uniqueUsername;
       _emailController.text = user.email;
@@ -389,6 +460,15 @@ class _RegisterAdminTabState extends State<_RegisterAdminTab> {
       _phoneController.text = user.phoneNumber ?? '';
       _searchController.text = user.fullName;
       _searchResults = [];
+
+      // Auto-assign the role based on hierarchy
+      if (_roles.any((r) => r.name == determinedRole)) {
+        _selectedRole = determinedRole;
+      } else if (determinedRole == 'site_admin' && _roles.any((r) => r.name == 'site_admin')) {
+        _selectedRole = 'site_admin';
+      } else if (_roles.isNotEmpty) {
+        _selectedRole = _roles.first.name;
+      }
       
       // Auto-select workplace if worker has one assigned
       _selectedWorkplaces.clear();
@@ -397,8 +477,8 @@ class _RegisterAdminTabState extends State<_RegisterAdminTab> {
       }
     });
     
-    // If user has a different site, switch to it and reload workplaces
-    if (user.siteId != null && user.siteId != _selectedSite?.id) {
+    // If user has a different site, switch to it and reload workplaces (if not restricted site_admin)
+    if (user.siteId != null && user.siteId != _selectedSite?.id && _currentUserRole != 'site_admin') {
       final site = _sites.firstWhere(
         (s) => s.id == user.siteId,
         orElse: () => _sites.first,
@@ -429,6 +509,7 @@ class _RegisterAdminTabState extends State<_RegisterAdminTab> {
       _passwordController.clear();
       _confirmPasswordController.clear();
       _searchController.clear();
+      _searchResults = [];
     });
   }
 
@@ -438,11 +519,19 @@ class _RegisterAdminTabState extends State<_RegisterAdminTab> {
     });
     try {
       final datasource = RolesRemoteDatasource(getIt<Dio>());
-      final roles = await datasource.getRoles(isActive: true);
+      final allRoles = await datasource.getRoles(isActive: true);
+      final currentRole = await _storageService.getUserRole();
       if (mounted) {
         setState(() {
-          _roles = roles.where((r) => r.name != 'super_admin').toList();
+          var filtered = allRoles.where((r) => r.name != 'super_admin').toList();
+          if (currentRole == 'site_admin') {
+            filtered = filtered.where((r) => r.name != 'admin').toList();
+          }
+          _roles = filtered;
           _loadingRoles = false;
+          if (_roles.isNotEmpty && !_roles.any((r) => r.name == _selectedRole)) {
+            _selectedRole = _roles.first.name;
+          }
         });
       }
     } catch (e) {
@@ -473,11 +562,16 @@ class _RegisterAdminTabState extends State<_RegisterAdminTab> {
     });
     try {
       final datasource = SiteRemoteDataSource();
-      final sites = await datasource.getSites(isActive: true);
+      var sites = await datasource.getSites(isActive: true);
       
+      final currentRole = await _storageService.getUserRole();
       final savedSiteId = await _storageService.getSelectedSiteId();
-      Site? siteToSelect;
+
+      if (currentRole == 'site_admin' && savedSiteId != null) {
+        sites = sites.where((s) => s.id == savedSiteId).toList();
+      }
       
+      Site? siteToSelect;
       if (savedSiteId != null && sites.any((s) => s.id == savedSiteId)) {
         siteToSelect = sites.firstWhere((s) => s.id == savedSiteId);
       } else if (sites.isNotEmpty) {
@@ -489,6 +583,7 @@ class _RegisterAdminTabState extends State<_RegisterAdminTab> {
       
       if (mounted) {
         setState(() {
+          _currentUserRole = currentRole;
           _sites = sites;
           _selectedSite = siteToSelect;
           _loadingSites = false;
@@ -534,7 +629,6 @@ class _RegisterAdminTabState extends State<_RegisterAdminTab> {
       );
       if (mounted) {
         setState(() {
-          _workplaces = workplaces;
           _filteredWorkplaces = workplaces;
           _loadingWorkplaces = false;
         });
@@ -638,8 +732,10 @@ class _RegisterAdminTabState extends State<_RegisterAdminTab> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  // ── 1. TARGET SITE ASSIGNMENT CARD ──
                   Card(
-                    elevation: 2,
+                    elevation: 1,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     child: Padding(
                       padding: const EdgeInsets.all(16),
                       child: Column(
@@ -647,17 +743,114 @@ class _RegisterAdminTabState extends State<_RegisterAdminTab> {
                         children: [
                           Row(
                             children: [
-                              Icon(
-                                Icons.search,
-                                color: const Color(0xFF007A3D),
+                              const Icon(Icons.location_city_rounded, color: Color(0xFF007A3D), size: 20),
+                              const SizedBox(width: 8),
+                              const Text(
+                                'Target Site Assignment',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                  color: Color(0xFF0A192F),
+                                ),
+                              ),
+                              const Spacer(),
+                              if (_currentUserRole == 'site_admin')
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFFFF3E0),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: const Text(
+                                    'Locked to Your Site',
+                                    style: TextStyle(
+                                      color: Color(0xFFE65100),
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          if (_currentUserRole == 'site_admin') ...[
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF4F7F4),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: const Color(0xFFD1D5DB)),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.business, color: Color(0xFF007A3D), size: 20),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: Text(
+                                      _selectedSite?.name ?? 'Assigned Site',
+                                      style: const TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.bold,
+                                        color: Color(0xFF0A192F),
+                                      ),
+                                    ),
+                                  ),
+                                  const Icon(Icons.lock_outline, color: Color(0xFF6B7280), size: 18),
+                                ],
+                              ),
+                            ),
+                          ] else ...[
+                            _loadingSites
+                                ? const Center(child: Padding(padding: EdgeInsets.all(8), child: CircularProgressIndicator()))
+                                : DropdownButtonFormField<Site>(
+                                    value: _selectedSite,
+                                    decoration: const InputDecoration(
+                                      labelText: 'Select Site *',
+                                      prefixIcon: Icon(Icons.business_outlined),
+                                      border: OutlineInputBorder(),
+                                      helperText: 'Admin account and workers are bound to this site',
+                                    ),
+                                    items: _sites.map((site) {
+                                      return DropdownMenuItem<Site>(
+                                        value: site,
+                                        child: Text(site.name),
+                                      );
+                                    }).toList(),
+                                    onChanged: _onSiteChanged,
+                                    validator: (value) {
+                                      if (value == null) return 'Please select a site';
+                                      return null;
+                                    },
+                                  ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // ── 2. LINK WORKER OR USER CARD ──
+                  Card(
+                    elevation: 1,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              const Icon(
+                                Icons.person_search_rounded,
+                                color: Color(0xFF007A3D),
                               ),
                               const SizedBox(width: 8),
-                              Text(
-                                'Search Existing User',
+                              const Text(
+                                'Link Worker or Existing Account',
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w600,
-                                  color: const Color(0xFF007A3D),
+                                  color: Color(0xFF007A3D),
                                 ),
                               ),
                               const Spacer(),
@@ -672,6 +865,11 @@ class _RegisterAdminTabState extends State<_RegisterAdminTab> {
                                 ),
                             ],
                           ),
+                          const SizedBox(height: 4),
+                          const Text(
+                            'Search by worker name, employee ID, or username to automatically configure RBAC and site credentials.',
+                            style: TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+                          ),
                           const SizedBox(height: 12),
                           TextFormField(
                             controller: _searchController,
@@ -679,8 +877,8 @@ class _RegisterAdminTabState extends State<_RegisterAdminTab> {
                             decoration: InputDecoration(
                               hintText: _selectedSite == null
                                   ? 'Please select a site first...'
-                                  : 'Search by name, username, or email...',
-                              prefixIcon: const Icon(Icons.person_search),
+                                  : 'Search by employee ID, name, or username...',
+                              prefixIcon: const Icon(Icons.search),
                               suffixIcon: _searchingUsers
                                   ? const Padding(
                                       padding: EdgeInsets.all(12),
@@ -695,18 +893,18 @@ class _RegisterAdminTabState extends State<_RegisterAdminTab> {
                                   : _selectedUser != null
                                       ? const Icon(
                                           Icons.check_circle,
-                                          color: const Color(0xFF1E3A5F),
+                                          color: Color(0xFF007A3D),
                                         )
                                       : null,
                               border: const OutlineInputBorder(),
                               filled: _selectedUser != null ? true : false,
-                              fillColor: _selectedUser != null ? const Color(0xFFE8EDF4) : null,
+                              fillColor: _selectedUser != null ? const Color(0xFFE8F5EE) : null,
                             ),
                           ),
                           if (_searchResults.isNotEmpty) ...[
                             const SizedBox(height: 8),
                             Container(
-                              constraints: const BoxConstraints(maxHeight: 200),
+                              constraints: const BoxConstraints(maxHeight: 220),
                               decoration: BoxDecoration(
                                 border: Border.all(color: const Color(0xFFD1D5DB)),
                                 borderRadius: BorderRadius.circular(8),
@@ -716,28 +914,62 @@ class _RegisterAdminTabState extends State<_RegisterAdminTab> {
                                 itemCount: _searchResults.length,
                                 itemBuilder: (context, index) {
                                   final user = _searchResults[index];
+                                  final isManager = user.hierarchyLevel == 3 ||
+                                      (user.workTypeName?.toLowerCase().contains('site manager') ?? false);
                                   return ListTile(
                                     leading: CircleAvatar(
-                                      backgroundColor:
-                                          const Color(0xFF007A3D),
+                                      backgroundColor: isManager ? const Color(0xFF0A192F) : const Color(0xFF007A3D),
                                       child: Text(
-                                        user.fullName.isNotEmpty ? user.fullName[0].toUpperCase() : 'U',
+                                        user.fullName.isNotEmpty ? user.fullName[0].toUpperCase() : 'W',
                                         style: const TextStyle(
                                           color: Colors.white,
+                                          fontWeight: FontWeight.bold,
                                         ),
                                       ),
                                     ),
-                                    title: Text(user.fullName),
+                                    title: Text(
+                                      user.fullName,
+                                      style: const TextStyle(fontWeight: FontWeight.w600),
+                                    ),
                                     subtitle: Text(
-                                      '${user.username} � ${user.email}',
+                                      '${user.employeeId != null ? "${user.employeeId} • " : ""}${user.workTypeName ?? user.role}',
                                       style: const TextStyle(fontSize: 12),
                                     ),
-                                    trailing: Chip(
-                                      label: Text(
-                                        user.role.toUpperCase(),
-                                        style: const TextStyle(fontSize: 10),
-                                      ),
-                                      backgroundColor: const Color(0xFFE8EDF4),
+                                    trailing: Wrap(
+                                      spacing: 6,
+                                      crossAxisAlignment: WrapCrossAlignment.center,
+                                      children: [
+                                        if (user.hierarchyLevel != null)
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                            decoration: BoxDecoration(
+                                              color: const Color(0xFF0A192F),
+                                              borderRadius: BorderRadius.circular(4),
+                                            ),
+                                            child: Text(
+                                              'L${user.hierarchyLevel}',
+                                              style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                                            ),
+                                          ),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                          decoration: BoxDecoration(
+                                            color: isManager ? const Color(0xFFFFF3E0) : const Color(0xFFE8F5EE),
+                                            borderRadius: BorderRadius.circular(4),
+                                            border: Border.all(
+                                              color: isManager ? const Color(0xFFFF9800) : const Color(0xFF007A3D),
+                                            ),
+                                          ),
+                                          child: Text(
+                                            isManager ? 'SITE ADMIN' : user.role.toUpperCase(),
+                                            style: TextStyle(
+                                              color: isManager ? const Color(0xFFE65100) : const Color(0xFF007A3D),
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                     onTap: () => _selectUser(user),
                                   );
@@ -746,26 +978,160 @@ class _RegisterAdminTabState extends State<_RegisterAdminTab> {
                             ),
                           ],
                           if (_selectedUser != null) ...[
-                            const SizedBox(height: 12),
+                            const SizedBox(height: 14),
                             Container(
-                              padding: const EdgeInsets.all(12),
+                              padding: const EdgeInsets.all(16),
                               decoration: BoxDecoration(
-                                color: const Color(0xFFE8EDF4),
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(color: const Color(0xFF90CAF9)),
+                                gradient: const LinearGradient(
+                                  colors: [Color(0xFFE8F5EE), Color(0xFFF4F7F4)],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: const Color(0xFF81C784)),
                               ),
-                              child: Row(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Icon(Icons.info_outline,
-                                      color: const Color(0xFF0A192F), size: 20),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: Text(
-                                      'Creating admin account for ${_selectedUser!.fullName}. Please enter a password and assign role/workplaces.',
-                                      style: TextStyle(
-                                        fontSize: 13,
-                                        color: const Color(0xFF0A192F),
+                                  Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(8),
+                                        decoration: const BoxDecoration(
+                                          color: Color(0xFF007A3D),
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: const Icon(
+                                          Icons.verified_user_rounded,
+                                          color: Colors.white,
+                                          size: 18,
+                                        ),
                                       ),
+                                      const SizedBox(width: 10),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Row(
+                                              children: [
+                                                Flexible(
+                                                  child: Text(
+                                                    _selectedUser!.fullName,
+                                                    style: const TextStyle(
+                                                      fontSize: 15,
+                                                      fontWeight: FontWeight.bold,
+                                                      color: Color(0xFF0A192F),
+                                                    ),
+                                                    overflow: TextOverflow.ellipsis,
+                                                  ),
+                                                ),
+                                                if (_selectedUser!.employeeId != null) ...[
+                                                  const SizedBox(width: 8),
+                                                  Container(
+                                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                                    decoration: BoxDecoration(
+                                                      color: const Color(0xFF0A192F),
+                                                      borderRadius: BorderRadius.circular(6),
+                                                    ),
+                                                    child: Text(
+                                                      _selectedUser!.employeeId!,
+                                                      style: const TextStyle(
+                                                        color: Colors.white,
+                                                        fontSize: 11,
+                                                        fontWeight: FontWeight.bold,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ],
+                                            ),
+                                            const SizedBox(height: 2),
+                                            Text(
+                                              _selectedUser!.workTypeName ?? 'Field Workforce Member',
+                                              style: const TextStyle(
+                                                fontSize: 13,
+                                                color: Color(0xFF4B5563),
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 12),
+                                  const Divider(height: 1, color: Color(0xFFC8E6C9)),
+                                  const SizedBox(height: 10),
+                                  Wrap(
+                                    spacing: 8,
+                                    runSpacing: 6,
+                                    children: [
+                                      if (_selectedUser!.hierarchyLevel != null)
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFF0A192F),
+                                            borderRadius: BorderRadius.circular(6),
+                                          ),
+                                          child: Text(
+                                            'Level ${_selectedUser!.hierarchyLevel}: ${_getHierarchyName(_selectedUser!.hierarchyLevel!)}',
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFF007A3D),
+                                          borderRadius: BorderRadius.circular(6),
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            const Icon(Icons.auto_awesome, color: Colors.white, size: 12),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              'Auto-Role: ${_selectedRole.toUpperCase()}',
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 11,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      if (_selectedRole == 'site_admin')
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFFFFF3E0),
+                                            borderRadius: BorderRadius.circular(6),
+                                            border: Border.all(color: const Color(0xFFFFB74D)),
+                                          ),
+                                          child: const Text(
+                                            'All 8 Modules • Site Scoped',
+                                            style: TextStyle(
+                                              color: Color(0xFFE65100),
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    _selectedRole == 'site_admin'
+                                        ? '✓ Site Manager profile automatically selected. This account will have full access to all 8 operational modules, strictly restricted to ${_selectedSite?.name ?? "the assigned site"}.'
+                                        : '✓ Enterprise RBAC mapped. System role has been pre-selected according to organizational hierarchy. Administrator can override the role below if desired.',
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: Color(0xFF2E7D32),
+                                      fontStyle: FontStyle.italic,
                                     ),
                                   ),
                                 ],
@@ -906,6 +1272,59 @@ class _RegisterAdminTabState extends State<_RegisterAdminTab> {
                                     return null;
                                   },
                                 ),
+                          const SizedBox(height: 10),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                            decoration: BoxDecoration(
+                              color: _selectedRole == 'site_admin'
+                                  ? const Color(0xFFE8F5EE)
+                                  : const Color(0xFFF8FAF8),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: _selectedRole == 'site_admin'
+                                    ? const Color(0xFF81C784)
+                                    : const Color(0xFFE0E0E0),
+                              ),
+                            ),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Icon(
+                                  _selectedRole == 'site_admin'
+                                      ? Icons.domain_verification_rounded
+                                      : _selectedRole == 'admin'
+                                          ? Icons.admin_panel_settings_rounded
+                                          : Icons.info_outline_rounded,
+                                  size: 18,
+                                  color: _selectedRole == 'site_admin'
+                                      ? const Color(0xFF007A3D)
+                                      : const Color(0xFF4B5563),
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Text(
+                                    _selectedRole == 'site_admin'
+                                        ? 'Site Administrator: Full access to all 8 operational modules (Workers, Attendance, Payroll, Sites, Work Types, Reports, Admins, Settings), strictly scoped to ${_selectedSite?.name ?? "the assigned site"}.'
+                                        : _selectedRole == 'admin'
+                                            ? 'Administrator: Multi-site operational authority across all company sites.'
+                                            : _selectedRole == 'supervisor'
+                                                ? 'Supervisor: Frontline operational access for attendance logging, biometric/QR check-in, and overtime records.'
+                                                : 'Role permissions will be applied according to organizational policy.',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: _selectedRole == 'site_admin'
+                                          ? const Color(0xFF005C2E)
+                                          : const Color(0xFF374151),
+                                      fontWeight: _selectedRole == 'site_admin'
+                                          ? FontWeight.w600
+                                          : FontWeight.normal,
+                                      height: 1.35,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                           const SizedBox(height: 16),
                           ListTile(
                             contentPadding: EdgeInsets.zero,
@@ -1506,6 +1925,7 @@ class _RegisterAdminTabState extends State<_RegisterAdminTab> {
         role: _selectedRole,
         siteIds: _selectedSite!.id != null ? [_selectedSite!.id!] : null,
         workPlaceIds: _selectedWorkplaces.isEmpty ? null : _selectedWorkplaces,
+        workerId: _selectedUser?.workerId ?? _selectedUser?.id,
       );
 
       context.read<AdminBloc>().add(SubmitRegistrationEvent(request));

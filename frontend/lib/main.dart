@@ -7,6 +7,7 @@ import 'core/di/injection.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'core/localization/app_localizations.dart';
+import 'core/services/session_manager.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 
 void main() async {
@@ -17,8 +18,36 @@ void main() async {
   runApp(const EthioWorkforceApp());
 }
 
-class EthioWorkforceApp extends StatelessWidget {
+class EthioWorkforceApp extends StatefulWidget {
   const EthioWorkforceApp({super.key});
+
+  @override
+  State<EthioWorkforceApp> createState() => _EthioWorkforceAppState();
+}
+
+class _EthioWorkforceAppState extends State<EthioWorkforceApp> with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    SessionManager.start();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    SessionManager.stop();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive || state == AppLifecycleState.hidden) {
+      SessionManager.recordActivity(syncNow: true);
+    } else if (state == AppLifecycleState.resumed) {
+      SessionManager.checkAndHandleResume();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,30 +55,36 @@ class EthioWorkforceApp extends StatelessWidget {
       providers: [
         BlocProvider(create: (_) => getIt<AuthBloc>()),
       ],
-      child: MaterialApp(
-        title: 'EthioWorkforce',
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.lightTheme,
-        darkTheme: AppTheme.darkTheme,
-        themeMode: ThemeMode.light,
-        localizationsDelegates: const [
-          AppLocalizations.delegate,
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-        ],
-        supportedLocales: const [
-          Locale('en', 'US'),
-          Locale('am', 'ET'),
-        ],
-        onGenerateRoute: AppRouter.onGenerateRoute,
-        initialRoute: AppRouter.splash,
-        scrollBehavior: const MaterialScrollBehavior().copyWith(
-          dragDevices: {
-            PointerDeviceKind.touch,
-            PointerDeviceKind.mouse,
-            PointerDeviceKind.trackpad,
-          },
+      child: Listener(
+        behavior: HitTestBehavior.translucent,
+        onPointerDown: (_) => SessionManager.recordActivity(),
+        onPointerMove: (_) => SessionManager.recordActivity(),
+        child: MaterialApp(
+          navigatorKey: AppRouter.navigatorKey,
+          title: 'EthioWorkforce',
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
+          themeMode: ThemeMode.light,
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: const [
+            Locale('en', 'US'),
+            Locale('am', 'ET'),
+          ],
+          onGenerateRoute: AppRouter.onGenerateRoute,
+          initialRoute: AppRouter.splash,
+          scrollBehavior: const MaterialScrollBehavior().copyWith(
+            dragDevices: {
+              PointerDeviceKind.touch,
+              PointerDeviceKind.mouse,
+              PointerDeviceKind.trackpad,
+            },
+          ),
         ),
       ),
     );

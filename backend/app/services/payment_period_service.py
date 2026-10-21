@@ -1,5 +1,4 @@
 from datetime import date, timedelta
-from datetime import date, timedelta
 from typing import Dict, Tuple, Optional
 from decimal import Decimal
 from loguru import logger
@@ -31,15 +30,10 @@ class PaymentPeriodService:
             - is_prorated: Whether the payment is prorated (partial period)
         """
         
-        # For daily workers, use the exact payroll period
-        if payment_mode == PaymentMode.DAILY_RATE:
-            period_days = (payroll_end - payroll_start).days + 1
-            return payroll_start, payroll_end, period_days, False
-        
-        # For hourly workers, use the exact payroll period
-        if payment_mode == PaymentMode.HOURLY_RATE:
-            period_days = (payroll_end - payroll_start).days + 1
-            return payroll_start, payroll_end, period_days, False
+        # For daily/hourly/piece workers with a configured cycle (e.g. 14 days)
+        if payment_mode in [PaymentMode.DAILY_RATE, PaymentMode.HOURLY_RATE, PaymentMode.PIECE_RATE]:
+            period_length = payment_period_days if payment_period_days else ((payroll_end - payroll_start).days + 1)
+            return payroll_start, payroll_end, period_length, False
         
         # For monthly salary, align to their payment period
         if payment_mode == PaymentMode.MONTHLY_SALARY and payment_period_days:
@@ -51,7 +45,7 @@ class PaymentPeriodService:
             )
         
         # Default: use payroll period as-is
-        period_days = (payroll_end - payroll_start).days + 1
+        period_days = payment_period_days if payment_period_days else ((payroll_end - payroll_start).days + 1)
         return payroll_start, payroll_end, period_days, False
     
     @staticmethod
@@ -139,18 +133,20 @@ class PaymentPeriodService:
         """
         Get a friendly name for the payment period.
         """
-        if payment_mode == PaymentMode.DAILY_RATE:
+        if payment_period_days == 14 or (payment_mode == PaymentMode.DAILY_RATE and payment_period_days == 14):
+            return "14-Day (Bi-Weekly)"
+        elif payment_period_days == 7:
+            return "Weekly"
+        elif payment_period_days and 28 <= payment_period_days <= 31:
+            return "Monthly"
+        elif payment_mode == PaymentMode.DAILY_RATE:
             return "Daily"
         elif payment_mode == PaymentMode.HOURLY_RATE:
             return "Hourly"
-        elif payment_period_days == 7:
-            return "Weekly"
-        elif payment_period_days == 14:
-            return "Bi-Weekly"
-        elif 28 <= payment_period_days <= 31:
-            return "Monthly"
-        else:
+        elif payment_period_days:
             return f"{payment_period_days}-Day Cycle"
+        else:
+            return "Standard"
     
     @staticmethod
     def get_period_group_key(

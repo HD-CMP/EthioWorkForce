@@ -60,6 +60,7 @@ class PayrollRemoteDataSource {
       if (payroll.ethiopianMonth != null) 'ethiopian_month': payroll.ethiopianMonth,
       if (payroll.ethiopianYear != null) 'ethiopian_year': payroll.ethiopianYear,
       if (payroll.workTypeId != null) 'work_type_id': payroll.workTypeId,
+      if (payroll.workPlaceId != null) 'work_place_id': payroll.workPlaceId,
     });
     return Payroll.fromJson(response.data as Map<String, dynamic>);
   }

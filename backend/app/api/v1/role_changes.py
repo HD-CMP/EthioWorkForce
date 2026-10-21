@@ -9,6 +9,7 @@ from app.models.user import User, UserRole
 from app.models.role_change import RoleChange, RoleChangeStatus
 from app.models.worker import Worker
 from app.models.work_type import WorkType
+from app.models.user_site_assignment import UserSiteAssignment
 from app.schemas.role_change import RoleChangeCreate, RoleChangeResponse, RoleChangeApproval
 from app.models.audit_log import AuditLog, ActionType
 
@@ -148,6 +149,20 @@ def implement_role_change(
     worker = db.query(Worker).filter(Worker.id == role_change.worker_id).first()
     worker.work_type_id = role_change.new_work_type_id
     worker.site_id = role_change.new_site_id
+    
+    # Synchronize linked User account if employee has software login access
+    if worker.user_account:
+        new_work_type = db.query(WorkType).filter(WorkType.id == role_change.new_work_type_id).first()
+        if new_work_type:
+            if new_work_type.hierarchy_level == 3:
+                worker.user_account.role = UserRole.SITE_ADMIN
+            elif new_work_type.hierarchy_level == 4:
+                worker.user_account.role = UserRole.SUPERVISOR
+            elif new_work_type.hierarchy_level in [1, 2]:
+                worker.user_account.role = UserRole.ADMIN
+
+        db.query(UserSiteAssignment).filter(UserSiteAssignment.user_id == worker.user_account.id).delete()
+        db.add(UserSiteAssignment(user_id=worker.user_account.id, site_id=role_change.new_site_id, is_primary=True))
     
     role_change.status = RoleChangeStatus.IMPLEMENTED
     role_change.implemented_at = date.today()

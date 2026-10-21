@@ -1,8 +1,12 @@
-﻿import 'dart:async';
+import 'dart:async';
+import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:dio/dio.dart';
+
+import '../../../../core/network/dio_client.dart';
 
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/network/api_exception.dart';
@@ -43,6 +47,7 @@ class _WorkerFormPageState extends State<WorkerFormPage> {
   late TextEditingController _bankAccountController;
   late TextEditingController _tinController;
   late TextEditingController _baseSalaryController;
+  late TextEditingController _overtimeRateController;
   
   int? _selectedSiteId;
   int? _selectedWorkPlaceId;
@@ -52,6 +57,11 @@ class _WorkerFormPageState extends State<WorkerFormPage> {
   String? _status;
   bool _isLoading = false;
   DateTime? _hireDate;
+
+  // National ID / Kebele ID Document
+  File? _idCardImageFile;
+  String? _existingIdCardUrl;
+  String? _resolvedExistingIdCardUrl;
 
   // Returns true if the selected work type is hierarchy level 1-4
   // (Executive, Senior Management, Middle Management, Supervisory)
@@ -96,6 +106,11 @@ class _WorkerFormPageState extends State<WorkerFormPage> {
     _baseSalaryController = TextEditingController(
       text: worker?.baseSalary != null ? worker!.baseSalary!.toStringAsFixed(2) : '',
     );
+    _overtimeRateController = TextEditingController(
+      text: worker?.overtimeRatePerHour != null && worker!.overtimeRatePerHour! > 0
+          ? worker!.overtimeRatePerHour!.toStringAsFixed(2)
+          : '',
+    );
     
     if (worker != null) {
       _selectedSiteId = worker.siteId;
@@ -107,12 +122,295 @@ class _WorkerFormPageState extends State<WorkerFormPage> {
       if (worker.bankName != null) {
         _selectedBank = EthiopianBanks.all.where((b) => b.name == worker.bankName).firstOrNull;
       }
+      _existingIdCardUrl = worker.idCardUrl;
+      if (_existingIdCardUrl != null && _existingIdCardUrl!.isNotEmpty) {
+        _resolveExistingIdUrl();
+      }
     } else {
       _hireDate = DateTime.now();
       _status = 'active';
     }
     
     _loadUserRoleAndInitialize();
+  }
+
+  Future<void> _resolveExistingIdUrl() async {
+    if (_existingIdCardUrl != null && _existingIdCardUrl!.isNotEmpty) {
+      final resolved = await DioClient.resolveMediaUrl(_existingIdCardUrl);
+      if (mounted) {
+        setState(() => _resolvedExistingIdCardUrl = resolved);
+      }
+    }
+  }
+
+  Future<void> _pickIdCardImage(ImageSource source) async {
+    try {
+      final picker = ImagePicker();
+      final picked = await picker.pickImage(
+        source: source,
+        maxWidth: 1600,
+        maxHeight: 1600,
+        imageQuality: 88,
+      );
+      if (picked != null && mounted) {
+        setState(() {
+          _idCardImageFile = File(picked.path);
+        });
+      }
+    } catch (e) {
+      _showError('Could not access camera or gallery: ${e.toString()}');
+    }
+  }
+
+  void _showDocumentSourceSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 44,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 18),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE8F5EE),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.badge_outlined, color: Color(0xFF007A3D), size: 24),
+                  ),
+                  const SizedBox(width: 12),
+                  const Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Document Worker ID Card',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF0A192F),
+                        ),
+                      ),
+                      Text(
+                        'National ID / Kebele ID / Fayda card capture',
+                        style: TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              InkWell(
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _pickIdCardImage(ImageSource.camera);
+                },
+                borderRadius: BorderRadius.circular(14),
+                child: Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8FAF8),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: const Color(0xFFE5E7EB)),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 46,
+                        height: 46,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE8F5EE),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(Icons.camera_alt_rounded, color: Color(0xFF007A3D), size: 24),
+                      ),
+                      const SizedBox(width: 14),
+                      const Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Take Photo with Camera',
+                              style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Color(0xFF1A1A1A)),
+                            ),
+                            SizedBox(height: 2),
+                            Text(
+                              'Use device camera to frame and scan physical ID card',
+                              style: TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Icon(Icons.chevron_right_rounded, color: Color(0xFF9CA3AF)),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              InkWell(
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _pickIdCardImage(ImageSource.gallery);
+                },
+                borderRadius: BorderRadius.circular(14),
+                child: Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8FAF8),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: const Color(0xFFE5E7EB)),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 46,
+                        height: 46,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE8EDF4),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(Icons.photo_library_rounded, color: Color(0xFF0A192F), size: 24),
+                      ),
+                      const SizedBox(width: 14),
+                      const Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Choose from Gallery / Files',
+                              style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Color(0xFF1A1A1A)),
+                            ),
+                            SizedBox(height: 2),
+                            Text(
+                              'Select an existing image or document scan',
+                              style: TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Icon(Icons.chevron_right_rounded, color: Color(0xFF9CA3AF)),
+                    ],
+                  ),
+                ),
+              ),
+              if (_idCardImageFile != null || (_existingIdCardUrl != null && _existingIdCardUrl!.isNotEmpty)) ...[
+                const SizedBox(height: 12),
+                InkWell(
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    setState(() {
+                      _idCardImageFile = null;
+                      _existingIdCardUrl = null;
+                      _resolvedExistingIdCardUrl = null;
+                    });
+                  },
+                  borderRadius: BorderRadius.circular(14),
+                  child: Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFEBEE),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: const Color(0xFFFFCDD2)),
+                    ),
+                    child: const Row(
+                      children: [
+                        Icon(Icons.delete_outline_rounded, color: Color(0xFFB71C1C), size: 24),
+                        SizedBox(width: 14),
+                        Expanded(
+                          child: Text(
+                            'Remove Attached ID Document',
+                            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFFB71C1C)),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+              const SizedBox(height: 12),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showFullscreenImagePreview(ImageProvider imageProvider) {
+    showDialog(
+      context: context,
+      builder: (ctx) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.all(12),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: const Color(0xCC0A192F),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Row(
+                    children: [
+                      Icon(Icons.verified, color: Color(0xFF007A3D), size: 16),
+                      SizedBox(width: 6),
+                      Text(
+                        'Official ID Document Preview',
+                        style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600),
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close_rounded, color: Colors.white, size: 28),
+                  onPressed: () => Navigator.pop(ctx),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: Container(
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(context).size.height * 0.75,
+                ),
+                color: Colors.black,
+                child: InteractiveViewer(
+                  panEnabled: true,
+                  minScale: 0.8,
+                  maxScale: 5.0,
+                  child: Image(
+                    image: imageProvider,
+                    fit: BoxFit.contain,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
   
   Future<void> _loadUserRoleAndInitialize() async {
@@ -421,6 +719,7 @@ class _WorkerFormPageState extends State<WorkerFormPage> {
     _bankAccountController.dispose();
     _tinController.dispose();
     _baseSalaryController.dispose();
+    _overtimeRateController.dispose();
     super.dispose();
   }
   
@@ -528,6 +827,25 @@ class _WorkerFormPageState extends State<WorkerFormPage> {
         baseSalary = null;
       }
 
+      final otRateText = _overtimeRateController.text.trim();
+      final double? customOtRate = otRateText.isNotEmpty ? double.tryParse(otRateText) : null;
+      final tinText = _tinController.text.trim();
+
+      String? idCardUrl = _existingIdCardUrl;
+      if (_idCardImageFile != null) {
+        try {
+          idCardUrl = await _datasource.uploadIdDocument(_idCardImageFile!.path);
+        } catch (_) {
+          try {
+            final bytes = await _idCardImageFile!.readAsBytes();
+            final b64 = base64Encode(bytes);
+            idCardUrl = 'data:image/jpeg;base64,$b64';
+          } catch (_) {
+            idCardUrl = _existingIdCardUrl;
+          }
+        }
+      }
+
       final worker = Worker(
         id: widget.worker?.id,
         employeeId: _employeeIdController.text.trim(),
@@ -540,8 +858,11 @@ class _WorkerFormPageState extends State<WorkerFormPage> {
         status: _status,
         bankName: _selectedBank?.name,
         bankAccountNumber: _bankAccountController.text.trim().isEmpty ? null : _bankAccountController.text.trim(),
+        tinNumber: tinText.isEmpty ? null : tinText,
         hireDate: _hireDate,
         baseSalary: baseSalary,
+        overtimeRatePerHour: customOtRate,
+        idCardUrl: idCardUrl,
       );
 
       if (widget.worker == null) {
@@ -750,6 +1071,8 @@ class _WorkerFormPageState extends State<WorkerFormPage> {
                 ),
               ),
             ),
+            const SizedBox(height: 16),
+            _buildIdDocumentSection(),
             const SizedBox(height: 16),
             Card(
               elevation: 2,
@@ -1319,11 +1642,335 @@ class _WorkerFormPageState extends State<WorkerFormPage> {
                         FilteringTextInputFormatter.digitsOnly,
                       ],
                     ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _overtimeRateController,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
+                      ],
+                      decoration: const InputDecoration(
+                        labelText: 'Custom Overtime Rate (ETB/hr) — Optional',
+                        prefixIcon: Icon(Icons.access_time_filled),
+                        prefixText: 'ETB ',
+                        border: OutlineInputBorder(),
+                        helperText: 'Overrides work type default (e.g. 100 or 200 ETB/hr). Leave blank for standard/statutory rate.',
+                      ),
+                    ),
                   ],
                 ),
               ),
             ),
             const SizedBox(height: 24),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildIdDocumentSection() {
+    final hasLocalImage = _idCardImageFile != null;
+    final hasRemoteImage = !hasLocalImage && _existingIdCardUrl != null && _existingIdCardUrl!.isNotEmpty;
+    final hasDocument = hasLocalImage || hasRemoteImage;
+
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE8F5EE),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(Icons.badge_rounded, color: Color(0xFF007A3D), size: 22),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'National ID / Kebele ID',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF0A192F),
+                        ),
+                      ),
+                      Text(
+                        'Document physical ID card for verification',
+                        style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: hasDocument ? const Color(0xFFE8F5EE) : const Color(0xFFFFF3E0),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: hasDocument ? const Color(0xFF007A3D) : const Color(0xFFE65100),
+                      width: 1,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        hasDocument ? Icons.check_circle_rounded : Icons.info_outline_rounded,
+                        size: 14,
+                        color: hasDocument ? const Color(0xFF007A3D) : const Color(0xFFE65100),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        hasDocument ? 'Attached' : 'Recommended',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: hasDocument ? const Color(0xFF007A3D) : const Color(0xFFE65100),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+
+            if (hasDocument) ...[
+              // Attached Document Preview Card
+              Container(
+                decoration: BoxDecoration(
+                  color: const Color(0xFF0A192F),
+                  borderRadius: BorderRadius.circular(14),
+                  boxShadow: const [
+                    BoxShadow(color: Color(0x14000000), blurRadius: 10, offset: Offset(0, 4)),
+                  ],
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: Column(
+                  children: [
+                    Stack(
+                      children: [
+                        AspectRatio(
+                          aspectRatio: 16 / 10,
+                          child: hasLocalImage
+                              ? Image.file(
+                                  _idCardImageFile!,
+                                  fit: BoxFit.cover,
+                                )
+                              : Image.network(
+                                  _resolvedExistingIdCardUrl ?? _existingIdCardUrl!,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (_, __, ___) => Container(
+                                    color: const Color(0xFF1E3A5F),
+                                    child: const Center(
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(Icons.broken_image_rounded, color: Colors.white70, size: 36),
+                                          SizedBox(height: 8),
+                                          Text('Failed to load image', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                        ),
+                        // Top gradient overlay with status
+                        Positioned(
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            decoration: const BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [Color(0xB3000000), Colors.transparent],
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF007A3D),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: const Row(
+                                    children: [
+                                      Icon(Icons.shield_rounded, color: Colors.white, size: 12),
+                                      SizedBox(width: 4),
+                                      Text(
+                                        'Official ID Card',
+                                        style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                GestureDetector(
+                                  onTap: () {
+                                    if (hasLocalImage) {
+                                      _showFullscreenImagePreview(FileImage(_idCardImageFile!));
+                                    } else {
+                                      _showFullscreenImagePreview(NetworkImage(_resolvedExistingIdCardUrl ?? _existingIdCardUrl!));
+                                    }
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.all(6),
+                                    decoration: const BoxDecoration(
+                                      color: Color(0x66000000),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(Icons.fullscreen_rounded, color: Colors.white, size: 20),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    // Action toolbar below preview
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      color: const Color(0xFF0A192F),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: _showDocumentSourceSheet,
+                              icon: const Icon(Icons.refresh_rounded, size: 16, color: Colors.white),
+                              label: const Text('Change', style: TextStyle(color: Colors.white, fontSize: 12)),
+                              style: OutlinedButton.styleFrom(
+                                side: const BorderSide(color: Color(0x40FFFFFF)),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                padding: const EdgeInsets.symmetric(vertical: 8),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: () {
+                                if (hasLocalImage) {
+                                  _showFullscreenImagePreview(FileImage(_idCardImageFile!));
+                                } else {
+                                  _showFullscreenImagePreview(NetworkImage(_resolvedExistingIdCardUrl ?? _existingIdCardUrl!));
+                                }
+                              },
+                              icon: const Icon(Icons.zoom_in_rounded, size: 16, color: Color(0xFF33A86A)),
+                              label: const Text('View Zoom', style: TextStyle(color: Color(0xFF33A86A), fontSize: 12)),
+                              style: OutlinedButton.styleFrom(
+                                side: const BorderSide(color: Color(0x6633A86A)),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                padding: const EdgeInsets.symmetric(vertical: 8),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          IconButton(
+                            icon: const Icon(Icons.delete_outline_rounded, color: Color(0xFFEF5350), size: 20),
+                            onPressed: () {
+                              setState(() {
+                                _idCardImageFile = null;
+                                _existingIdCardUrl = null;
+                                _resolvedExistingIdCardUrl = null;
+                              });
+                            },
+                            tooltip: 'Remove',
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ] else ...[
+              // No Document - Enterprise Capture Card
+              GestureDetector(
+                onTap: _showDocumentSourceSheet,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8FAF8),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: const Color(0xFFB2DFCA),
+                      width: 1.5,
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      Container(
+                        width: 52,
+                        height: 52,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFE8F5EE),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.camera_alt_rounded, size: 26, color: Color(0xFF007A3D)),
+                      ),
+                      const SizedBox(height: 12),
+                      const Text(
+                        'Capture National ID or Kebele ID',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF0A192F),
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Frame worker\'s ID card with device camera or choose from gallery',
+                        style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          ElevatedButton.icon(
+                            onPressed: () => _pickIdCardImage(ImageSource.camera),
+                            icon: const Icon(Icons.camera_alt_rounded, size: 16),
+                            label: const Text('Use Camera', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF007A3D),
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          OutlinedButton.icon(
+                            onPressed: () => _pickIdCardImage(ImageSource.gallery),
+                            icon: const Icon(Icons.photo_library_outlined, size: 16, color: Color(0xFF0A192F)),
+                            label: const Text('From Gallery', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF0A192F))),
+                            style: OutlinedButton.styleFrom(
+                              side: const BorderSide(color: Color(0xFF0A192F)),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       ),

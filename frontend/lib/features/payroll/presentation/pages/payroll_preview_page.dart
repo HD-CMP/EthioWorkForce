@@ -229,9 +229,13 @@ class _PayrollPreviewPageState extends State<PayrollPreviewPage> {
     for (var attendance in attendances) {
       if (attendance.status == 'present' ||
           attendance.status == 'late' ||
-          attendance.status == 'excused') {
+          attendance.status == 'excused' ||
+          attendance.status == 'leave') {
         daysWorked++;
         regularHours += attendance.regularHours;
+      } else if (attendance.status == 'half_day') {
+        daysWorked++;  // counted as 0.5 in backend, but int here — close enough for preview
+        regularHours += attendance.regularHours / 2;
       }
     }
 
@@ -277,7 +281,22 @@ class _PayrollPreviewPageState extends State<PayrollPreviewPage> {
       }
 
       if (workType.overtimeEligible && verifiedOvertimeHours > 0) {
-        final overtimeRate = workType.overtimeRatePerHour ?? 0.0;
+        // Worker's custom OT rate takes priority over work type default
+        double overtimeRate = 0.0;
+        if (worker.overtimeRatePerHour != null && worker.overtimeRatePerHour! > 0) {
+          overtimeRate = worker.overtimeRatePerHour!;
+        } else if (workType.overtimeRatePerHour != null && workType.overtimeRatePerHour! > 0) {
+          overtimeRate = workType.overtimeRatePerHour!;
+        } else {
+          // Statutory fallback: 1.25x hourly equivalent
+          if (workType.paymentMode == PaymentMode.monthlySalary && effectiveBaseRate > 0) {
+            overtimeRate = (effectiveBaseRate / 208) * 1.25;
+          } else if (workType.paymentMode == PaymentMode.dailyRate && effectiveBaseRate > 0) {
+            overtimeRate = (effectiveBaseRate / 8) * 1.25;
+          } else if (workType.paymentMode == PaymentMode.hourlyRate && effectiveBaseRate > 0) {
+            overtimeRate = effectiveBaseRate * 1.25;
+          }
+        }
         estimatedGross += verifiedOvertimeHours * overtimeRate;
       }
     }
@@ -287,11 +306,13 @@ class _PayrollPreviewPageState extends State<PayrollPreviewPage> {
       if (workType.taxRule == TaxRule.dailyCasual) {
         estimatedDeductions = 0;
       } else {
-        double incomeTax = _estimateIncomeTax(estimatedGross);
         double pensionDeduction = 0;
         if (workType.pensionEligible && workType.employeePensionRate != null) {
           pensionDeduction = estimatedGross * workType.employeePensionRate!;
         }
+        // ERCA: Income tax is computed on taxable income = gross - employee pension
+        final taxableIncome = estimatedGross - pensionDeduction;
+        double incomeTax = _estimateIncomeTax(taxableIncome);
         estimatedDeductions = incomeTax + pensionDeduction;
       }
     }

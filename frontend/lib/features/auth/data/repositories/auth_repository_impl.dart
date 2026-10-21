@@ -1,10 +1,11 @@
-﻿import 'package:dio/dio.dart';
+import 'package:dio/dio.dart';
 
 import '../../domain/repositories/auth_repository.dart';
 import '../datasources/auth_remote_datasource.dart';
 import '../datasources/auth_local_datasource.dart';
 import '../models/login_request.dart';
 import '../../../../core/services/storage_service.dart';
+import '../../../../core/services/session_manager.dart';
 import '../../../../core/network/dio_client.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
@@ -25,6 +26,24 @@ class AuthRepositoryImpl implements AuthRepository {
       
       await localDataSource.saveToken(response.accessToken);
       
+      // Initialize active session tracking immediately
+      SessionManager.recordActivity(syncNow: true);
+      
+      // Proactively fetch and cache the user's profile and role immediately
+      try {
+        final dio = await DioClient.createDio();
+        final userResponse = await dio.get('/users/me');
+        if (userResponse.statusCode == 200 && userResponse.data != null) {
+          final userData = Map<String, dynamic>.from(userResponse.data as Map);
+          await localDataSource.saveUserData(userData);
+          if (userData['role'] != null) {
+            await storageService.setUserRole(userData['role'].toString());
+          }
+        }
+      } catch (_) {
+        // If profile fetch fails (e.g. slow connection), token is still valid
+      }
+      
       return true;
     } catch (e) {
       if (e is DioException) {
@@ -40,22 +59,37 @@ class AuthRepositoryImpl implements AuthRepository {
     await localDataSource.clearToken();
     await storageService.clearUserRole();
     await storageService.clearSelectedSiteId();
+    SessionManager.stop();
   }
 
   @override
   Future<bool> isLoggedIn() async {
     try {
+      // Security check: Has session expired due to inactivity?
+      if (await SessionManager.isSessionExpired()) {
+        await SessionManager.expireSession();
+        return false;
+      }
+
       final token = await localDataSource.getToken();
       if (token == null || token.isEmpty) {
         return false;
       }
       
       // Validate the token by calling /users/me
-      // If the token is expired or invalid, this will fail
       final dio = await DioClient.createDio();
       final response = await dio.get('/users/me');
       
-      // If we get here, token is valid
+      if (response.statusCode == 200 && response.data != null) {
+        final userData = Map<String, dynamic>.from(response.data as Map);
+        await localDataSource.saveUserData(userData);
+        if (userData['role'] != null) {
+          await storageService.setUserRole(userData['role'].toString());
+        }
+        SessionManager.recordActivity(syncNow: true);
+        return true;
+      }
+      
       return response.statusCode == 200;
     } on DioException catch (e) {
       // Only clear token if server explicitly rejected it (401 Unauthorized)
@@ -63,14 +97,20 @@ class AuthRepositoryImpl implements AuthRepository {
         await localDataSource.clearToken();
         return false;
       }
-      // Network error (no internet, timeout, etc.) — keep token, user stays logged in
-      // This prevents offline users from being permanently locked out
+      // Network error (no internet, timeout, etc.) — check if token exists
       final token = await localDataSource.getToken();
-      return token != null && token.isNotEmpty;
+      if (token != null && token.isNotEmpty) {
+        SessionManager.recordActivity(syncNow: true);
+        return true;
+      }
+      return false;
     } catch (e) {
-      // Unknown error — preserve token if it exists (don't lock out offline users)
       final token = await localDataSource.getToken();
-      return token != null && token.isNotEmpty;
+      if (token != null && token.isNotEmpty) {
+        SessionManager.recordActivity(syncNow: true);
+        return true;
+      }
+      return false;
     }
   }
 }

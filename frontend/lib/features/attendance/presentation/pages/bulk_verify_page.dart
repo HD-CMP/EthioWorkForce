@@ -13,6 +13,7 @@ import '../../../../core/widgets/visual_feedback_overlay.dart';
 import '../../../../core/widgets/ethiopian_date_picker.dart';
 import '../../../../core/utils/ethiopian_calendar.dart';
 import '../../../../core/utils/app_snackbar.dart';
+import '../../../../core/services/storage_service.dart';
 
 class BulkVerifyPage extends StatefulWidget {
   final int siteId;
@@ -34,6 +35,17 @@ class _BulkVerifyPageState extends State<BulkVerifyPage> {
   final _overtimeDataSource = OvertimeRemoteDataSource();
   final _audioService = AudioFeedbackService();
   final _searchController = TextEditingController();
+  final _storageService = StorageService();
+
+  String? _userRole;
+  bool get _canVerify {
+    final role = _userRole?.toLowerCase() ?? '';
+    return role == 'super_admin' ||
+        role == 'admin' ||
+        role == 'site_admin' ||
+        role == 'site_manager' ||
+        role == 'site_engineer';
+  }
 
   List<Worker> _allWorkers = [];
   List<Worker> _filteredWorkers = [];
@@ -56,7 +68,17 @@ class _BulkVerifyPageState extends State<BulkVerifyPage> {
   void initState() {
     super.initState();
     _selectedDate = widget.selectedDate;
+    _loadUserRole();
     _loadData();
+  }
+
+  Future<void> _loadUserRole() async {
+    final role = await _storageService.getUserRole();
+    if (mounted) {
+      setState(() {
+        _userRole = role;
+      });
+    }
   }
 
   @override
@@ -151,7 +173,9 @@ class _BulkVerifyPageState extends State<BulkVerifyPage> {
   }
 
   bool _canBeSelected(int attendanceId) {
+    if (!_canVerify) return false;
     final attendance = _allAttendances.firstWhere((a) => a.id == attendanceId);
+    if (attendance.isLocked) return false;
     if (_isUnverifyMode) {
       return attendance.isVerified;
     } else {
@@ -421,6 +445,15 @@ class _BulkVerifyPageState extends State<BulkVerifyPage> {
   }
 
   Future<void> _submitBulkVerify() async {
+    if (!_canVerify) {
+      VisualFeedbackOverlay.showFlashFeedback(
+        context,
+        type: FeedbackType.warning,
+        message: 'Verification authority is restricted to Site Engineers, Site Managers, and Admins',
+      );
+      return;
+    }
+
     if (_selectedAttendanceIds.isEmpty) {
       VisualFeedbackOverlay.showFlashFeedback(
         context,
@@ -622,6 +655,24 @@ class _BulkVerifyPageState extends State<BulkVerifyPage> {
       ),
       body: Column(
         children: [
+          if (!_canVerify)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              color: const Color(0xFFFFF3E0),
+              child: Row(
+                children: const [
+                  Icon(Icons.lock_outline, color: Color(0xFFE65100), size: 20),
+                  SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'Read-Only View: Verification authority is restricted to Site Engineers, Site Managers, and Administrators.',
+                      style: TextStyle(color: Color(0xFFE65100), fontSize: 13, fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           _buildSummaryCard(),
           _buildFilterBar(),
           if (_workPlaces.isNotEmpty) _buildWorkPlaceFilters(),
@@ -1317,10 +1368,28 @@ class _BulkVerifyPageState extends State<BulkVerifyPage> {
                       ),
                     ),
                   const Spacer(),
+                  if (attendance.isLocked) ...[
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF0A192F),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: const [
+                          Icon(Icons.lock, size: 10, color: Color(0xFFD4A017)),
+                          SizedBox(width: 3),
+                          Text('Sealed', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                  ],
                   if (isVerified)
-                    Icon(Icons.verified, size: 20, color: const Color(0xFF005C2E))
+                    const Icon(Icons.verified, size: 20, color: Color(0xFF005C2E))
                   else
-                    Icon(Icons.pending, size: 20, color: const Color(0xFFE65100)),
+                    const Icon(Icons.pending, size: 20, color: Color(0xFFE65100)),
                 ],
               ),
             ),
@@ -1360,10 +1429,12 @@ class _BulkVerifyPageState extends State<BulkVerifyPage> {
                   ),
                   if (_selectedAttendanceIds.isNotEmpty)
                     Text(
-                      _isUnverifyMode ? 'Ready to unverify' : 'Ready to verify',
+                      !_canVerify 
+                          ? 'Verification restricted to Site Engineer+'
+                          : (_isUnverifyMode ? 'Ready to unverify' : 'Ready to verify'),
                       style: TextStyle(
                         fontSize: 12,
-                        color: const Color(0xFF6B7280),
+                        color: !_canVerify ? const Color(0xFFE65100) : const Color(0xFF6B7280),
                       ),
                     ),
                 ],
@@ -1371,7 +1442,7 @@ class _BulkVerifyPageState extends State<BulkVerifyPage> {
             ),
             const SizedBox(width: 16),
             ElevatedButton.icon(
-              onPressed: _selectedAttendanceIds.isEmpty || _isLoading ? null : _submitBulkVerify,
+              onPressed: (!_canVerify || _selectedAttendanceIds.isEmpty || _isLoading) ? null : _submitBulkVerify,
               icon: _isLoading
                   ? const SizedBox(
                       width: 16,

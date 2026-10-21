@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/network/api_exception.dart';
+import '../../../../core/network/dio_client.dart';
 import '../../domain/entities/worker.dart';
 import '../../data/datasources/worker_remote_datasource.dart';
 import 'worker_form_page.dart';
@@ -545,6 +548,11 @@ class _WorkerDetailPageState extends State<WorkerDetailPage> {
                       title: 'TIN Number',
                       value: _worker.tinNumber!,
                     ),
+                  _IdDocumentCard(
+                    worker: _worker,
+                    datasource: _datasource,
+                    onUpdate: (updated) => setState(() => _worker = updated),
+                  ),
                   if (_worker.hireDate != null)
                     _InfoCard(
                       icon: Icons.calendar_today,
@@ -1113,6 +1121,566 @@ class _BankInfoCard extends StatelessWidget {
       buffer.write(accountNumber[i]);
     }
     return buffer.toString();
+  }
+}
+
+class _IdDocumentCard extends StatefulWidget {
+  final Worker worker;
+  final WorkerRemoteDataSource datasource;
+  final ValueChanged<Worker> onUpdate;
+
+  const _IdDocumentCard({
+    required this.worker,
+    required this.datasource,
+    required this.onUpdate,
+  });
+
+  @override
+  State<_IdDocumentCard> createState() => _IdDocumentCardState();
+}
+
+class _IdDocumentCardState extends State<_IdDocumentCard> {
+  bool _isUploading = false;
+  String? _resolvedUrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _resolveUrl();
+  }
+
+  @override
+  void didUpdateWidget(covariant _IdDocumentCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.worker.idCardUrl != widget.worker.idCardUrl) {
+      _resolveUrl();
+    }
+  }
+
+  Future<void> _resolveUrl() async {
+    final raw = widget.worker.idCardUrl;
+    if (raw != null && raw.isNotEmpty) {
+      final resolved = await DioClient.resolveMediaUrl(raw);
+      if (mounted) setState(() => _resolvedUrl = resolved);
+    } else {
+      if (mounted) setState(() => _resolvedUrl = null);
+    }
+  }
+
+  Future<void> _pickAndUpload(ImageSource source) async {
+    try {
+      final picker = ImagePicker();
+      final picked = await picker.pickImage(
+        source: source,
+        maxWidth: 1600,
+        maxHeight: 1600,
+        imageQuality: 88,
+      );
+      if (picked != null && mounted) {
+        setState(() => _isUploading = true);
+        final updated = await widget.datasource.uploadWorkerIdDocument(
+          widget.worker.id!,
+          picked.path,
+        );
+        if (mounted) {
+          setState(() {
+            _isUploading = false;
+          });
+          widget.onUpdate(updated);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Row(children: [
+                Icon(Icons.check_circle_outline, color: Colors.white, size: 18),
+                SizedBox(width: 10),
+                Text('Worker ID document captured & uploaded successfully!'),
+              ]),
+              backgroundColor: const Color(0xFF007A3D),
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              margin: const EdgeInsets.all(16),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isUploading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(children: [
+              const Icon(Icons.error_outline, color: Colors.white, size: 18),
+              const SizedBox(width: 10),
+              Expanded(child: Text('Failed to upload ID document: ${e.toString()}')),
+            ]),
+            backgroundColor: const Color(0xFFB71C1C),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
+          ),
+        );
+      }
+    }
+  }
+
+  void _showCaptureOptionsSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 44,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 18),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE8F5EE),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.badge_outlined, color: Color(0xFF007A3D), size: 24),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Document Worker ID Card',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF0A192F),
+                          ),
+                        ),
+                        Text(
+                          'Capture Kebele ID or National ID for ${widget.worker.fullName}',
+                          style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: Container(
+                  width: 46,
+                  height: 46,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE8F5EE),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.camera_alt_rounded, color: Color(0xFF007A3D), size: 24),
+                ),
+                title: const Text('Take Photo with Camera', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                subtitle: const Text('Scan physical ID card using device camera', style: TextStyle(fontSize: 12)),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _pickAndUpload(ImageSource.camera);
+                },
+              ),
+              const Divider(height: 16),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: Container(
+                  width: 46,
+                  height: 46,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE8EDF4),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.photo_library_rounded, color: Color(0xFF0A192F), size: 24),
+                ),
+                title: const Text('Choose from Gallery', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                subtitle: const Text('Select existing photo or scan from storage', style: TextStyle(fontSize: 12)),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _pickAndUpload(ImageSource.gallery);
+                },
+              ),
+              const SizedBox(height: 12),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showFullscreenViewer(ImageProvider provider) {
+    showDialog(
+      context: context,
+      builder: (ctx) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.all(12),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: const Color(0xCC0A192F),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.verified, color: Color(0xFF007A3D), size: 16),
+                      const SizedBox(width: 6),
+                      Text(
+                        'ID: ${widget.worker.fullName} (${widget.worker.employeeId})',
+                        style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600),
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close_rounded, color: Colors.white, size: 28),
+                  onPressed: () => Navigator.pop(ctx),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: Container(
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(context).size.height * 0.75,
+                ),
+                color: Colors.black,
+                child: InteractiveViewer(
+                  panEnabled: true,
+                  minScale: 0.8,
+                  maxScale: 5.0,
+                  child: Image(
+                    image: provider,
+                    fit: BoxFit.contain,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final hasDocument = widget.worker.hasIdDocument;
+    final displayUrl = _resolvedUrl ?? widget.worker.idCardUrl;
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 16),
+      child: Card(
+        elevation: 2,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE8F5EE),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.badge_rounded, color: Color(0xFF007A3D), size: 22),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'National ID / Kebele ID',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF0A192F),
+                          ),
+                        ),
+                        Text(
+                          hasDocument ? 'Official Documented ID Card' : 'Identity Verification Pending',
+                          style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: hasDocument ? const Color(0xFFE8F5EE) : const Color(0xFFFFF3E0),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: hasDocument ? const Color(0xFF007A3D) : const Color(0xFFE65100),
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          hasDocument ? Icons.verified_user_rounded : Icons.warning_amber_rounded,
+                          size: 14,
+                          color: hasDocument ? const Color(0xFF007A3D) : const Color(0xFFE65100),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          hasDocument ? 'Verified' : 'Missing',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: hasDocument ? const Color(0xFF007A3D) : const Color(0xFFE65100),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+
+              if (_isUploading)
+                Container(
+                  padding: const EdgeInsets.all(32),
+                  alignment: Alignment.center,
+                  child: const Column(
+                    children: [
+                      CircularProgressIndicator(color: Color(0xFF007A3D)),
+                      SizedBox(height: 12),
+                      Text('Uploading & documenting ID card...', style: TextStyle(color: Color(0xFF6B7280), fontSize: 13)),
+                    ],
+                  ),
+                )
+              else if (hasDocument && displayUrl != null) ...[
+                // High-fidelity ID card preview with frame
+                Container(
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF0A192F),
+                    borderRadius: BorderRadius.circular(14),
+                    boxShadow: const [
+                      BoxShadow(color: Color(0x1A000000), blurRadius: 12, offset: Offset(0, 4)),
+                    ],
+                  ),
+                  clipBehavior: Clip.antiAlias,
+                  child: Column(
+                    children: [
+                      Stack(
+                        children: [
+                          AspectRatio(
+                            aspectRatio: 16 / 10,
+                            child: displayUrl.startsWith('data:image')
+                                ? Image.memory(
+                                    Uri.parse(displayUrl).data!.contentAsBytes(),
+                                    fit: BoxFit.cover,
+                                  )
+                                : Image.network(
+                                    displayUrl,
+                                    fit: BoxFit.cover,
+                                    loadingBuilder: (context, child, progress) {
+                                      if (progress == null) return child;
+                                      return Container(
+                                        color: const Color(0xFF0A192F),
+                                        child: Center(
+                                          child: CircularProgressIndicator(
+                                            value: progress.expectedTotalBytes != null
+                                                ? progress.cumulativeBytesLoaded / progress.expectedTotalBytes!
+                                                : null,
+                                            color: const Color(0xFF007A3D),
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                    errorBuilder: (_, __, ___) => Container(
+                                      color: const Color(0xFF1E3A5F),
+                                      child: const Center(
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(Icons.broken_image_rounded, color: Colors.white70, size: 36),
+                                            SizedBox(height: 8),
+                                            Text('Failed to load image from server', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                          ),
+                          Positioned(
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              decoration: const BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [Color(0xB3000000), Colors.transparent],
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFF007A3D),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: const Row(
+                                      children: [
+                                        Icon(Icons.shield_rounded, color: Colors.white, size: 12),
+                                        SizedBox(width: 4),
+                                        Text(
+                                          'Documented on Record',
+                                          style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  GestureDetector(
+                                    onTap: () {
+                                      if (displayUrl.startsWith('data:image')) {
+                                        _showFullscreenViewer(MemoryImage(Uri.parse(displayUrl).data!.contentAsBytes()));
+                                      } else {
+                                        _showFullscreenViewer(NetworkImage(displayUrl));
+                                      }
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.all(6),
+                                      decoration: const BoxDecoration(
+                                        color: Color(0x66000000),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: const Icon(Icons.fullscreen_rounded, color: Colors.white, size: 20),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        color: const Color(0xFF0A192F),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: ElevatedButton.icon(
+                                onPressed: () {
+                                  if (displayUrl.startsWith('data:image')) {
+                                    _showFullscreenViewer(MemoryImage(Uri.parse(displayUrl).data!.contentAsBytes()));
+                                  } else {
+                                    _showFullscreenViewer(NetworkImage(displayUrl));
+                                  }
+                                },
+                                icon: const Icon(Icons.zoom_in_rounded, size: 18),
+                                label: const Text('View Fullscreen', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFF007A3D),
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                  padding: const EdgeInsets.symmetric(vertical: 10),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            OutlinedButton.icon(
+                              onPressed: _showCaptureOptionsSheet,
+                              icon: const Icon(Icons.camera_alt_rounded, size: 16, color: Colors.white),
+                              label: const Text('Re-scan ID', style: TextStyle(color: Colors.white, fontSize: 12)),
+                              style: OutlinedButton.styleFrom(
+                                side: const BorderSide(color: Color(0x40FFFFFF)),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ] else ...[
+                // Empty State with Call-to-action
+                Container(
+                  padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFFDF5),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: const Color(0xFFFFE0B2)),
+                  ),
+                  child: Column(
+                    children: [
+                      Container(
+                        width: 48,
+                        height: 48,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFFFF3E0),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.camera_alt_outlined, color: Color(0xFFE65100), size: 24),
+                      ),
+                      const SizedBox(height: 10),
+                      const Text(
+                        'No ID Document On File',
+                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF0A192F)),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Worker is missing a documented Kebele ID or National ID card. Capture with camera now to complete workforce compliance.',
+                        style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 14),
+                      ElevatedButton.icon(
+                        onPressed: _showCaptureOptionsSheet,
+                        icon: const Icon(Icons.camera_alt_rounded, size: 18),
+                        label: const Text('Capture ID Card Now', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF007A3D),
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 

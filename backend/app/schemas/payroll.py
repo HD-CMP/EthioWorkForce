@@ -43,6 +43,9 @@ class PayrollItemResponse(BaseModel):
     employee_id: Optional[str] = None
     work_type_id: Optional[int] = None
     work_type_name: Optional[str] = None
+    bank_name: Optional[str] = None
+    bank_account_number: Optional[str] = None
+    phone_number: Optional[str] = None
     
     # Payment period metadata
     payment_period_start: Optional[date] = None

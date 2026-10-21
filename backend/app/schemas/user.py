@@ -12,6 +12,7 @@ class UserBase(BaseModel):
     phone_number: Optional[str] = None
     role: UserRole = UserRole.VIEWER
     preferred_language: str = "en"
+    worker_id: Optional[int] = None
 
 
 class UserCreate(UserBase):
@@ -24,6 +25,7 @@ class UserUpdate(BaseModel):
     role: Optional[UserRole] = None
     is_active: Optional[bool] = None
     preferred_language: Optional[str] = None
+    worker_id: Optional[int] = None
 
 
 class UserProfileUpdate(BaseModel):
@@ -32,6 +34,7 @@ class UserProfileUpdate(BaseModel):
     full_name: Optional[str] = Field(None, min_length=1, max_length=255)
     phone_number: Optional[str] = None
     preferred_language: Optional[str] = None
+    profile_photo: Optional[str] = None
 
 
 class PasswordChange(BaseModel):

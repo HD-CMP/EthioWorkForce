@@ -22,8 +22,11 @@ class Worker {
   final int? paymentPeriodDays;
   final double? baseSalary;
   final int? hierarchyLevel;
+  final String? idCardUrl;
+  final String? photoUrl;
 
   bool get isActive => status == null || status == 'active';
+  bool get hasIdDocument => idCardUrl != null && idCardUrl!.isNotEmpty;
   
   double get totalOvertimePayment => (overtimeHours ?? 0.0) * (overtimeRatePerHour ?? 0.0);
 
@@ -51,6 +54,8 @@ class Worker {
     this.paymentPeriodDays,
     this.baseSalary,
     this.hierarchyLevel,
+    this.idCardUrl,
+    this.photoUrl,
   });
 
   factory Worker.fromJson(Map<String, dynamic> json) {
@@ -80,7 +85,7 @@ class Worker {
       status: json['status'] as String?,
       bankName: json['bank_name'] as String?,
       bankAccountNumber: json['bank_account_number'] as String?,
-      tinNumber: json['tin_number'] as String?,
+      tinNumber: json['tin_number'] as String? ?? json['national_id'] as String?,
       hireDate: json['hire_date'] != null 
           ? DateTime.parse(json['hire_date'] as String)
           : null,
@@ -91,6 +96,8 @@ class Worker {
       paymentPeriodDays: json['payment_period_days'] as int?,
       baseSalary: _parseNullableDouble(json['base_salary']),
       hierarchyLevel: json['hierarchy_level'] as int?,
+      idCardUrl: json['id_card_url'] as String? ?? json['photo_url'] as String?,
+      photoUrl: json['photo_url'] as String?,
     );
   }
 
@@ -106,6 +113,10 @@ class Worker {
       if (status != null) 'status': status,
       if (bankName != null) 'bank_name': bankName,
       if (bankAccountNumber != null) 'bank_account_number': bankAccountNumber,
+      if (tinNumber != null) ...{
+        'tin_number': tinNumber,
+        'national_id': tinNumber,
+      },
       'hire_date': (hireDate ?? DateTime.now()).toIso8601String().split('T')[0],
       'overtime_hours': overtimeHours ?? 0,
       'overtime_rate_per_hour': overtimeRatePerHour ?? 0,
@@ -114,6 +125,8 @@ class Worker {
       if (paymentPeriodDays != null) 'payment_period_days': paymentPeriodDays,
       if (baseSalary != null) 'base_salary': baseSalary,
       if (hierarchyLevel != null) 'hierarchy_level': hierarchyLevel,
+      if (idCardUrl != null) 'id_card_url': idCardUrl,
+      if (photoUrl != null) 'photo_url': photoUrl,
     };
   }
 }

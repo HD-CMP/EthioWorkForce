@@ -17,6 +17,7 @@ class RegistrationRequestCreate(BaseModel):
     request_reason: Optional[str] = None
     site_ids: Optional[list[int]] = None
     work_place_ids: Optional[list[int]] = None
+    worker_id: Optional[int] = None
     
     @field_validator('email', mode='before')
     @classmethod
@@ -53,6 +54,7 @@ class RegistrationRequestResponse(BaseModel):
     reviewed_at: Optional[datetime]
     site_ids: Optional[list[int]] = None
     site_names: Optional[list[str]] = None
+    worker_id: Optional[int] = None
 
     class Config:
         from_attributes = True
@@ -64,6 +66,7 @@ class RegistrationApprovalAction(BaseModel):
     approval_notes: Optional[str] = None
     site_ids: Optional[list[int]] = Field(default=None, description="Sites to assign user to (for SITE_ADMIN, SUPERVISOR)")
     work_place_ids: Optional[list[int]] = Field(default=None, description="Work places to assign user to")
+    worker_id: Optional[int] = Field(default=None, description="Linked worker ID")
 
 
 class UserSiteAssignmentCreate(BaseModel):

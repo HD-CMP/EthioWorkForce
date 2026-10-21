@@ -4,6 +4,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import '../../../../core/network/dio_client.dart';
+import '../../../../core/di/injection.dart';
+import '../../../auth/data/datasources/auth_local_datasource.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -26,9 +28,10 @@ class _ProfilePageState extends State<ProfilePage> {
   final _confirmPasswordController = TextEditingController();
 
   bool _isLoading = false;
-  bool _isPasswordVisible = false;
+  bool _isUploadingAvatar = false;
   Map<String, dynamic>? _userData;
   File? _pickedImage;
+  String? _networkAvatarUrl;
 
   @override
   void initState() {
@@ -39,6 +42,24 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Future<void> _loadLocalAvatar() async {
     try {
+      final cachedUser = await getIt<AuthLocalDataSource>().getUserData();
+      if (cachedUser != null && mounted) {
+        final rawPhoto = cachedUser['profile_photo']?.toString();
+        String? resolved;
+        if (rawPhoto != null && rawPhoto.isNotEmpty) {
+          resolved = await DioClient.resolveMediaUrl(rawPhoto);
+        }
+        if (mounted) {
+          setState(() {
+            _userData = cachedUser;
+            _networkAvatarUrl = resolved;
+            _usernameController.text = cachedUser['username'] ?? '';
+            _emailController.text = cachedUser['email'] ?? '';
+            _fullNameController.text = cachedUser['full_name'] ?? '';
+            _phoneController.text = cachedUser['phone_number'] ?? '';
+          });
+        }
+      }
       final prefs = await SharedPreferences.getInstance();
       final path = prefs.getString('user_profile_photo_path');
       if (path != null && File(path).existsSync()) {
@@ -60,7 +81,7 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> _loadUserData() async {
-    setState(() => _isLoading = true);
+    if (_userData == null) setState(() => _isLoading = true);
 
     try {
       final dio = await DioClient.createDio();
@@ -72,13 +93,25 @@ class _ProfilePageState extends State<ProfilePage> {
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
 
-      setState(() {
-        _userData = response.data;
-        _usernameController.text = _userData?['username'] ?? '';
-        _emailController.text = _userData?['email'] ?? '';
-        _fullNameController.text = _userData?['full_name'] ?? '';
-        _phoneController.text = _userData?['phone_number'] ?? '';
-      });
+      if (response.data != null && mounted) {
+        final data = Map<String, dynamic>.from(response.data as Map);
+        final rawPhoto = data['profile_photo']?.toString();
+        String? resolved;
+        if (rawPhoto != null && rawPhoto.isNotEmpty) {
+          resolved = await DioClient.resolveMediaUrl(rawPhoto);
+        }
+
+        setState(() {
+          _userData = data;
+          _networkAvatarUrl = resolved;
+          _usernameController.text = data['username'] ?? '';
+          _emailController.text = data['email'] ?? '';
+          _fullNameController.text = data['full_name'] ?? '';
+          _phoneController.text = data['phone_number'] ?? '';
+        });
+
+        await getIt<AuthLocalDataSource>().saveUserData(data);
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -96,11 +129,13 @@ class _ProfilePageState extends State<ProfilePage> {
         );
       }
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
   Future<void> _showPhotoOptions() async {
+    final hasPhoto = _pickedImage != null || (_networkAvatarUrl != null && _networkAvatarUrl!.isNotEmpty);
+
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -157,7 +192,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 _pickImageFromSource(ImageSource.gallery);
               },
             ),
-            if (_pickedImage != null)
+            if (hasPhoto)
               ListTile(
                 leading: Container(
                   padding: const EdgeInsets.all(10),
@@ -170,9 +205,62 @@ class _ProfilePageState extends State<ProfilePage> {
                 title: const Text('Remove Photo', style: TextStyle(fontWeight: FontWeight.w600, color: Color(0xFFB71C1C))),
                 onTap: () async {
                   Navigator.pop(ctx);
-                  final prefs = await SharedPreferences.getInstance();
-                  await prefs.remove('user_profile_photo_path');
-                  setState(() => _pickedImage = null);
+                  setState(() => _isUploadingAvatar = true);
+                  try {
+                    final dio = await DioClient.createDio();
+                    final prefs = await SharedPreferences.getInstance();
+                    final token = prefs.getString('auth_token');
+                    await dio.delete(
+                      '/users/me/avatar',
+                      options: Options(headers: {'Authorization': 'Bearer $token'}),
+                    );
+                    await prefs.remove('user_profile_photo_path');
+                    if (mounted) {
+                      setState(() {
+                        _pickedImage = null;
+                        _networkAvatarUrl = null;
+                        if (_userData != null) {
+                          _userData!['profile_photo'] = null;
+                        }
+                        _isUploadingAvatar = false;
+                      });
+                      if (_userData != null) {
+                        await getIt<AuthLocalDataSource>().saveUserData(_userData!);
+                      }
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: const Row(children: [
+                              Icon(Icons.check_circle_outline, color: Colors.white, size: 18),
+                              SizedBox(width: 10),
+                              Text('Profile photo removed permanently'),
+                            ]),
+                            backgroundColor: const Color(0xFF007A3D),
+                            behavior: SnackBarBehavior.floating,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            margin: const EdgeInsets.all(16),
+                          ),
+                        );
+                      }
+                    }
+                  } catch (e) {
+                    if (mounted) {
+                      setState(() => _isUploadingAvatar = false);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Row(children: [
+                            const Icon(Icons.error_outline, color: Colors.white, size: 18),
+                            const SizedBox(width: 10),
+                            Expanded(child: Text('Could not remove photo: $e')),
+                          ]),
+                          backgroundColor: const Color(0xFFB71C1C),
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          margin: const EdgeInsets.all(16),
+                        ),
+                      );
+                    }
+                  }
                 },
               ),
             const SizedBox(height: 12),
@@ -193,33 +281,71 @@ class _ProfilePageState extends State<ProfilePage> {
       );
       if (picked != null && mounted) {
         final file = File(picked.path);
-        setState(() => _pickedImage = file);
+        setState(() {
+          _pickedImage = file;
+          _isUploadingAvatar = true;
+        });
+
+        final dio = await DioClient.createDio();
         final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('user_profile_photo_path', picked.path);
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Row(children: [
-                Icon(Icons.check_circle_outline, color: Colors.white, size: 18),
-                SizedBox(width: 10),
-                Text('Profile photo updated'),
-              ]),
-              backgroundColor: const Color(0xFF007A3D),
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              margin: const EdgeInsets.all(16),
-            ),
-          );
+        final token = prefs.getString('auth_token');
+
+        final formData = FormData.fromMap({
+          'file': await MultipartFile.fromFile(
+            file.path,
+            filename: picked.name.isNotEmpty ? picked.name : 'avatar.jpg',
+          ),
+        });
+
+        final response = await dio.post(
+          '/users/me/avatar',
+          data: formData,
+          options: Options(headers: {'Authorization': 'Bearer $token'}),
+        );
+
+        if (response.data != null && mounted) {
+          final updatedData = Map<String, dynamic>.from(response.data as Map);
+          final rawPhoto = updatedData['profile_photo']?.toString();
+          final resolved = await DioClient.resolveMediaUrl(rawPhoto);
+
+          setState(() {
+            _userData = {
+              ...?_userData,
+              ...updatedData,
+            };
+            _networkAvatarUrl = resolved;
+            _isUploadingAvatar = false;
+          });
+
+          await prefs.setString('user_profile_photo_path', picked.path);
+          await getIt<AuthLocalDataSource>().saveUserData(_userData!);
+
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: const Row(children: [
+                  Icon(Icons.check_circle_outline, color: Colors.white, size: 18),
+                  SizedBox(width: 10),
+                  Text('Profile photo saved permanently to server'),
+                ]),
+                backgroundColor: const Color(0xFF007A3D),
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                margin: const EdgeInsets.all(16),
+              ),
+            );
+          }
         }
       }
     } catch (e) {
       if (mounted) {
+        setState(() => _isUploadingAvatar = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Row(children: [
               const Icon(Icons.error_outline, color: Colors.white, size: 18),
               const SizedBox(width: 10),
-              Expanded(child: Text('Could not access image: $e')),
+              Expanded(child: Text('Could not upload photo: $e')),
             ]),
             backgroundColor: const Color(0xFFB71C1C),
             behavior: SnackBarBehavior.floating,
@@ -271,6 +397,13 @@ class _ProfilePageState extends State<ProfilePage> {
           _phoneController.text = _userData?['phone_number'] ?? '';
           _isLoading = false;
         });
+
+        // Persist updated profile to local cache
+        try {
+          if (_userData != null) {
+            getIt<AuthLocalDataSource>().saveUserData(_userData!);
+          }
+        } catch (_) {}
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -564,21 +697,21 @@ class _ProfilePageState extends State<ProfilePage> {
                       child: Column(
                         children: [
                           GestureDetector(
-                            onTap: _showPhotoOptions,
+                            onTap: _isUploadingAvatar ? null : _showPhotoOptions,
                             child: Stack(
                               children: [
                                 // Gradient shine ring around avatar
                                 Container(
                                   width: 132,
                                   height: 132,
-                                  decoration: BoxDecoration(
+                                  decoration: const BoxDecoration(
                                     shape: BoxShape.circle,
-                                    gradient: const LinearGradient(
+                                    gradient: LinearGradient(
                                       colors: [Color(0xFF007A3D), Color(0xFF00C964)],
                                       begin: Alignment.topLeft,
                                       end: Alignment.bottomRight,
                                     ),
-                                    boxShadow: const [
+                                    boxShadow: [
                                       BoxShadow(
                                         color: Color(0x33007A3D),
                                         blurRadius: 16,
@@ -588,19 +721,20 @@ class _ProfilePageState extends State<ProfilePage> {
                                   ),
                                   child: Padding(
                                     padding: const EdgeInsets.all(3),
-                                    child: CircleAvatar(
-                                      radius: 60,
-                                      backgroundColor: const Color(0x1A007A3D),
-                                      backgroundImage: _pickedImage != null
-                                          ? FileImage(_pickedImage!)
-                                          : null,
-                                      child: _pickedImage == null
-                                          ? const Icon(
-                                              Icons.person,
-                                              size: 60,
-                                              color: Color(0xFF007A3D),
-                                            )
-                                          : null,
+                                    child: ClipOval(
+                                      child: Container(
+                                        color: const Color(0x1A007A3D),
+                                        width: 126,
+                                        height: 126,
+                                        child: _isUploadingAvatar
+                                            ? const Center(
+                                                child: CircularProgressIndicator(
+                                                  strokeWidth: 3,
+                                                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF007A3D)),
+                                                ),
+                                              )
+                                            : _buildAvatarImage(),
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -970,5 +1104,38 @@ class _ProfilePageState extends State<ProfilePage> {
     } catch (e) {
       return 'N/A';
     }
+  }
+
+  Widget _buildAvatarImage() {
+    if (_pickedImage != null) {
+      return Image.file(
+        _pickedImage!,
+        width: 126,
+        height: 126,
+        fit: BoxFit.cover,
+      );
+    }
+    if (_networkAvatarUrl != null && _networkAvatarUrl!.isNotEmpty) {
+      return Image.network(
+        _networkAvatarUrl!,
+        width: 126,
+        height: 126,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => const Center(
+          child: Icon(
+            Icons.person,
+            size: 60,
+            color: Color(0xFF007A3D),
+          ),
+        ),
+      );
+    }
+    return const Center(
+      child: Icon(
+        Icons.person,
+        size: 60,
+        color: Color(0xFF007A3D),
+      ),
+    );
   }
 }

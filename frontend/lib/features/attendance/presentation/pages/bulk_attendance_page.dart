@@ -157,9 +157,13 @@ class _BulkAttendancePageState extends State<BulkAttendancePage> {
   }
 
   bool _canBeSelected(int workerId) {
+    final attendance = _getAttendance(workerId);
+    if (attendance != null && attendance.isLocked) {
+      return false; // Sealed for payroll - cannot unmark or overwrite
+    }
     final hasAttendance = _hasAttendance(workerId);
     if (_isUnmarkMode) {
-      // In unmark mode, only marked attendance can be selected
+      // In unmark mode, only marked attendance that is not locked can be selected
       return hasAttendance;
     } else {
       // In mark mode, only unmarked workers can be selected
@@ -877,6 +881,24 @@ class _BulkAttendancePageState extends State<BulkAttendancePage> {
                   )),
             ),
             if (hasAttendance && attendance != null) ...[
+              if (attendance.isLocked) ...[
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF0A192F),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: const [
+                      Icon(Icons.lock, size: 12, color: Color(0xFFD4A017)),
+                      SizedBox(width: 4),
+                      Text('SEALED', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 6),
+              ],
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(

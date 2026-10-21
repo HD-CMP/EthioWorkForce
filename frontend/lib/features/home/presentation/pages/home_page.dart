@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/di/injection.dart';
 import '../../../../core/router/app_router.dart';
+import '../../../auth/data/datasources/auth_local_datasource.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_event.dart';
 import '../../../auth/presentation/bloc/auth_state.dart';
-import '../../../../core/theme/app_theme.dart';
+import '../../../../core/services/session_manager.dart';
+import '../../../../core/services/storage_service.dart';
+import '../../../../core/network/dio_client.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -16,8 +20,9 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
+class _HomePageState extends State<HomePage> with TickerProviderStateMixin, WidgetsBindingObserver {
   Map<String, dynamic>? _userData;
+  String? _resolvedAvatarUrl;
   bool _isLoadingUser = true;
   bool _isSuperAdmin = false;
   AnimationController? _fadeController;
@@ -34,6 +39,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+
     _fadeController = AnimationController(
       duration: const Duration(milliseconds: 800),
       vsync: this,
@@ -48,35 +55,132 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       end: Offset.zero,
     ).animate(CurvedAnimation(parent: _slideController!, curve: Curves.easeOut));
 
+    // 1. Immediately restore cached user & stats for seamless offline-first experience
+    _loadCachedUserData();
+
+    // 2. Fetch fresh user & stats from backend
     _loadUserData();
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _fadeController?.dispose();
     _slideController?.dispose();
     super.dispose();
   }
 
-  Future<void> _loadUserData() async {
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      SessionManager.checkAndHandleResume().then((expired) {
+        if (!expired && mounted) {
+          _loadUserData(isSilent: true);
+        }
+      });
+    } else if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive || state == AppLifecycleState.hidden) {
+      SessionManager.recordActivity(syncNow: true);
+    }
+  }
+
+  Future<void> _loadCachedUserData() async {
+    try {
+      final localDs = getIt<AuthLocalDataSource>();
+      final cachedUser = await localDs.getUserData();
+      final prefs = getIt<SharedPreferences>();
+
+      final cachedWorkers = prefs.getInt('cached_total_workers');
+      final cachedPresent = prefs.getInt('cached_present_today');
+      final cachedSites = prefs.getInt('cached_active_sites');
+
+      if (mounted && cachedUser != null) {
+        final role = (cachedUser['role'] ?? '').toString().toLowerCase();
+        final rawPhoto = cachedUser['profile_photo']?.toString();
+        String? resolved;
+        if (rawPhoto != null && rawPhoto.isNotEmpty) {
+          resolved = await DioClient.resolveMediaUrl(rawPhoto);
+        }
+        setState(() {
+          _userData = cachedUser;
+          _resolvedAvatarUrl = resolved;
+          _isSuperAdmin = role == 'super_admin' || role == 'admin';
+          _isLoadingUser = false;
+          if (cachedWorkers != null) _totalWorkers = cachedWorkers;
+          if (cachedPresent != null) _presentToday = cachedPresent;
+          if (cachedSites != null) _activeSites = cachedSites;
+          if (cachedWorkers != null || cachedSites != null) {
+            _statsLoaded = true;
+          }
+        });
+        _fadeController?.forward();
+        _slideController?.forward();
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _loadUserData({bool isSilent = false}) async {
+    if (!isSilent && _userData == null) {
+      setState(() => _isLoadingUser = true);
+    }
     try {
       final dio = getIt<Dio>();
       final response = await dio.get('/users/me');
       if (mounted) {
-        setState(() {
-          _userData = response.data;
-          _isSuperAdmin = response.data['role'] == 'super_admin';
-          _isLoadingUser = false;
-        });
-        _fadeController?.forward();
-        _slideController?.forward();
-        _loadQuickStats(dio);
+        final data = response.data;
+        if (data != null && (data is Map<String, dynamic> || data is Map)) {
+          final userMap = Map<String, dynamic>.from(data as Map);
+          final role = (userMap['role'] ?? '').toString().toLowerCase();
+          final rawPhoto = userMap['profile_photo']?.toString();
+          String? resolved;
+          if (rawPhoto != null && rawPhoto.isNotEmpty) {
+            resolved = await DioClient.resolveMediaUrl(rawPhoto);
+          }
+
+          setState(() {
+            _userData = userMap;
+            _resolvedAvatarUrl = resolved;
+            _isSuperAdmin = role == 'super_admin' || role == 'admin';
+            _isLoadingUser = false;
+          });
+
+          // Persist user data to local storage so future cold starts/resumes retain it
+          try {
+            final localDs = getIt<AuthLocalDataSource>();
+            await localDs.saveUserData(userMap);
+
+            // Auto-configure and lock primary site for Site Managers / Site Admins
+            if (role == 'site_admin' && userMap['site_assignments'] is List && (userMap['site_assignments'] as List).isNotEmpty) {
+              final assignments = userMap['site_assignments'] as List;
+              final primaryAssignment = assignments.firstWhere(
+                (a) => a is Map && a['is_primary'] == true,
+                orElse: () => assignments.first,
+              );
+              if (primaryAssignment is Map && primaryAssignment['site_id'] != null) {
+                final siteId = primaryAssignment['site_id'] as int;
+                await StorageService().setSelectedSiteId(siteId);
+              }
+            }
+          } catch (_) {}
+
+          _fadeController?.forward();
+          _slideController?.forward();
+          _loadQuickStats(dio);
+        }
       }
     } catch (e) {
       if (mounted) {
+        // If we didn't have user data yet, fall back to local storage
+        if (_userData == null) {
+          await _loadCachedUserData();
+        }
         setState(() => _isLoadingUser = false);
         _fadeController?.forward();
         _slideController?.forward();
+
+        // If the server explicitly returned 401 Unauthorized, token has expired
+        if (e is DioException && e.response?.statusCode == 401 && mounted) {
+          context.read<AuthBloc>().add(LogoutRequested());
+        }
       }
     }
   }
@@ -98,49 +202,77 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       final attendanceData = results[1].data;
       final sitesData = results[2].data;
 
+      int newWorkers = _totalWorkers;
+      int newPresent = _presentToday;
+      int newSites = _activeSites;
+
+      if (workersData is Map) {
+        newWorkers = (workersData['total'] ?? workersData['count'] ?? 0) as int;
+      } else if (workersData is List) {
+        newWorkers = workersData.length;
+      }
+      if (attendanceData is List) {
+        newPresent = attendanceData
+            .where((a) => (a['status'] ?? '') == 'present')
+            .length;
+      }
+      if (sitesData is List) {
+        newSites = sitesData.length;
+      } else if (sitesData is Map) {
+        final list = sitesData['data'] ?? sitesData['sites'] ?? [];
+        if (list is List) {
+          newSites = list.length;
+        } else {
+          newSites = (sitesData['total'] ?? sitesData['count'] ?? 0) as int;
+        }
+      }
+
       setState(() {
-        if (workersData is Map) {
-          _totalWorkers = (workersData['total'] ?? workersData['count'] ?? 0) as int;
-        } else if (workersData is List) {
-          _totalWorkers = workersData.length;
-        }
-        if (attendanceData is List) {
-          _presentToday = attendanceData
-              .where((a) => (a['status'] ?? '') == 'present')
-              .length;
-        }
-        if (sitesData is List) {
-          _activeSites = sitesData.length;
-        } else if (sitesData is Map) {
-          final list = sitesData['data'] ?? sitesData['sites'] ?? [];
-          if (list is List) {
-            _activeSites = list.length;
-          } else {
-            _activeSites = (sitesData['total'] ?? sitesData['count'] ?? 0) as int;
-          }
-        }
+        _totalWorkers = newWorkers;
+        _presentToday = newPresent;
+        _activeSites = newSites;
         _statsLoaded = true;
       });
+
+      // Persist quick stats to SharedPreferences
+      try {
+        final prefs = getIt<SharedPreferences>();
+        await prefs.setInt('cached_total_workers', newWorkers);
+        await prefs.setInt('cached_present_today', newPresent);
+        await prefs.setInt('cached_active_sites', newSites);
+      } catch (_) {}
     } catch (_) {
       if (mounted) setState(() => _statsLoaded = true);
     }
   }
 
   String _getInitials(String? fullName) {
-    if (fullName == null || fullName.isEmpty) return 'U';
-    final names = fullName.trim().split(' ');
-    if (names.length == 1) return names[0][0].toUpperCase();
-    return '${names[0][0]}${names[names.length - 1][0]}'.toUpperCase();
+    if (fullName == null || fullName.trim().isEmpty) return 'U';
+    final names = fullName.trim().split(RegExp(r'\s+'));
+    if (names.length == 1) return names[0].isNotEmpty ? names[0][0].toUpperCase() : 'U';
+    return '${names.first[0]}${names.last[0]}'.toUpperCase();
   }
 
   String _getRoleLabel(String? role) {
-    switch (role) {
+    switch (role?.toString().toLowerCase()) {
       case 'super_admin': return 'Super Administrator';
       case 'admin': return 'Administrator';
       case 'site_admin': return 'Site Administrator';
+      case 'supervisor': return 'Supervisor';
+      case 'hr_officer': return 'HR Officer';
       case 'viewer': return 'Viewer';
       default: return 'User';
     }
+  }
+
+  bool get _isAdminOrSuperAdmin {
+    final role = (_userData?['role'] ?? '').toString().toLowerCase();
+    return _isSuperAdmin || role == 'super_admin' || role == 'admin';
+  }
+
+  bool get _isAnyAdmin {
+    final role = (_userData?['role'] ?? '').toString().toLowerCase();
+    return _isSuperAdmin || role == 'super_admin' || role == 'admin' || role == 'site_admin';
   }
 
   String _getGreeting() {
@@ -180,14 +312,14 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                   Container(
                     width: 52,
                     height: 52,
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
                         colors: [Color(0xFF005C2E), Color(0xFF007A3D)],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
                       shape: BoxShape.circle,
-                      boxShadow: const [
+                      boxShadow: [
                         BoxShadow(
                           color: Color(0x4D005C2E),
                           blurRadius: 8,
@@ -268,7 +400,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         ),
       ],
     ).then((value) async {
-      if (value == null) return;
+      if (value == null || !mounted) return;
       switch (value) {
         case 'profile':
           await Navigator.pushNamed(context, AppRouter.profile);
@@ -373,7 +505,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         'adminOnly': false,
       },
     ];
-    if (_isSuperAdmin) return all;
+    final role = (_userData?['role'] ?? '').toString().toLowerCase();
+    // Super Admin, Admin, and Site Manager (site_admin) get ALL 8 modules with full functionality!
+    if (_isAdminOrSuperAdmin || role == 'super_admin' || role == 'admin' || role == 'site_admin') {
+      return all;
+    }
     return all.where((i) => i['adminOnly'] == false).toList();
   }
 
@@ -464,7 +600,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                       position: _slideAnimation ?? const AlwaysStoppedAnimation(Offset.zero),
                       child: Column(
                         children: [
-                          if (_isSuperAdmin) _buildQuickStats(),
+                          if (_isAnyAdmin) _buildQuickStats(),
                           _buildSectionTitle('Quick Access'),
                           _buildModuleGrid(),
                           const SizedBox(height: 24),
@@ -584,11 +720,26 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                         BoxShadow(color: Color(0x26000000), blurRadius: 6, offset: Offset(0, 2)),
                                       ],
                                     ),
-                                    child: Center(
-                                      child: Text(
-                                        _getInitials(_userData?['full_name']),
-                                        style: const TextStyle(color: Color(0xFF007A3D), fontSize: 13, fontWeight: FontWeight.bold),
-                                      ),
+                                    child: ClipOval(
+                                      child: _resolvedAvatarUrl != null && _resolvedAvatarUrl!.isNotEmpty
+                                          ? Image.network(
+                                              _resolvedAvatarUrl!,
+                                              width: 34,
+                                              height: 34,
+                                              fit: BoxFit.cover,
+                                              errorBuilder: (_, __, ___) => Center(
+                                                child: Text(
+                                                  _getInitials(_userData?['full_name']),
+                                                  style: const TextStyle(color: Color(0xFF007A3D), fontSize: 13, fontWeight: FontWeight.bold),
+                                                ),
+                                              ),
+                                            )
+                                          : Center(
+                                              child: Text(
+                                                _getInitials(_userData?['full_name']),
+                                                style: const TextStyle(color: Color(0xFF007A3D), fontSize: 13, fontWeight: FontWeight.bold),
+                                              ),
+                                            ),
                                     ),
                                   ),
                                   const SizedBox(width: 6),

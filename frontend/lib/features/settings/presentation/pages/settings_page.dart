@@ -10,6 +10,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/network/dio_client.dart';
 import '../../../../core/utils/file_saver.dart';
+import '../../../../core/di/injection.dart';
+import '../../../../core/services/session_manager.dart';
+import '../../../auth/data/datasources/auth_local_datasource.dart';
 import '../../../profile/presentation/pages/profile_page.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -23,6 +26,9 @@ class _SettingsPageState extends State<SettingsPage> {
   // Localization & Region
   String _selectedLanguage = 'en'; // 'en' or 'am'
   String _selectedCalendar = 'ethiopian'; // 'ethiopian' or 'gregorian'
+
+  // Security & Inactivity Timeout
+  int _autoLogoutMinutes = 15;
 
   // Operation & Connectivity
   bool _offlineMode = false;
@@ -39,7 +45,6 @@ class _SettingsPageState extends State<SettingsPage> {
   // Identity & Permissions
   Map<String, dynamic>? _userData;
   bool _isSuperAdmin = false;
-  bool _isLoadingUser = true;
 
   // Cache estimation
   String _cacheSizeStr = 'Calculating…';
@@ -57,11 +62,13 @@ class _SettingsPageState extends State<SettingsPage> {
     final url = await DioClient.getBackendUrl();
     final isOffline = await DioClient.isOfflineMode();
     final lastSyncStr = prefs.getString('last_sync');
+    final timeoutMins = await SessionManager.getTimeoutMinutes();
 
     if (mounted) {
       setState(() {
         _backendUrl = url;
         _offlineMode = isOffline;
+        _autoLogoutMinutes = timeoutMins;
         _selectedLanguage = prefs.getString('app_language') ?? 'en';
         _selectedCalendar = prefs.getString('calendar_type') ?? 'ethiopian';
         _audioFeedback = prefs.getBool('audio_feedback') ?? true;
@@ -86,15 +93,29 @@ class _SettingsPageState extends State<SettingsPage> {
       );
 
       if (mounted) {
-        setState(() {
-          _userData = response.data;
-          _isSuperAdmin = response.data['role'] == 'super_admin';
-          _isLoadingUser = false;
-        });
+        final data = response.data;
+        if (data is Map<String, dynamic> || data is Map) {
+          final userMap = Map<String, dynamic>.from(data as Map);
+          final role = (userMap['role'] ?? '').toString().toLowerCase();
+          setState(() {
+            _userData = userMap;
+            _isSuperAdmin = role == 'super_admin' || role == 'admin';
+          });
+        }
       }
     } catch (_) {
       if (mounted) {
-        setState(() => _isLoadingUser = false);
+        try {
+          final localDs = getIt<AuthLocalDataSource>();
+          final cached = await localDs.getUserData();
+          if (cached != null) {
+            final role = (cached['role'] ?? '').toString().toLowerCase();
+            setState(() {
+              _userData = cached;
+              _isSuperAdmin = role == 'super_admin' || role == 'admin';
+            });
+          }
+        } catch (_) {}
       }
     }
   }
@@ -707,6 +728,48 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
+  void _showAutoLogoutDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        title: const Row(
+          children: [
+            Icon(Icons.shield_outlined, color: Color(0xFF007A3D)),
+            SizedBox(width: 10),
+            Text('Auto-Logout Inactivity', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'To protect enterprise payroll and worker financial records, the session will automatically expire and require password re-authentication when inactive.',
+              style: TextStyle(fontSize: 13, color: Color(0xFF4B5563), height: 1.4),
+            ),
+            const SizedBox(height: 16),
+            ...[5, 10, 15, 30].map((mins) => RadioListTile<int>(
+              value: mins,
+              groupValue: _autoLogoutMinutes,
+              activeColor: const Color(0xFF007A3D),
+              title: Text('$mins Minutes${mins == 15 ? ' (Recommended)' : ''}',
+                style: TextStyle(fontWeight: mins == 15 ? FontWeight.bold : FontWeight.w500)),
+              subtitle: Text(mins == 5 ? 'Highest security' : (mins == 15 ? 'Financial industry benchmark' : 'Extended timeout')),
+              onChanged: (val) async {
+                if (val != null) {
+                  setState(() => _autoLogoutMinutes = val);
+                  await SessionManager.setTimeoutMinutes(val);
+                  if (ctx.mounted) Navigator.pop(ctx);
+                }
+              },
+            )),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final localizations = AppLocalizations.of(context);
@@ -824,6 +887,20 @@ class _SettingsPageState extends State<SettingsPage> {
                     );
                     if (mounted) _loadUserIdentity();
                   },
+                ),
+                ListTile(
+                  leading: Container(
+                    width: 38, height: 38,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFF3E0),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.timer_outlined, color: Color(0xFFE65100), size: 20),
+                  ),
+                  title: const Text('Auto-Logout Security Limit', style: TextStyle(fontWeight: FontWeight.w600)),
+                  subtitle: Text('$_autoLogoutMinutes minutes inactivity timeout (Financial Grade)'),
+                  trailing: const Icon(Icons.chevron_right, color: Color(0xFF9CA3AF)),
+                  onTap: _showAutoLogoutDialog,
                 ),
               ],
             ),

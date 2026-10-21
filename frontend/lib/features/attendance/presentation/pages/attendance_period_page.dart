@@ -11,6 +11,8 @@ import '../../../workers/domain/entities/worker.dart';
 import '../../../workers/domain/entities/work_type.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/widgets/visual_feedback_overlay.dart';
+import '../../../../core/widgets/ethiopian_date_picker.dart';
+import '../../../../core/utils/ethiopian_calendar.dart';
 import '../widgets/attendance_period_grid.dart';
 
 class AttendancePeriodPage extends StatefulWidget {
@@ -243,11 +245,12 @@ class _AttendancePeriodPageState extends State<AttendancePeriodPage> {
   }
 
   void _selectPeriodStartDate() async {
-    final picked = await showDatePicker(
+    final picked = await showEthiopianDatePicker(
       context: context,
       initialDate: _periodStartDate,
       firstDate: DateTime(2020),
       lastDate: DateTime.now().add(const Duration(days: 365)),
+      showEthiopian: true,
     );
 
     if (picked != null) {
@@ -349,13 +352,17 @@ class _AttendancePeriodPageState extends State<AttendancePeriodPage> {
   }
 
   Widget _buildPeriodSelector() {
+    final ethDate = EthiopianCalendar.fromGregorian(_periodStartDate);
+    final ethFormatted = EthiopianCalendar.formatEthiopian(ethDate);
+    final gregFormatted = DateFormat('MMM d, yyyy').format(_periodStartDate);
+
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            const Color(0xFF007A3D),
-            const Color(0xCC007A3D),
+            Color(0xFF005C2E),
+            Color(0xFF007A3D),
           ],
         ),
       ),
@@ -368,13 +375,13 @@ class _AttendancePeriodPageState extends State<AttendancePeriodPage> {
                 const Text(
                   'Payment Period Start',
                   style: TextStyle(
-                    color: const Color(0xB3FFFFFF),
+                    color: Color(0xB3FFFFFF),
                     fontSize: 12,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  DateFormat('EEEE, MMM d, yyyy').format(_periodStartDate),
+                  '$ethFormatted • $gregFormatted',
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 16,
@@ -386,6 +393,7 @@ class _AttendancePeriodPageState extends State<AttendancePeriodPage> {
           ),
           IconButton(
             icon: const Icon(Icons.calendar_month, color: Colors.white),
+            tooltip: 'Change Start Date',
             onPressed: _selectPeriodStartDate,
           ),
         ],

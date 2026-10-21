@@ -208,11 +208,12 @@ class _AttendanceDetailPageState extends State<AttendanceDetailPage> {
   Widget build(BuildContext context) {
     final localizations = AppLocalizations.of(context);
     final isVerified = widget.attendance?.isVerified ?? false;
+    final isLocked = widget.attendance?.isLocked ?? false;
 
     return Scaffold(
       appBar: AppBar(
         title: Text(_isEditing 
-            ? 'Edit Attendance'
+            ? (isLocked ? 'Attendance Details (Locked)' : 'Edit Attendance')
             : (localizations?.markAttendance ?? 'Mark Attendance')),
         actions: [
           IconButton(
@@ -224,53 +225,122 @@ class _AttendanceDetailPageState extends State<AttendanceDetailPage> {
             },
             tooltip: 'Toggle Calendar Type',
           ),
-          if (isVerified)
-            Padding(
-              padding: const EdgeInsets.only(right: 16),
+          if (isLocked)
+            const Padding(
+              padding: EdgeInsets.only(right: 8),
               child: Chip(
-                avatar: const Icon(Icons.verified, color: Colors.white, size: 18),
-                label: const Text('Verified', style: TextStyle(color: Colors.white)),
-                backgroundColor: const Color(0xFF007A3D),
+                avatar: Icon(Icons.lock, color: Color(0xFFD4A017), size: 16),
+                label: Text('Sealed', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
+                backgroundColor: Color(0xFF0A192F),
+              ),
+            )
+          else if (isVerified)
+            const Padding(
+              padding: EdgeInsets.only(right: 8),
+              child: Chip(
+                avatar: Icon(Icons.verified, color: Colors.white, size: 16),
+                label: Text('Verified', style: TextStyle(color: Colors.white, fontSize: 12)),
+                backgroundColor: Color(0xFF007A3D),
               ),
             ),
         ],
       ),
       body: Form(
-              key: _formKey,
-              child: ListView(
-                padding: const EdgeInsets.all(16),
-                children: [
-                  if (widget.attendance != null) ...[
-                    _buildInfoCard(),
-                    const SizedBox(height: 16),
-                  ],
-                  
-                  _buildDateSection(localizations),
-                  const SizedBox(height: 16),
-                  
-                  _buildTimeSection(localizations),
-                  const SizedBox(height: 16),
-                  
-                  _buildStatusSection(localizations),
-                  const SizedBox(height: 16),
-                  
-                  _buildHoursSection(localizations),
-                  const SizedBox(height: 16),
-                  
-                  if (_selectedStatus == 'excused')
-                    _buildOverrideReasonField(localizations),
-                  
-                  _buildNotesField(localizations),
-                  const SizedBox(height: 24),
-                  
-                  _buildActionButtons(localizations),
-                ],
-              ),
+        key: _formKey,
+        child: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            if (isLocked) _buildLockedBanner(),
+            if (widget.attendance != null) ...[
+              _buildInfoCard(),
+              const SizedBox(height: 16),
+            ],
+            
+            _buildDateSection(localizations, isLocked),
+            const SizedBox(height: 16),
+            
+            _buildTimeSection(localizations, isLocked),
+            const SizedBox(height: 16),
+            
+            _buildStatusSection(localizations, isLocked),
+            const SizedBox(height: 16),
+            
+            _buildHoursSection(localizations, isLocked),
+            const SizedBox(height: 16),
+            
+            if (_selectedStatus == 'excused')
+              _buildOverrideReasonField(localizations, isLocked),
+            
+            _buildNotesField(localizations, isLocked),
+            const SizedBox(height: 24),
+            
+            _buildActionButtons(localizations, isLocked),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLockedBanner() {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF0A192F),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFD4A017), width: 1.5),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x26000000),
+            blurRadius: 8,
+            offset: Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: const Color(0x33D4A017),
+              borderRadius: BorderRadius.circular(10),
             ),
+            child: const Icon(Icons.lock, color: Color(0xFFD4A017), size: 24),
+          ),
+          const SizedBox(width: 14),
+          const Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Record Sealed for Payroll',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  'This attendance record has been finalized and sealed as part of an approved payroll run. Edits, recalculations, or status modifications are strictly prohibited.',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFFD1D5DB),
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildInfoCard() {
+    final att = widget.attendance;
+    final isVerified = att?.isVerified ?? false;
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -281,7 +351,7 @@ class _AttendanceDetailPageState extends State<AttendanceDetailPage> {
               children: [
                 CircleAvatar(
                   backgroundColor: const Color(0x1A007A3D),
-                  child: Icon(Icons.person, color: const Color(0xFF007A3D)),
+                  child: const Icon(Icons.person, color: Color(0xFF007A3D)),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -289,27 +359,57 @@ class _AttendanceDetailPageState extends State<AttendanceDetailPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        widget.attendance?.workerName ?? 'Worker',
+                        att?.workerName ?? 'Worker',
                         style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                       ),
                       Text(
-                        'ID: ${widget.attendance?.employeeId ?? 'N/A'}',
-                        style: TextStyle(fontSize: 14, color: const Color(0xFF6B7280)),
+                        'ID: ${att?.employeeId ?? 'N/A'}',
+                        style: const TextStyle(fontSize: 14, color: Color(0xFF6B7280)),
                       ),
                     ],
                   ),
                 ),
+                if (isVerified)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE8F5EE),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFF007A3D)),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.verified, size: 14, color: Color(0xFF007A3D)),
+                        SizedBox(width: 4),
+                        Text('Verified', style: TextStyle(color: Color(0xFF007A3D), fontSize: 12, fontWeight: FontWeight.bold)),
+                      ],
+                    ),
+                  ),
               ],
             ),
-            if (widget.attendance?.ethiopianYear != null) ...[
+            if (att?.ethiopianYear != null) ...[
               const Divider(height: 24),
               Row(
                 children: [
-                  Icon(Icons.calendar_today, size: 16, color: const Color(0xFF6B7280)),
+                  const Icon(Icons.calendar_today, size: 16, color: Color(0xFF6B7280)),
                   const SizedBox(width: 8),
                   Text(
-                    widget.attendance!.formattedEthiopianDate,
-                    style: TextStyle(fontSize: 14, color: const Color(0xFF374151)),
+                    att!.formattedEthiopianDate,
+                    style: const TextStyle(fontSize: 14, color: Color(0xFF374151)),
+                  ),
+                ],
+              ),
+            ],
+            if (att?.method != null) ...[
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  const Icon(Icons.badge, size: 16, color: Color(0xFF6B7280)),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Recorded via: ${att!.method.replaceAll('_', ' ').toUpperCase()}',
+                    style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
                   ),
                 ],
               ),
@@ -320,7 +420,7 @@ class _AttendanceDetailPageState extends State<AttendanceDetailPage> {
     );
   }
 
-  Widget _buildDateSection(AppLocalizations? localizations) {
+  Widget _buildDateSection(AppLocalizations? localizations, bool isLocked) {
     String dateText;
     String calendarLabel;
     
@@ -340,29 +440,29 @@ class _AttendanceDetailPageState extends State<AttendanceDetailPage> {
         leading: const Icon(Icons.event),
         title: Text('Date ($calendarLabel)'),
         subtitle: Text(dateText),
-        trailing: const Icon(Icons.chevron_right),
-        onTap: () => _selectDate(context),
+        trailing: isLocked ? null : const Icon(Icons.chevron_right),
+        onTap: isLocked ? null : () => _selectDate(context),
       ),
     );
   }
 
-  Widget _buildTimeSection(AppLocalizations? localizations) {
+  Widget _buildTimeSection(AppLocalizations? localizations, bool isLocked) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
+            const Text(
               'Time',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: const Color(0xFF374151)),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF374151)),
             ),
             const SizedBox(height: 12),
             Row(
               children: [
                 Expanded(
                   child: InkWell(
-                    onTap: () => _selectTime(context, true),
+                    onTap: isLocked ? null : () => _selectTime(context, true),
                     child: InputDecorator(
                       decoration: const InputDecoration(
                         labelText: 'Check In',
@@ -383,7 +483,7 @@ class _AttendanceDetailPageState extends State<AttendanceDetailPage> {
                 const SizedBox(width: 16),
                 Expanded(
                   child: InkWell(
-                    onTap: () => _selectTime(context, false),
+                    onTap: isLocked ? null : () => _selectTime(context, false),
                     child: InputDecorator(
                       decoration: const InputDecoration(
                         labelText: 'Check Out',
@@ -409,7 +509,7 @@ class _AttendanceDetailPageState extends State<AttendanceDetailPage> {
     );
   }
 
-  Widget _buildStatusSection(AppLocalizations? localizations) {
+  Widget _buildStatusSection(AppLocalizations? localizations, bool isLocked) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -418,7 +518,7 @@ class _AttendanceDetailPageState extends State<AttendanceDetailPage> {
           children: [
             Text(
               localizations?.status ?? 'Status',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: const Color(0xFF374151)),
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF374151)),
             ),
             const SizedBox(height: 12),
             Wrap(
@@ -444,7 +544,7 @@ class _AttendanceDetailPageState extends State<AttendanceDetailPage> {
                   labelStyle: TextStyle(
                     color: isSelected ? Colors.white : const Color(0xFF1A1A1A),
                   ),
-                  onSelected: (selected) {
+                  onSelected: isLocked ? null : (selected) {
                     if (selected) {
                       setState(() {
                         _selectedStatus = option['value'] as String;
@@ -460,16 +560,16 @@ class _AttendanceDetailPageState extends State<AttendanceDetailPage> {
     );
   }
 
-  Widget _buildHoursSection(AppLocalizations? localizations) {
+  Widget _buildHoursSection(AppLocalizations? localizations, bool isLocked) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
+            const Text(
               'Working Hours',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: const Color(0xFF374151)),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF374151)),
             ),
             const SizedBox(height: 16),
             Row(
@@ -478,15 +578,15 @@ class _AttendanceDetailPageState extends State<AttendanceDetailPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Regular Hours', style: TextStyle(color: const Color(0xFF6B7280))),
+                      const Text('Regular Hours', style: TextStyle(color: Color(0xFF6B7280))),
                       const SizedBox(height: 8),
                       Row(
                         children: [
                           IconButton(
                             icon: const Icon(Icons.remove_circle_outline),
-                            onPressed: _regularHours > 0 
-                                ? () => setState(() => _regularHours--) 
-                                : null,
+                            onPressed: (isLocked || _regularHours <= 0)
+                                ? null 
+                                : () => setState(() => _regularHours--),
                           ),
                           Text(
                             '$_regularHours h',
@@ -494,9 +594,9 @@ class _AttendanceDetailPageState extends State<AttendanceDetailPage> {
                           ),
                           IconButton(
                             icon: const Icon(Icons.add_circle_outline),
-                            onPressed: _regularHours < 24 
-                                ? () => setState(() => _regularHours++) 
-                                : null,
+                            onPressed: (isLocked || _regularHours >= 24)
+                                ? null 
+                                : () => setState(() => _regularHours++),
                           ),
                         ],
                       ),
@@ -508,15 +608,15 @@ class _AttendanceDetailPageState extends State<AttendanceDetailPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Overtime Hours', style: TextStyle(color: const Color(0xFF6B7280))),
+                      const Text('Overtime Hours', style: TextStyle(color: Color(0xFF6B7280))),
                       const SizedBox(height: 8),
                       Row(
                         children: [
                           IconButton(
                             icon: const Icon(Icons.remove_circle_outline),
-                            onPressed: _overtimeHours > 0 
-                                ? () => setState(() => _overtimeHours = (_overtimeHours - 0.5).clamp(0.0, 24.0)) 
-                                : null,
+                            onPressed: (isLocked || _overtimeHours <= 0)
+                                ? null 
+                                : () => setState(() => _overtimeHours = (_overtimeHours - 0.5).clamp(0.0, 24.0)),
                           ),
                           Text(
                             '${_overtimeHours.toStringAsFixed(_overtimeHours == _overtimeHours.roundToDouble() ? 0 : 1)} h',
@@ -524,9 +624,9 @@ class _AttendanceDetailPageState extends State<AttendanceDetailPage> {
                           ),
                           IconButton(
                             icon: const Icon(Icons.add_circle_outline),
-                            onPressed: _overtimeHours < 24 
-                                ? () => setState(() => _overtimeHours = (_overtimeHours + 0.5).clamp(0.0, 24.0)) 
-                                : null,
+                            onPressed: (isLocked || _overtimeHours >= 24)
+                                ? null 
+                                : () => setState(() => _overtimeHours = (_overtimeHours + 0.5).clamp(0.0, 24.0)),
                           ),
                         ],
                       ),
@@ -541,22 +641,23 @@ class _AttendanceDetailPageState extends State<AttendanceDetailPage> {
     );
   }
 
-  Widget _buildOverrideReasonField(AppLocalizations? localizations) {
+  Widget _buildOverrideReasonField(AppLocalizations? localizations, bool isLocked) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: TextFormField(
         controller: _overrideReasonController,
+        readOnly: isLocked,
         decoration: InputDecoration(
           labelText: 'Override Reason *',
-          hintText: 'Required for Excused status',
+          hintText: isLocked ? 'None' : 'Required for Excused status',
           border: const OutlineInputBorder(),
           prefixIcon: const Icon(Icons.notes),
           filled: true,
-          fillColor: Color(0x0D1E3A5F),
+          fillColor: const Color(0x0D1E3A5F),
         ),
         maxLines: 2,
         validator: (value) {
-          if (_selectedStatus == 'excused' && (value == null || value.trim().isEmpty)) {
+          if (!isLocked && _selectedStatus == 'excused' && (value == null || value.trim().isEmpty)) {
             return 'Override reason is mandatory for Excused status';
           }
           return null;
@@ -565,20 +666,38 @@ class _AttendanceDetailPageState extends State<AttendanceDetailPage> {
     );
   }
 
-  Widget _buildNotesField(AppLocalizations? localizations) {
+  Widget _buildNotesField(AppLocalizations? localizations, bool isLocked) {
     return TextFormField(
       controller: _notesController,
-      decoration: const InputDecoration(
+      readOnly: isLocked,
+      decoration: InputDecoration(
         labelText: 'Notes (Optional)',
-        hintText: 'Add any additional notes...',
-        border: OutlineInputBorder(),
-        prefixIcon: Icon(Icons.note),
+        hintText: isLocked ? 'No notes provided' : 'Add any additional notes...',
+        border: const OutlineInputBorder(),
+        prefixIcon: const Icon(Icons.note),
       ),
       maxLines: 3,
     );
   }
 
-  Widget _buildActionButtons(AppLocalizations? localizations) {
+  Widget _buildActionButtons(AppLocalizations? localizations, bool isLocked) {
+    if (isLocked) {
+      return SizedBox(
+        width: double.infinity,
+        height: 48,
+        child: OutlinedButton.icon(
+          onPressed: () => Navigator.pop(context),
+          icon: const Icon(Icons.close),
+          label: const Text('Close (Record Locked)'),
+          style: OutlinedButton.styleFrom(
+            side: const BorderSide(color: Color(0xFF6B7280)),
+            foregroundColor: const Color(0xFF374151),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        ),
+      );
+    }
+
     return Row(
       children: [
         Expanded(
@@ -595,6 +714,10 @@ class _AttendanceDetailPageState extends State<AttendanceDetailPage> {
           flex: 2,
           child: ElevatedButton(
             onPressed: _isLoading ? null : _saveAttendance,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF007A3D),
+              foregroundColor: Colors.white,
+            ),
             child: Padding(
               padding: const EdgeInsets.all(12),
               child: _isLoading

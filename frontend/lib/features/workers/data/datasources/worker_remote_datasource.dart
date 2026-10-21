@@ -127,4 +127,28 @@ class WorkerRemoteDataSource {
       return response.data as Map<String, dynamic>;
     });
   }
+
+  Future<String> uploadIdDocument(String filePath) async {
+    return _handleRequest(() async {
+      final dio = await _getDio();
+      final filename = filePath.split(RegExp(r'[/\\]')).last;
+      final formData = FormData.fromMap({
+        'file': await MultipartFile.fromFile(filePath, filename: filename),
+      });
+      final response = await dio.post('/workers/upload-id-document', data: formData);
+      return (response.data['id_card_url'] ?? response.data['url'] ?? '') as String;
+    });
+  }
+
+  Future<Worker> uploadWorkerIdDocument(int workerId, String filePath) async {
+    return _handleRequest(() async {
+      final dio = await _getDio();
+      final filename = filePath.split(RegExp(r'[/\\]')).last;
+      final formData = FormData.fromMap({
+        'file': await MultipartFile.fromFile(filePath, filename: filename),
+      });
+      final response = await dio.post('/workers/$workerId/upload-id-document', data: formData);
+      return Worker.fromJson(response.data as Map<String, dynamic>);
+    });
+  }
 }

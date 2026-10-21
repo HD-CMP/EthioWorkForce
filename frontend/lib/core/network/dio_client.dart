@@ -73,6 +73,19 @@ class DioClient {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_isOfflineModeKey) ?? false;
   }
+
+  /// Resolves relative media paths (e.g. /uploads/id_cards/xxx.jpg) to full URLs
+  static Future<String> resolveMediaUrl(String? path) async {
+    if (path == null || path.trim().isEmpty) return '';
+    final trimmed = path.trim();
+    if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+      return trimmed;
+    }
+    final backendUrl = await getBackendUrl();
+    final baseUrl = backendUrl.replaceAll(RegExp(r'/api/v1/?$'), '');
+    final cleanPath = trimmed.startsWith('/') ? trimmed : '/$trimmed';
+    return '$baseUrl$cleanPath';
+  }
   
   static Future<Dio> createDio() async {
     final baseUrl = await getBackendUrl();

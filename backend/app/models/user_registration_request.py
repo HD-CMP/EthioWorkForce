@@ -38,7 +38,11 @@ class UserRegistrationRequest(BaseModel):
     site_ids = Column(JSON, nullable=True)
     work_place_ids = Column(JSON, nullable=True)
     
+    # Linked physical worker (for employee account provisioning)
+    worker_id = Column(Integer, ForeignKey("workers.id", ondelete="SET NULL"), nullable=True, index=True)
+    
     reviewed_at = Column(DateTime, nullable=True)
     
     requested_by = relationship("User", foreign_keys=[requested_by_id], backref="registration_requests")
     approved_by = relationship("User", foreign_keys=[approved_by_id])
+    worker = relationship("Worker", foreign_keys=[worker_id])

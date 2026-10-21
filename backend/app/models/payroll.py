@@ -1,5 +1,6 @@
 from sqlalchemy import Column, Integer, String, Date, ForeignKey, Enum as SQLEnum, Numeric, Boolean, Text, Float
 from sqlalchemy.orm import relationship
+from typing import Optional
 import enum
 
 from app.models.base import BaseModel
@@ -96,3 +97,57 @@ class PayrollItem(BaseModel):
     payroll = relationship("Payroll", back_populates="payroll_items")
     worker = relationship("Worker", back_populates="payroll_items")
     payment = relationship("Payment", back_populates="payroll_item", uselist=False)
+
+    @property
+    def worker_name(self) -> Optional[str]:
+        return self.worker.full_name if self.worker else None
+
+    @property
+    def employee_id(self) -> Optional[str]:
+        return self.worker.employee_id if self.worker else None
+
+    @property
+    def work_type_id(self) -> Optional[int]:
+        return self.worker.work_type_id if self.worker else None
+
+    @property
+    def work_type_name(self) -> Optional[str]:
+        return self.worker.work_type.name if (self.worker and self.worker.work_type) else None
+
+    @property
+    def bank_name(self) -> Optional[str]:
+        return self.worker.bank_name if self.worker else None
+
+    @property
+    def bank_account_number(self) -> Optional[str]:
+        return self.worker.bank_account_number if self.worker else None
+
+    @property
+    def phone_number(self) -> Optional[str]:
+        return self.worker.phone_number if self.worker else None
+
+    @property
+    def is_paid(self) -> bool:
+        if self.payment and getattr(self.payment, 'status', None) == 'completed':
+            return True
+        if self.notes and "Payment status: PAID" in self.notes:
+            return True
+        return False
+
+    @property
+    def payment_date(self) -> Optional[Date]:
+        if self.payment and getattr(self.payment, 'payment_date', None):
+            return self.payment.payment_date
+        return None
+
+    @property
+    def payment_id(self) -> Optional[int]:
+        if self.payment:
+            return self.payment.id
+        return None
+
+    @property
+    def payment_period_description(self) -> Optional[str]:
+        if self.payment_period_start and self.payment_period_end:
+            return f"{self.payment_period_start.strftime('%d/%m/%Y')} - {self.payment_period_end.strftime('%d/%m/%Y')}"
+        return None

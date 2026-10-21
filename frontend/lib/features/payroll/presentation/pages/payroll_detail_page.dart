@@ -12,6 +12,7 @@ import '../bloc/payroll_bloc.dart';
 import '../bloc/payroll_event.dart';
 import '../bloc/payroll_state.dart';
 import '../widgets/cash_payment_sheet.dart';
+import '../widgets/payroll_item_detail_card.dart';
 
 class PayrollDetailPage extends StatefulWidget {
   final int payrollId;
@@ -31,7 +32,6 @@ class PayrollDetailPage extends StatefulWidget {
 
 class _PayrollDetailPageState extends State<PayrollDetailPage> {
   Map<String, dynamic>? _periodBreakdown;
-  bool _isLoadingBreakdown = true;
   final _dataSource = PayrollRemoteDataSource();
 
   @override
@@ -46,15 +46,10 @@ class _PayrollDetailPageState extends State<PayrollDetailPage> {
       if (mounted) {
         setState(() {
           _periodBreakdown = breakdown;
-          _isLoadingBreakdown = false;
         });
       }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _isLoadingBreakdown = false;
-        });
-      }
+    } catch (_) {
+      // Ignore breakdown errors
     }
   }
 
@@ -506,45 +501,137 @@ class _PayrollDetailPageState extends State<PayrollDetailPage> {
           children: [
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+              decoration: const BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    const Color(0xFF007A3D),
-                    const Color(0xB3007A3D),
+                    Color(0xFF005C2E),
+                    Color(0xFF007A3D),
                   ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Top Pills: Category & Ethiopian Month
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: const Color(0x33FFFFFF),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0x4DFFFFFF)),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              payroll.periodType.toLowerCase() == 'monthly'
+                                  ? Icons.business
+                                  : (payroll.periodType.toLowerCase().contains('bi') ? Icons.engineering : Icons.event_repeat),
+                              size: 13,
+                              color: Colors.white,
+                            ),
+                            const SizedBox(width: 5),
+                            Text(
+                              payroll.periodType.toLowerCase() == 'monthly'
+                                  ? 'Monthly Staff Batch'
+                                  : (payroll.periodType.toLowerCase().contains('bi') ? '14-Day Laborer Batch' : '${payroll.periodType.toUpperCase()} Batch'),
+                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11),
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (payroll.ethiopianMonth != null)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: const Color(0x26FFFFFF),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.calendar_month, size: 12, color: Colors.white),
+                              const SizedBox(width: 4),
+                              Text(
+                                '${payroll.ethiopianMonth} ${payroll.ethiopianYear ?? ""}',
+                                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 11),
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
                   Text(
                     payroll.payrollCode,
                     style: const TextStyle(
                       color: Colors.white,
-                      fontSize: 28,
+                      fontSize: 26,
                       fontWeight: FontWeight.bold,
+                      letterSpacing: -0.3,
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 4),
                   Text(
                     payroll.formattedPeriod,
                     style: const TextStyle(
-                      color: const Color(0xB3FFFFFF),
-                      fontSize: 16,
+                      color: Color(0xB3FFFFFF),
+                      fontSize: 14,
                     ),
                   ),
                   const SizedBox(height: 16),
+
+                  // 3-Box Financial Summary
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _SummaryBox(
+                          label: 'Gross',
+                          value: currencyFormat.format(payroll.totalGrossAmount),
+                          icon: Icons.monetization_on_outlined,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: _SummaryBox(
+                          label: 'Deductions',
+                          value: currencyFormat.format(payroll.totalDeductions),
+                          icon: Icons.shield_outlined,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: _SummaryBox(
+                          label: 'Net Payout',
+                          value: currencyFormat.format(payroll.totalNetAmount),
+                          icon: Icons.payments_outlined,
+                          isHighlight: true,
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 14),
+
+                  // Workforce count & Status
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      _InfoChip(
-                        label: 'Total: ${currencyFormat.format(payroll.totalNetAmount)}',
-                        icon: Icons.account_balance_wallet,
-                      ),
-                      _InfoChip(
-                        label: '${items.length} Employees',
-                        icon: Icons.people,
+                      Row(
+                        children: [
+                          const Icon(Icons.people_outline, size: 16, color: Colors.white70),
+                          const SizedBox(width: 6),
+                          Text(
+                            '${items.length} Workforce Members',
+                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 13),
+                          ),
+                        ],
                       ),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -555,24 +642,27 @@ class _PayrollDetailPageState extends State<PayrollDetailPage> {
                         ),
                         child: Text(
                           payroll.status.toUpperCase(),
-                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11),
                         ),
                       ),
                     ],
                   ),
+
                   if (payroll.status.toLowerCase() != 'paid') ...[
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 14),
                     Row(
                       children: [
                         if (payroll.status.toLowerCase() == 'calculated' || payroll.status.toLowerCase() == 'draft')
                           ElevatedButton.icon(
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.white,
-                              foregroundColor: const Color(0xFF1B5E20),
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              foregroundColor: const Color(0xFF005C2E),
+                              elevation: 2,
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                             ),
                             icon: const Icon(Icons.check_circle_outline, size: 18),
-                            label: const Text('Approve Payroll', style: TextStyle(fontWeight: FontWeight.bold)),
+                            label: const Text('Approve Payroll', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
                             onPressed: () => _handleApprove(context, widget.payrollId),
                           ),
                         if (payroll.status.toLowerCase() == 'approved')
@@ -580,10 +670,12 @@ class _PayrollDetailPageState extends State<PayrollDetailPage> {
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFFFFD54F),
                               foregroundColor: const Color(0xFF1A1A1A),
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              elevation: 2,
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                             ),
                             icon: const Icon(Icons.lock_outline, size: 18),
-                            label: const Text('Lock & Archive', style: TextStyle(fontWeight: FontWeight.bold)),
+                            label: const Text('Lock & Archive', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
                             onPressed: () => _handleLock(context, widget.payrollId),
                           ),
                       ],
@@ -597,7 +689,7 @@ class _PayrollDetailPageState extends State<PayrollDetailPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (_periodBreakdown != null && _periodBreakdown!['period_types_count'] > 1) ...[
+                  if (_periodBreakdown != null && (_periodBreakdown!['period_types_count'] ?? 0) > 1) ...[
                     Text(
                       'Payment Period Breakdown',
                       style: const TextStyle(
@@ -724,6 +816,9 @@ class _PayrollDetailPageState extends State<PayrollDetailPage> {
                             netAmount: item.netSalary,
                             paymentPeriodDescription: item.paymentPeriodDescription,
                             workTypeName: item.workTypeName,
+                            bankName: item.bankName,
+                            bankAccountNumber: item.bankAccountNumber,
+                            phoneNumber: item.phoneNumber,
                             isPaid: item.isPaid,
                             paidAt: item.paymentDate != null ? DateTime.tryParse(item.paymentDate!) : null,
                           )).toList();
@@ -757,37 +852,6 @@ class _PayrollDetailPageState extends State<PayrollDetailPage> {
       );
           },
         ),
-      ),
-    );
-  }
-}
-
-class _InfoChip extends StatelessWidget {
-  final String label;
-  final IconData icon;
-
-  const _InfoChip({required this.label, required this.icon});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: const Color(0x33FFFFFF),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: Colors.white, size: 18),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -1426,51 +1490,94 @@ class _WorkTypeExpansionTile extends StatelessWidget {
                 final item = sortedItems[index];
                 return ListTile(
                   dense: true,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                  onTap: () => PayrollItemDetailCard.show(context, item),
                   leading: CircleAvatar(
                     radius: 18,
-                    backgroundColor: const Color(0xFFD1D5DB),
+                    backgroundColor: const Color(0xFFE8F5EE),
                     child: Text(
                       '${index + 1}',
                       style: const TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
+                        color: Color(0xFF007A3D),
                       ),
                     ),
                   ),
-                  title: Text(
-                    item.workerName ?? 'Unknown',
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
+                  title: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          item.workerName ?? 'Unknown',
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      if (item.totalOvertimePay != null && item.totalOvertimePay! > 0) ...[
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFFF3E0),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            '+OT: ${currencyFormat.format(item.totalOvertimePay)}',
+                            style: const TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFFE65100),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
-                  subtitle: Text(
-                    item.employeeId ?? 'N/A',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: const Color(0xFF6B7280),
-                    ),
-                  ),
-                  trailing: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.end,
+                  subtitle: Row(
                     children: [
                       Text(
-                        currencyFormat.format(item.netSalary),
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: const Color(0xFF004A25),
+                        item.employeeId ?? 'N/A',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Color(0xFF6B7280),
                         ),
                       ),
-                      Text(
-                        'Net',
-                        style: TextStyle(
-                          fontSize: 10,
-                          color: const Color(0xFF6B7280),
-                        ),
+                      if (item.bankAccountNumber != null && item.bankAccountNumber!.isNotEmpty) ...[
+                        const SizedBox(width: 8),
+                        const Icon(Icons.account_balance, size: 12, color: Color(0xFF1E3A5F)),
+                      ] else if (item.phoneNumber != null && item.phoneNumber!.isNotEmpty) ...[
+                        const SizedBox(width: 8),
+                        const Icon(Icons.phone_android, size: 12, color: Color(0xFF007A3D)),
+                      ],
+                    ],
+                  ),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            currencyFormat.format(item.netSalary),
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF004A25),
+                            ),
+                          ),
+                          const Text(
+                            'Net Pay',
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: Color(0xFF6B7280),
+                            ),
+                          ),
+                        ],
                       ),
+                      const SizedBox(width: 6),
+                      const Icon(Icons.chevron_right, size: 18, color: Color(0xFF9CA3AF)),
                     ],
                   ),
                 );
@@ -1506,6 +1613,55 @@ class _WorkTypeExpansionTile extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _SummaryBox extends StatelessWidget {
+  final String label;
+  final String value;
+  final IconData icon;
+  final bool isHighlight;
+
+  const _SummaryBox({
+    required this.label,
+    required this.value,
+    required this.icon,
+    this.isHighlight = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: isHighlight ? const Color(0x33FFFFFF) : const Color(0x1FFFFFFF),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: isHighlight ? const Color(0x66FFFFFF) : const Color(0x26FFFFFF)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 13, color: const Color(0xCCFFFFFF)),
+              const SizedBox(width: 4),
+              Text(label, style: const TextStyle(color: Color(0xCCFFFFFF), fontSize: 11)),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: isHighlight ? FontWeight.bold : FontWeight.w600,
+              fontSize: 12,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
       ),
     );
   }

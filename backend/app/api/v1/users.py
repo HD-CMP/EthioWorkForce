@@ -1,6 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, File, UploadFile
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
+import os
+import uuid
+import base64
 
 from app.core.database import get_db
 from app.api.deps import get_current_user, require_role, require_super_admin, can_manage_users
@@ -17,8 +20,74 @@ from pydantic import BaseModel
 router = APIRouter()
 
 
+def _save_avatar_bytes(content: bytes, extension: str = ".jpg") -> str:
+    upload_dir = os.path.join("uploads", "avatars")
+    os.makedirs(upload_dir, exist_ok=True)
+    filename = f"avatar_{uuid.uuid4().hex}{extension}"
+    filepath = os.path.join(upload_dir, filename)
+    with open(filepath, "wb") as f:
+        f.write(content)
+    return f"/uploads/avatars/{filename}"
+
+
+def _process_avatar_data(data_str: Optional[str]) -> Optional[str]:
+    if not data_str:
+        return None
+    if data_str.startswith("/") or data_str.startswith("http://") or data_str.startswith("https://"):
+        return data_str
+    if "base64," in data_str:
+        header, b64_content = data_str.split("base64,", 1)
+        ext = ".png" if "image/png" in header else ".jpg"
+        try:
+            raw_bytes = base64.b64decode(b64_content)
+            return _save_avatar_bytes(raw_bytes, ext)
+        except Exception:
+            return data_str
+    elif len(data_str) > 200:
+        try:
+            raw_bytes = base64.b64decode(data_str)
+            return _save_avatar_bytes(raw_bytes, ".jpg")
+        except Exception:
+            return data_str
+    return data_str
+
+
 @router.get("/me", response_model=UserResponse)
 def get_current_user_info(current_user: User = Depends(get_current_user)):
+    return current_user
+
+
+@router.post("/me/avatar", response_model=UserResponse)
+async def upload_my_avatar(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Upload and set avatar for the current logged-in user permanently."""
+    ext = os.path.splitext(file.filename or "")[1].lower()
+    if not ext or ext not in [".jpg", ".jpeg", ".png", ".webp"]:
+        ext = ".jpg"
+    
+    content = await file.read()
+    if not content:
+        raise HTTPException(status_code=400, detail="Uploaded file is empty")
+    
+    file_url = _save_avatar_bytes(content, ext)
+    current_user.profile_photo = file_url
+    db.commit()
+    db.refresh(current_user)
+    return current_user
+
+
+@router.delete("/me/avatar", response_model=UserResponse)
+def remove_my_avatar(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Remove avatar for the current logged-in user permanently."""
+    current_user.profile_photo = None
+    db.commit()
+    db.refresh(current_user)
     return current_user
 
 
@@ -52,6 +121,12 @@ def update_my_profile(
                 detail="Email already in use"
             )
     
+    if 'profile_photo' in update_data:
+        if update_data['profile_photo']:
+            update_data['profile_photo'] = _process_avatar_data(update_data['profile_photo'])
+        else:
+            update_data['profile_photo'] = None
+
     for field, value in update_data.items():
         setattr(current_user, field, value)
     
@@ -88,14 +163,20 @@ def search_workers(
     # Convert workers to UserResponse format for frontend compatibility
     return [{
         "id": w.id,
+        "worker_id": w.id,
+        "employee_id": w.employee_id,
         "username": w.employee_id,
         "email": "",
         "full_name": w.full_name,
         "phone_number": w.phone_number or "",
         "role": w.work_type.name if w.work_type else "Worker",
+        "work_type_id": w.work_type_id,
+        "work_type_name": w.work_type.name if w.work_type else "Worker",
+        "hierarchy_level": w.work_type.hierarchy_level if w.work_type else 5,
         "is_active": w.status == WorkerStatus.ACTIVE,
         "site_id": w.site_id,
-        "work_place_id": w.work_place_id
+        "work_place_id": w.work_place_id,
+        "has_user_account": w.user_account is not None
     } for w in workers]
 
 
@@ -191,6 +272,12 @@ def update_user(
                 detail="ADMIN cannot assign SUPER_ADMIN role"
             )
     
+    if 'profile_photo' in update_data:
+        if update_data['profile_photo']:
+            update_data['profile_photo'] = _process_avatar_data(update_data['profile_photo'])
+        else:
+            update_data['profile_photo'] = None
+
     for field, value in update_data.items():
         setattr(user, field, value)
     
@@ -396,6 +483,12 @@ def update_user_profile(
                 detail="Email already in use"
             )
     
+    if 'profile_photo' in update_data:
+        if update_data['profile_photo']:
+            update_data['profile_photo'] = _process_avatar_data(update_data['profile_photo'])
+        else:
+            update_data['profile_photo'] = None
+
     for field, value in update_data.items():
         setattr(user, field, value)
     

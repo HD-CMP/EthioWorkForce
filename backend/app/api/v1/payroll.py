@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 from typing import List, Optional, Dict, Any
 from datetime import datetime, date
@@ -7,11 +8,11 @@ from decimal import Decimal
 from app.core.database import get_db
 from app.api.deps import get_current_user, get_user_accessible_sites, verify_site_access
 from app.models.user import User, UserRole
-from app.models.payroll import Payroll, PayrollItem, PayrollStatus
+from app.models.payroll import Payroll, PayrollItem, PayrollStatus, PayrollPeriodType
 from app.models.worker import Worker
 from app.models.attendance import Attendance
 from app.models.overtime import Overtime
-from app.models.work_type import PaymentMode
+from app.models.work_type import PaymentMode, WorkType
 from app.schemas.payroll import PayrollCreate, PayrollCalculate, PayrollApprove, PayrollResponse, PayrollItemResponse
 from app.services.payment_period_service import PaymentPeriodService
 from app.services.payroll_calculator import PayrollCalculator
@@ -26,6 +27,12 @@ def create_payroll(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
+    if current_user.role not in [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.SITE_ADMIN]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only administrators can create payroll runs"
+        )
+    
     if not verify_site_access(current_user, payroll_data.site_id, db):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -59,6 +66,12 @@ def calculate_payroll(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
+    if current_user.role not in [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.SITE_ADMIN]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only administrators can calculate payroll"
+        )
+    
     payroll = db.query(Payroll).filter(Payroll.id == calc_data.payroll_id).first()
     if not payroll:
         raise HTTPException(status_code=404, detail="Payroll not found")
@@ -83,13 +96,55 @@ def calculate_payroll(
         Overtime.is_verified == True
     )
 
-    if payroll.work_type_id or payroll.work_place_id:
+    # Smart cycle filtering: if work_type_id not explicitly provided, align to period_type
+    has_cycle_filter = (
+        payroll.work_type_id is not None
+        or payroll.work_place_id is not None
+        or payroll.period_type in [PayrollPeriodType.BI_WEEKLY, PayrollPeriodType.MONTHLY, PayrollPeriodType.WEEKLY]
+    )
+
+    if has_cycle_filter:
         attendances_query = attendances_query.join(Worker, Attendance.worker_id == Worker.id)
         overtime_query = overtime_query.join(Worker, Overtime.worker_id == Worker.id)
         
         if payroll.work_type_id:
             attendances_query = attendances_query.filter(Worker.work_type_id == payroll.work_type_id)
             overtime_query = overtime_query.filter(Worker.work_type_id == payroll.work_type_id)
+        elif payroll.period_type == PayrollPeriodType.BI_WEEKLY:
+            # 14-day / bi-weekly cycle: daily, hourly, piece rate, or configured <= 14 days
+            attendances_query = attendances_query.join(WorkType, Worker.work_type_id == WorkType.id).filter(
+                or_(
+                    WorkType.payment_mode.in_([PaymentMode.DAILY_RATE, PaymentMode.PIECE_RATE, PaymentMode.HOURLY_RATE]),
+                    WorkType.payment_period_days <= 14
+                )
+            )
+            overtime_query = overtime_query.join(WorkType, Worker.work_type_id == WorkType.id).filter(
+                or_(
+                    WorkType.payment_mode.in_([PaymentMode.DAILY_RATE, PaymentMode.PIECE_RATE, PaymentMode.HOURLY_RATE]),
+                    WorkType.payment_period_days <= 14
+                )
+            )
+        elif payroll.period_type == PayrollPeriodType.MONTHLY:
+            # Monthly salaried staff (Engineers, Foremen, Office Staff, Management)
+            attendances_query = attendances_query.join(WorkType, Worker.work_type_id == WorkType.id).filter(
+                or_(
+                    WorkType.payment_mode == PaymentMode.MONTHLY_SALARY,
+                    WorkType.payment_period_days >= 28
+                )
+            )
+            overtime_query = overtime_query.join(WorkType, Worker.work_type_id == WorkType.id).filter(
+                or_(
+                    WorkType.payment_mode == PaymentMode.MONTHLY_SALARY,
+                    WorkType.payment_period_days >= 28
+                )
+            )
+        elif payroll.period_type == PayrollPeriodType.WEEKLY:
+            attendances_query = attendances_query.join(WorkType, Worker.work_type_id == WorkType.id).filter(
+                WorkType.payment_period_days == 7
+            )
+            overtime_query = overtime_query.join(WorkType, Worker.work_type_id == WorkType.id).filter(
+                WorkType.payment_period_days == 7
+            )
             
         if payroll.work_place_id:
             attendances_query = attendances_query.filter(Worker.work_place_id == payroll.work_place_id)
@@ -110,6 +165,27 @@ def calculate_payroll(
     )
     if payroll.work_type_id:
         workers_query = workers_query.filter(Worker.work_type_id == payroll.work_type_id)
+    elif payroll.period_type == PayrollPeriodType.BI_WEEKLY:
+        # 14-day / bi-weekly cycle: daily, hourly, piece rate, or configured <= 14 days
+        workers_query = workers_query.join(Worker.work_type).filter(
+            or_(
+                WorkType.payment_mode.in_([PaymentMode.DAILY_RATE, PaymentMode.PIECE_RATE, PaymentMode.HOURLY_RATE]),
+                WorkType.payment_period_days <= 14
+            )
+        )
+    elif payroll.period_type == PayrollPeriodType.MONTHLY:
+        # Monthly salaried staff (Engineers, Foremen, Office Staff, Management)
+        workers_query = workers_query.join(Worker.work_type).filter(
+            or_(
+                WorkType.payment_mode == PaymentMode.MONTHLY_SALARY,
+                WorkType.payment_period_days >= 28
+            )
+        )
+    elif payroll.period_type == PayrollPeriodType.WEEKLY:
+        workers_query = workers_query.join(Worker.work_type).filter(
+            WorkType.payment_period_days == 7
+        )
+        
     if payroll.work_place_id:
         workers_query = workers_query.filter(Worker.work_place_id == payroll.work_place_id)
     active_workers = workers_query.all()
@@ -155,11 +231,11 @@ def calculate_payroll(
         if work_type_key not in workers_by_work_type:
             workers_by_work_type[work_type_key] = []
         
-        is_high_hierarchy = wt.hierarchy_level is not None and wt.hierarchy_level <= 4
-        has_individual_salary = worker.base_salary is not None and worker.base_salary > 0
+        # If worker has an individual base salary override set by admin, use it;
+        # otherwise use the work type's configured base rate
         effective_base_rate = (
-            worker.base_salary
-            if (is_high_hierarchy and has_individual_salary)
+            Decimal(str(worker.base_salary))
+            if (worker.base_salary is not None and worker.base_salary > 0)
             else wt.base_rate
         )
         
@@ -178,6 +254,27 @@ def calculate_payroll(
             if (cycle_start + _td(days=i)).weekday() < 6  # Mon-Sat
         )
         
+        # Determine the best effective overtime rate per hour:
+        # 1. Individual worker's custom overtime rate (if set)
+        # 2. Work type's configured overtime rate (if set)
+        # 3. Dynamic statutory rate (1.25x hourly wage as per Ethiopian Labor Proclamation No. 1156/2019)
+        #    Ensures Monthly Staff (30 days) and daily workers always receive their verified overtime pay!
+        effective_ot_rate = Decimal("0")
+        if worker.overtime_rate_per_hour is not None and worker.overtime_rate_per_hour > 0:
+            effective_ot_rate = Decimal(str(worker.overtime_rate_per_hour))
+        elif wt.overtime_rate_per_hour is not None and wt.overtime_rate_per_hour > 0:
+            effective_ot_rate = Decimal(str(wt.overtime_rate_per_hour))
+        else:
+            if wt.payment_mode == PaymentMode.MONTHLY_SALARY and effective_base_rate > 0:
+                # 26 standard working days * 8 hours = 208 working hours in a month
+                hourly = Decimal(str(effective_base_rate)) / Decimal("208")
+                effective_ot_rate = (hourly * Decimal("1.25")).quantize(Decimal("0.01"))
+            elif wt.payment_mode == PaymentMode.DAILY_RATE and effective_base_rate > 0:
+                hourly = Decimal(str(effective_base_rate)) / Decimal("8")
+                effective_ot_rate = (hourly * Decimal("1.25")).quantize(Decimal("0.01"))
+            elif wt.payment_mode == PaymentMode.HOURLY_RATE and effective_base_rate > 0:
+                effective_ot_rate = (Decimal(str(effective_base_rate)) * Decimal("1.25")).quantize(Decimal("0.01"))
+
         workers_by_work_type[work_type_key].append({
             "worker_id": worker_id,
             "base_rate": effective_base_rate,
@@ -186,7 +283,7 @@ def calculate_payroll(
             "days_worked": summary["days_worked"],
             "regular_hours": summary["regular_hours"],
             "overtime_hours": summary["overtime_hours"],
-            "overtime_rate_per_hour": wt.overtime_rate_per_hour or Decimal("0"),
+            "overtime_rate_per_hour": effective_ot_rate,
             "pension_eligible": wt.pension_eligible,
             # IMPORTANT: Only use rates explicitly configured in the work type.
             # If not set, default to 0 so no deduction is ever made silently.

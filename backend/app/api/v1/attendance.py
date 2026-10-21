@@ -89,7 +89,7 @@ def create_attendance(
             detail="Worker does not belong to this site"
         )
     
-    # Validate workplace access for admins
+    # Validate workplace access for admins (if restricted to specific workplaces)
     if current_user.role in [UserRole.ADMIN, UserRole.SITE_ADMIN]:
         workplace_assignments = current_user.work_place_assignments
         if workplace_assignments:
@@ -99,12 +99,6 @@ def create_attendance(
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail="You don't have access to this worker's workplace"
                 )
-        else:
-            # Admin has NO workplace assignments - cannot create attendance
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="No workplace assignment - Contact Super Admin"
-            )
 
     existing = db.query(Attendance).filter(
         Attendance.worker_id == attendance_data.worker_id,
@@ -247,7 +241,7 @@ def create_multi_day_attendance(
             detail="Worker does not belong to this site"
         )
     
-    # Validate workplace access for admins
+    # Validate workplace access for admins (if restricted to specific workplaces)
     if current_user.role in [UserRole.ADMIN, UserRole.SITE_ADMIN]:
         workplace_assignments = current_user.work_place_assignments
         if workplace_assignments:
@@ -257,12 +251,6 @@ def create_multi_day_attendance(
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail="You don't have access to this worker's workplace"
                 )
-        else:
-            # Admin has NO workplace assignments - cannot create attendance
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="No workplace assignment - Contact Super Admin"
-            )
 
     created_attendances = []
     updated_attendances = []
@@ -343,6 +331,14 @@ def verify_multi_day_attendance(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ) -> Dict[str, Any]:
+    # Verification authority: Site Engineer and above
+    VERIFICATION_ROLES = [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.SITE_ADMIN]
+    if current_user.role not in VERIFICATION_ROLES:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Verification authority restricted to Site Engineer, Site Manager, or Administrator."
+        )
+
     if not verify_site_access(current_user, verify_data.site_id, db):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -538,6 +534,18 @@ def update_attendance(
     if not attendance:
         raise HTTPException(status_code=404, detail="Attendance not found")
 
+    if attendance.is_locked:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Attendance record is sealed for payroll and cannot be modified"
+        )
+
+    if attendance.is_verified and current_user.role not in [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.SITE_ADMIN]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="This attendance record has been verified by a Site Engineer. Only Site Engineers and Administrators can modify verified records."
+        )
+
     update_data = attendance_update.model_dump(exclude_unset=True)
 
     if 'status' in update_data:
@@ -566,7 +574,15 @@ def verify_attendance(
     verify_data: AttendanceVerify,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
-) -> Dict[str, str]:
+) -> Dict[str, Any]:
+    # Verification authority: Site Engineer and above
+    VERIFICATION_ROLES = [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.SITE_ADMIN]
+    if current_user.role not in VERIFICATION_ROLES:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Verification authority restricted to Site Engineer, Site Manager, or Administrator."
+        )
+
     attendances = db.query(Attendance).filter(
         Attendance.id.in_(verify_data.attendance_ids)
     ).all()
@@ -577,17 +593,31 @@ def verify_attendance(
             detail="No attendance records found"
         )
 
+    verified_count = 0
+    locked_skipped = 0
+    unauthorized_skipped = 0
+
     for attendance in attendances:
+        if not verify_site_access(current_user, attendance.site_id, db):
+            unauthorized_skipped += 1
+            continue
+        if attendance.is_locked:
+            locked_skipped += 1
+            continue
+
         attendance.is_verified = True
         attendance.verified_by_id = current_user.id
         attendance.verified_at = datetime.utcnow()
         if verify_data.override_reason:
             attendance.override_reason = verify_data.override_reason
+        verified_count += 1
 
     db.commit()
 
-    message = f"Successfully verified {len(attendances)} attendance records"
-    return {"message": message, "verified_count": len(attendances)}
+    message = f"Successfully verified {verified_count} attendance record(s)"
+    if locked_skipped > 0:
+        message += f" ({locked_skipped} locked records skipped)"
+    return {"message": message, "verified_count": verified_count}
 
 
 @router.post("/unverify", response_model=dict)
@@ -595,7 +625,15 @@ def unverify_attendance(
     verify_data: AttendanceVerify,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
-) -> Dict[str, str]:
+) -> Dict[str, Any]:
+    # Unverify authority: Site Engineer and above
+    VERIFICATION_ROLES = [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.SITE_ADMIN]
+    if current_user.role not in VERIFICATION_ROLES:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Unverify authority restricted to Site Engineer, Site Manager, or Administrator."
+        )
+
     attendances = db.query(Attendance).filter(
         Attendance.id.in_(verify_data.attendance_ids)
     ).all()
@@ -606,15 +644,22 @@ def unverify_attendance(
             detail="No attendance records found"
         )
 
+    unverified_count = 0
     for attendance in attendances:
+        if not verify_site_access(current_user, attendance.site_id, db):
+            continue
+        if attendance.is_locked:
+            continue  # Cannot unverify locked records
+
         attendance.is_verified = False
         attendance.verified_by_id = None
         attendance.verified_at = None
+        unverified_count += 1
 
     db.commit()
 
-    message = f"Successfully unverified {len(attendances)} attendance records"
-    return {"message": message, "unverified_count": len(attendances)}
+    message = f"Successfully unverified {unverified_count} attendance record(s)"
+    return {"message": message, "unverified_count": unverified_count}
 
 
 @router.get("/statistics", response_model=dict)
@@ -853,19 +898,32 @@ def delete_attendance(
     ).first()
     if not attendance:
         raise HTTPException(status_code=404, detail="Attendance not found")
-    
+
+    # Locked records are permanently sealed — nobody can delete them
+    if attendance.is_locked:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Attendance record is sealed for payroll and cannot be deleted"
+        )
+
     # Only SUPER_ADMIN and ADMIN can delete attendance records
     if current_user.role not in [UserRole.SUPER_ADMIN, UserRole.ADMIN]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only administrators can delete attendance records"
         )
-    
-    # Prevent deleting locked/verified records
-    if attendance.is_locked or attendance.is_verified:
+
+    # Verified records must be unverified first before deletion
+    if attendance.is_verified:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Cannot delete locked or verified attendance records. Unverify first."
+            detail="Cannot delete verified attendance records. Unverify the record first, then delete."
+        )
+    
+    if not verify_site_access(current_user, attendance.site_id, db):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You don't have access to this site"
         )
     
     db.delete(attendance)
@@ -1046,40 +1104,5 @@ def unlock_attendances(
     return {
         "message": f"Successfully unlocked {count} attendance records",
         "unlocked_count": count
-    }
-
-
-@router.post("/verify-multi-day")
-def verify_multi_day_attendance(
-    verify_data: AttendanceMultiDayVerify,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    """
-    Verify attendance across multiple days for a worker in one atomic operation.
-    """
-    if not verify_site_access(current_user, verify_data.site_id, db):
-        raise HTTPException(status_code=403, detail="Access denied to this site")
-        
-    records = db.query(Attendance).filter(
-        Attendance.worker_id == verify_data.worker_id,
-        Attendance.site_id == verify_data.site_id,
-        Attendance.attendance_date.in_(verify_data.attendance_dates)
-    ).all()
-    
-    count = 0
-    for r in records:
-        r.is_verified = True
-        r.verified_by_id = current_user.id
-        r.verified_at = datetime.utcnow()
-        if verify_data.override_reason:
-            r.override_reason = verify_data.override_reason
-        count += 1
-        
-    db.commit()
-    return {
-        "message": f"Multi-day attendance verified for {count} dates",
-        "verified_count": count,
-        "worker_id": verify_data.worker_id
     }
 

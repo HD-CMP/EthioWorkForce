@@ -517,6 +517,33 @@ class _WorkersListPageState extends State<WorkersListPage> {
                     ),
                   ),
                 ),
+                if (worker.hasIdDocument) ...[
+                  const SizedBox(width: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE8F5EE),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: const Color(0xFFB2DFCA)),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.badge, size: 10, color: _kEmerald),
+                        SizedBox(width: 3),
+                        Text(
+                          'ID ON FILE',
+                          style: TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.bold,
+                            color: _kEmerald,
+                            letterSpacing: 0.3,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(

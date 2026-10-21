@@ -1,7 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query, File, UploadFile
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy.exc import IntegrityError
 from typing import List, Optional
+import os
+import uuid
+import base64
 
 from app.core.database import get_db
 from app.core.exceptions import (
@@ -13,6 +16,7 @@ from app.core.exceptions import (
 )
 from app.api.deps import get_current_user, get_user_accessible_sites, verify_site_access, require_role
 from app.models.user import User, UserRole
+from app.models.user_site_assignment import UserSiteAssignment
 from app.models.worker import Worker
 from app.models.site import Site
 from app.models.work_place import WorkPlace
@@ -24,6 +28,38 @@ router = APIRouter()
 qr_service = QRCodeService()
 
 
+def _save_id_card_bytes(content: bytes, extension: str = ".jpg") -> str:
+    upload_dir = os.path.join("uploads", "id_cards")
+    os.makedirs(upload_dir, exist_ok=True)
+    filename = f"id_card_{uuid.uuid4().hex}{extension}"
+    filepath = os.path.join(upload_dir, filename)
+    with open(filepath, "wb") as f:
+        f.write(content)
+    return f"/uploads/id_cards/{filename}"
+
+
+def _process_id_card_data(data_str: Optional[str]) -> Optional[str]:
+    if not data_str:
+        return None
+    if data_str.startswith("/") or data_str.startswith("http://") or data_str.startswith("https://"):
+        return data_str
+    if "base64," in data_str:
+        header, b64_content = data_str.split("base64,", 1)
+        ext = ".png" if "image/png" in header else ".jpg"
+        try:
+            raw_bytes = base64.b64decode(b64_content)
+            return _save_id_card_bytes(raw_bytes, ext)
+        except Exception:
+            return data_str
+    elif len(data_str) > 200:
+        try:
+            raw_bytes = base64.b64decode(data_str)
+            return _save_id_card_bytes(raw_bytes, ".jpg")
+        except Exception:
+            return data_str
+    return data_str
+
+
 def enrich_worker_response(worker: Worker) -> dict:
     worker_dict = {
         "id": worker.id,
@@ -31,6 +67,7 @@ def enrich_worker_response(worker: Worker) -> dict:
         "full_name": worker.full_name,
         "phone_number": worker.phone_number,
         "national_id": worker.national_id,
+        "tin_number": worker.national_id,
         "date_of_birth": worker.date_of_birth,
         "gender": worker.gender,
         "site_id": worker.site_id,
@@ -50,6 +87,7 @@ def enrich_worker_response(worker: Worker) -> dict:
         "payment_period_days": worker.work_type.payment_period_days if worker.work_type else None,
         "base_salary": float(worker.base_salary) if worker.base_salary is not None else None,
         "photo_url": worker.photo_url,
+        "id_card_url": getattr(worker, "id_card_url", None) or worker.photo_url,
         "qr_code": worker.qr_code,
         "created_at": worker.created_at,
         "updated_at": worker.updated_at,
@@ -110,7 +148,10 @@ def create_worker(
             }
         )
     
-    db_worker = Worker(**worker_data.model_dump())
+    worker_dict = worker_data.model_dump(exclude={'tin_number'})
+    if worker_dict.get('id_card_url'):
+        worker_dict['id_card_url'] = _process_id_card_data(worker_dict['id_card_url'])
+    db_worker = Worker(**worker_dict)
     db.add(db_worker)
     
     try:
@@ -267,7 +308,9 @@ def update_worker(
     if not worker:
         raise ResourceNotFoundError("Worker", worker_id)
     
-    update_data = worker_update.model_dump(exclude_unset=True)
+    update_data = worker_update.model_dump(exclude_unset=True, exclude={'tin_number'})
+    if update_data.get('id_card_url'):
+        update_data['id_card_url'] = _process_id_card_data(update_data['id_card_url'])
     
     new_employee_id = update_data.get('employee_id', worker.employee_id)
     new_site_id = update_data.get('site_id', worker.site_id)
@@ -318,6 +361,22 @@ def update_worker(
     try:
         db.commit()
         db.refresh(worker)
+
+        # Synchronize linked User account if employee has software login access
+        if worker.user_account:
+            work_type = db.query(WorkType).filter(WorkType.id == worker.work_type_id).first()
+            if work_type:
+                if work_type.hierarchy_level == 3:
+                    worker.user_account.role = UserRole.SITE_ADMIN
+                elif work_type.hierarchy_level == 4:
+                    worker.user_account.role = UserRole.SUPERVISOR
+                elif work_type.hierarchy_level in [1, 2]:
+                    worker.user_account.role = UserRole.ADMIN
+            if worker.site_id:
+                db.query(UserSiteAssignment).filter(UserSiteAssignment.user_id == worker.user_account.id).delete()
+                db.add(UserSiteAssignment(user_id=worker.user_account.id, site_id=worker.site_id, is_primary=True))
+            db.commit()
+            db.refresh(worker)
     except IntegrityError as e:
         db.rollback()
         if "uq_worker_employee_id_site_work_type" in str(e.orig):
@@ -385,3 +444,50 @@ def generate_worker_qr(
     db.commit()
     
     return {"qr_code": qr_code, "employee_id": worker.employee_id}
+
+
+@router.post("/upload-id-document", response_model=dict)
+async def upload_id_document(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user)
+):
+    """Upload a worker's Kebele / National ID document image (standalone before worker creation)"""
+    ext = os.path.splitext(file.filename or "")[1] or ".jpg"
+    content = await file.read()
+    file_url = _save_id_card_bytes(content, ext)
+    return {
+        "url": file_url,
+        "id_card_url": file_url,
+        "message": "ID document uploaded successfully"
+    }
+
+
+@router.post("/{worker_id}/upload-id-document", response_model=WorkerResponse)
+async def upload_worker_id_document(
+    worker_id: int,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Upload and attach Kebele / National ID document image to an existing worker"""
+    worker = db.query(Worker).filter(Worker.id == worker_id).first()
+    if not worker:
+        raise ResourceNotFoundError("Worker", worker_id)
+    if not verify_site_access(current_user, worker.site_id, db):
+        raise UnauthorizedAccessError("site", "modify worker documents in")
+    
+    ext = os.path.splitext(file.filename or "")[1] or ".jpg"
+    content = await file.read()
+    file_url = _save_id_card_bytes(content, ext)
+    worker.id_card_url = file_url
+    db.commit()
+    db.refresh(worker)
+    
+    worker_with_relations = db.query(Worker).options(
+        joinedload(Worker.site),
+        joinedload(Worker.work_place).joinedload(WorkPlace.supervisor),
+        joinedload(Worker.work_type),
+        joinedload(Worker.supervisor)
+    ).filter(Worker.id == worker.id).first()
+    
+    return enrich_worker_response(worker_with_relations)

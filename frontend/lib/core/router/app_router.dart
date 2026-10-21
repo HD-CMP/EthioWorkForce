@@ -17,6 +17,8 @@ import '../../features/profile/presentation/pages/profile_page.dart';
 import '../../features/reports/presentation/pages/reports_page.dart';
 
 class AppRouter {
+  static final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
   static const String splash = '/';
   static const String login = '/login';
   static const String home = '/home';

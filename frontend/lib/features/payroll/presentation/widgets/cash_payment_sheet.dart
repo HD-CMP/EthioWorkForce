@@ -33,6 +33,9 @@ class PaymentRecord {
   final double netAmount;
   final String? paymentPeriodDescription;
   final String? workTypeName;
+  final String? bankName;
+  final String? bankAccountNumber;
+  final String? phoneNumber;
   String? signatureData;
   DateTime? signedAt;
   bool isPaid;
@@ -45,6 +48,9 @@ class PaymentRecord {
     required this.netAmount,
     this.paymentPeriodDescription,
     this.workTypeName,
+    this.bankName,
+    this.bankAccountNumber,
+    this.phoneNumber,
     this.signatureData,
     this.signedAt,
     this.isPaid = false,
@@ -435,6 +441,12 @@ class _CashPaymentSheetState extends State<CashPaymentSheet> with TickerProvider
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text('ID: ${record.employeeId}'),
+                        if (record.workTypeName != null)
+                          Text('Trade: ${record.workTypeName}', style: const TextStyle(fontSize: 12, color: Color(0xFF4B5563))),
+                        if (record.bankAccountNumber != null && record.bankAccountNumber!.isNotEmpty)
+                          Text('🏦 ${record.bankName ?? "Bank"}: ${record.bankAccountNumber}', style: const TextStyle(fontSize: 11, color: Color(0xFF1E3A5F))),
+                        if (record.phoneNumber != null && record.phoneNumber!.isNotEmpty)
+                          Text('📱 Mobile: ${record.phoneNumber}', style: const TextStyle(fontSize: 11, color: Color(0xFF007A3D))),
                         if (isSigned)
                           Text(
                             'Signed: ${record.signedAt?.toString().split(' ')[0]}',

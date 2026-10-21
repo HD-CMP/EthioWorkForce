@@ -6,6 +6,9 @@ class PayrollItem {
   final String? employeeId;
   final int? workTypeId;
   final String? workTypeName;
+  final String? bankName;
+  final String? bankAccountNumber;
+  final String? phoneNumber;
   final double basicSalary;
   final double? allowances;
   final double? overtimePay;
@@ -35,6 +38,9 @@ class PayrollItem {
     this.employeeId,
     this.workTypeId,
     this.workTypeName,
+    this.bankName,
+    this.bankAccountNumber,
+    this.phoneNumber,
     required this.basicSalary,
     this.allowances,
     this.overtimePay,
@@ -66,6 +72,9 @@ class PayrollItem {
       employeeId: json['employee_id'] as String?,
       workTypeId: json['work_type_id'] as int?,
       workTypeName: json['work_type_name'] as String?,
+      bankName: json['bank_name'] as String?,
+      bankAccountNumber: json['bank_account_number'] as String?,
+      phoneNumber: json['phone_number'] as String?,
       basicSalary: ((json['basic_salary'] ?? json['base_salary']) as num).toDouble(),
       allowances: (json['allowances'] as num?)?.toDouble(),
       overtimePay: (json['overtime_pay'] as num?)?.toDouble(),

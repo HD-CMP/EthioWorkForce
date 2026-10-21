@@ -28,6 +28,7 @@ class Worker(BaseModel):
     
     full_name = Column(String(255), nullable=False, index=True)
     photo_url = Column(String(500), nullable=True)
+    id_card_url = Column(String(500), nullable=True)
     phone_number = Column(String(20), nullable=True)
     national_id = Column(String(50), nullable=True, unique=True)
     
@@ -72,3 +73,4 @@ class Worker(BaseModel):
     leaves = relationship("Leave", back_populates="worker", cascade="all, delete-orphan")
     role_changes = relationship("RoleChange", back_populates="worker", cascade="all, delete-orphan")
     disputes = relationship("AttendanceDispute", back_populates="worker", cascade="all, delete-orphan")
+    user_account = relationship("User", back_populates="worker", uselist=False)

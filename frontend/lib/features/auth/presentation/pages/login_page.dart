@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/router/app_router.dart';
@@ -6,6 +6,7 @@ import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
 import '../../../../core/utils/app_snackbar.dart';
+import '../../../../core/services/session_manager.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -31,6 +32,16 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
     _slideAnim = Tween<Offset>(begin: const Offset(0, 0.12), end: Offset.zero)
         .animate(CurvedAnimation(parent: _animController, curve: Curves.easeOut));
     _animController.forward();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final expired = await SessionManager.consumeExpirationNotice();
+      if (expired && mounted) {
+        AppSnackBar.showWarning(
+          context,
+          'Session expired due to inactivity to protect funds. Please sign in.',
+        );
+      }
+    });
   }
 
   @override

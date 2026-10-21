@@ -95,48 +95,141 @@ class _PayrollListViewState extends State<_PayrollListView> {
       
       final sites = List<Site>.from(_sites);
       final bloc = context.read<PayrollBloc>();
-      showDialog(
+      showModalBottomSheet(
         context: context,
-        builder: (dialogContext) {
-          return AlertDialog(
-            title: const Text('Select Site'),
-            content: SizedBox(
-              width: double.maxFinite,
-              child: ListView.builder(
-                shrinkWrap: true,
-                itemCount: sites.length,
-                itemBuilder: (context, index) {
-                  final site = sites[index];
-                  final isSelected = _selectedSite?.id == site.id;
-                  return ListTile(
-                    leading: Icon(
-                      isSelected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
-                      color: isSelected ? const Color(0xFF007A3D) : null,
-                    ),
-                    title: Text(site.name),
-                    subtitle: Text(site.code),
-                    onTap: () async {
-                      if (site.id != null) {
-                        Navigator.pop(dialogContext);
-                        await _storageService.setSelectedSiteId(site.id!);
-                        if (mounted) {
-                          setState(() {
-                            _selectedSite = site;
-                          });
-                          bloc.add(RefreshPayrolls(siteId: site.id));
-                        }
-                      }
-                    },
-                  );
-                },
-              ),
+        backgroundColor: Colors.transparent,
+        isScrollControlled: true,
+        builder: (bottomSheetContext) {
+          return Container(
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(dialogContext),
-                child: const Text('Cancel'),
-              ),
-            ],
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 44,
+                    height: 4,
+                    margin: const EdgeInsets.only(bottom: 16),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE5E7EB),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Row(
+                      children: [
+                        Icon(Icons.location_on, color: Color(0xFF007A3D), size: 22),
+                        SizedBox(width: 8),
+                        Text(
+                          'Select Construction Site',
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1A1A1A)),
+                        ),
+                      ],
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFE8F5EE),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        '${sites.length} sites',
+                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF007A3D)),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxHeight: MediaQuery.of(context).size.height * 0.5,
+                  ),
+                  child: ListView.separated(
+                    shrinkWrap: true,
+                    itemCount: sites.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 8),
+                    itemBuilder: (context, index) {
+                      final site = sites[index];
+                      final isSelected = _selectedSite?.id == site.id;
+                      return InkWell(
+                        onTap: () async {
+                          if (site.id != null) {
+                            Navigator.pop(bottomSheetContext);
+                            await _storageService.setSelectedSiteId(site.id!);
+                            if (mounted) {
+                              setState(() {
+                                _selectedSite = site;
+                              });
+                              bloc.add(RefreshPayrolls(siteId: site.id));
+                            }
+                          }
+                        },
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                          decoration: BoxDecoration(
+                            color: isSelected ? const Color(0xFFE8F5EE) : const Color(0xFFF9FAFB),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: isSelected ? const Color(0xFF007A3D) : const Color(0xFFE5E7EB),
+                              width: isSelected ? 1.5 : 1,
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 36,
+                                height: 36,
+                                decoration: BoxDecoration(
+                                  color: isSelected ? const Color(0xFF007A3D) : const Color(0xFFE5E7EB),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  Icons.business,
+                                  size: 18,
+                                  color: isSelected ? Colors.white : const Color(0xFF6B7280),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      site.name,
+                                      style: TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                                        color: isSelected ? const Color(0xFF005C2E) : const Color(0xFF1F2937),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      'Code: ${site.code}',
+                                      style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              if (isSelected)
+                                const Icon(Icons.check_circle, color: Color(0xFF007A3D), size: 22),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
           );
         },
       );
@@ -459,35 +552,79 @@ class _PayrollLoadedView extends StatelessWidget {
         SliverToBoxAdapter(
           child: Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+            decoration: const BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  const Color(0xFF007A3D),
-                  const Color(0xB3007A3D),
+                  Color(0xFF005C2E),
+                  Color(0xFF007A3D),
                 ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Stack(
               children: [
-                const Text(
-                  'Payroll Management',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
+                Positioned(
+                  right: -30,
+                  top: -30,
+                  child: Container(
+                    width: 140,
+                    height: 140,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.06),
+                      shape: BoxShape.circle,
+                    ),
                   ),
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  selectedSite != null
-                      ? '${selectedSite!.name} - Manage and export payroll data'
-                      : 'Manage and export payroll data',
-                  style: TextStyle(
-                    color: const Color(0xE6FFFFFF),
-                    fontSize: 14,
-                  ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Payroll Management',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: -0.3,
+                          ),
+                        ),
+                        if (selectedSite != null)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: const Color(0x33FFFFFF),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: const Color(0x4DFFFFFF)),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.location_on, size: 12, color: Colors.white),
+                                const SizedBox(width: 4),
+                                Text(
+                                  selectedSite!.code,
+                                  style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                                ),
+                              ],
+                            ),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      selectedSite != null
+                          ? '${selectedSite!.name} • Calculate, approve & disburse workforce wages'
+                          : 'Manage and export construction workforce payroll',
+                      style: const TextStyle(
+                        color: Color(0xE6FFFFFF),
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -663,12 +800,21 @@ class _PayrollCard extends StatelessWidget {
     final statusColor = statusColors[status] ?? const Color(0xFF9CA3AF);
     final statusLabel = statusLabels[status] ?? payroll.status;
 
+    final isMonthly = payroll.periodType.toString().toLowerCase() == 'monthly';
+    final isBiWeekly = payroll.periodType.toString().toLowerCase().contains('bi');
+    final isTrade = payroll.workTypeId != null;
+
+    final Color accentColor = isMonthly
+        ? const Color(0xFF0A192F)
+        : (isBiWeekly ? const Color(0xFFE65100) : const Color(0xFF007A3D));
+
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 2,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(14),
       ),
+      clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: () async {
           final result = await Navigator.push(
@@ -687,213 +833,309 @@ class _PayrollCard extends StatelessWidget {
             );
           }
         },
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
+        child: Container(
+          decoration: BoxDecoration(
+            border: Border(
+              left: BorderSide(color: accentColor, width: 4.5),
+            ),
+          ),
           padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Top Badges Row: Batch Type & Status & Delete Menu
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Expanded(
-                    child: Text(
-                      payroll.payrollCode,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
+                  // Batch Category Badge
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: isMonthly
+                          ? const Color(0xFFE8EDF4)
+                          : (isBiWeekly ? const Color(0xFFFFF3E0) : const Color(0xFFE8F5EE)),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: isMonthly
+                            ? const Color(0xFF9AAFCA)
+                            : (isBiWeekly ? const Color(0xFFFFCC80) : const Color(0xFFA5D6A7)),
                       ),
                     ),
-                  ),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 5,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          isMonthly
+                              ? Icons.business
+                              : (isBiWeekly ? Icons.engineering : (isTrade ? Icons.handyman : Icons.event_repeat)),
+                          size: 13,
+                          color: isMonthly
+                              ? const Color(0xFF0A192F)
+                              : (isBiWeekly ? const Color(0xFFE65100) : const Color(0xFF007A3D)),
                         ),
-                        decoration: BoxDecoration(
-                          color: Color.fromARGB(26, statusColor.red, statusColor.green, statusColor.blue),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          statusLabel,
+                        const SizedBox(width: 4),
+                        Text(
+                          isMonthly
+                              ? 'Monthly Staff'
+                              : (isBiWeekly ? '14-Day Labor' : (isTrade ? 'Trade Batch' : payroll.periodType.toUpperCase())),
                           style: TextStyle(
-                            color: statusColor,
+                            fontSize: 11,
                             fontWeight: FontWeight.bold,
-                            fontSize: 12,
+                            color: isMonthly
+                                ? const Color(0xFF0A192F)
+                                : (isBiWeekly ? const Color(0xFFE65100) : const Color(0xFF007A3D)),
                           ),
                         ),
-                      ),
-                      PopupMenuButton<String>(
-                        icon: const Icon(Icons.more_vert, size: 20, color: Color(0xFF6B7280)),
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(minWidth: 140),
-                        onSelected: (val) async {
-                          if (val == 'delete') {
-                            final confirmed = await showDialog<bool>(
-                              context: context,
-                              builder: (ctx) => AlertDialog(
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-                                title: const Row(children: [
-                                  Icon(Icons.warning_amber_rounded, color: Color(0xFFB71C1C), size: 26),
-                                  SizedBox(width: 10),
-                                  Text('Delete Payroll?', style: TextStyle(fontSize: 18)),
-                                ]),
-                                content: Text(
-                                  'Are you sure you want to permanently delete ${payroll.payrollCode}?\n\nThis removes all calculated items and cannot be undone.',
-                                  style: const TextStyle(fontSize: 14, height: 1.4),
-                                ),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(ctx, false),
-                                    child: const Text('Cancel'),
-                                  ),
-                                  ElevatedButton(
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: const Color(0xFFB71C1C),
-                                      foregroundColor: Colors.white,
-                                    ),
-                                    onPressed: () => Navigator.pop(ctx, true),
-                                    child: const Text('Delete'),
-                                  ),
-                                ],
-                              ),
-                            );
-                            if (confirmed == true && context.mounted) {
-                              try {
-                                final dio = await DioClient.createDio();
-                                await dio.delete('/payroll/${payroll.id}');
-                                if (context.mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Row(children: [
-                                        Icon(Icons.check_circle_outline, color: Colors.white, size: 18),
-                                        SizedBox(width: 8),
-                                        Text('Payroll deleted successfully'),
-                                      ]),
-                                      backgroundColor: Color(0xFF007A3D),
-                                      behavior: SnackBarBehavior.floating,
-                                    ),
-                                  );
-                                  context.read<PayrollBloc>().add(
-                                    RefreshPayrolls(siteId: payroll.siteId),
-                                  );
-                                }
-                              } catch (e) {
-                                if (context.mounted) {
-                                  String msg = 'Could not delete payroll';
-                                  if (e is DioException && e.response?.data != null && e.response?.data is Map) {
-                                    msg = e.response?.data['detail'] ?? msg;
-                                  }
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Row(children: [
-                                        const Icon(Icons.error_outline, color: Colors.white, size: 18),
-                                        const SizedBox(width: 8),
-                                        Expanded(child: Text(msg)),
-                                      ]),
-                                      backgroundColor: const Color(0xFFB71C1C),
-                                      behavior: SnackBarBehavior.floating,
-                                    ),
-                                  );
-                                }
-                              }
-                            }
-                          }
-                        },
-                        itemBuilder: (ctx) => [
-                          const PopupMenuItem(
-                            value: 'delete',
-                            child: Row(children: [
-                              Icon(Icons.delete_outline, color: Color(0xFFB71C1C), size: 18),
-                              SizedBox(width: 8),
-                              Text('Delete', style: TextStyle(color: Color(0xFFB71C1C), fontWeight: FontWeight.w600)),
-                            ]),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Icon(Icons.calendar_today,
-                      size: 16, color: const Color(0xFF6B7280)),
-                  const SizedBox(width: 6),
-                  Text(
-                    payroll.formattedPeriod,
-                    style: TextStyle(
-                      color: const Color(0xFF6B7280),
-                      fontSize: 13,
+                      ],
                     ),
                   ),
-                  if (payroll.hasMultiplePeriods == true) ...[
-                    const SizedBox(width: 8),
+
+                  // Ethiopian Month Badge (if present)
+                  if (payroll.ethiopianMonth != null) ...[
+                    const SizedBox(width: 6),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
-                        color: const Color(0x1A1E3A5F),
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: const Color(0x4D1E3A5F)),
+                        color: const Color(0xFFF3F4F6),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: const Color(0xFFE5E7EB)),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.group_work, size: 12, color: const Color(0xFF0A192F)),
+                          const Icon(Icons.calendar_month, size: 12, color: Color(0xFF4B5563)),
                           const SizedBox(width: 4),
                           Text(
-                            '${payroll.periodTypesCount} periods',
-                            style: TextStyle(
-                              color: const Color(0xFF0A192F),
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                            ),
+                            '${payroll.ethiopianMonth} ${payroll.ethiopianYear ?? ""}',
+                            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF374151)),
                           ),
                         ],
                       ),
                     ),
                   ],
-                ],
-              ),
-              const SizedBox(height: 8),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      Icon(Icons.account_balance_wallet,
-                          size: 16, color: const Color(0xFF6B7280)),
-                      const SizedBox(width: 6),
-                      Text(
-                        'Net: ${currencyFormat.format(payroll.totalNetAmount)}',
-                        style: TextStyle(
-                          color: const Color(0xFF6B7280),
-                          fontSize: 13,
-                        ),
+
+                  const Spacer(),
+
+                  // Status Badge
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Color.fromARGB(26, statusColor.red, statusColor.green, statusColor.blue),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      statusLabel,
+                      style: TextStyle(
+                        color: statusColor,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ),
+
+                  PopupMenuButton<String>(
+                    icon: const Icon(Icons.more_vert, size: 18, color: Color(0xFF9CA3AF)),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(minWidth: 140),
+                    onSelected: (val) async {
+                      if (val == 'delete') {
+                        final confirmed = await showDialog<bool>(
+                          context: context,
+                          builder: (ctx) => AlertDialog(
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                            title: const Row(children: [
+                              Icon(Icons.warning_amber_rounded, color: Color(0xFFB71C1C), size: 26),
+                              SizedBox(width: 10),
+                              Text('Delete Payroll?', style: TextStyle(fontSize: 18)),
+                            ]),
+                            content: Text(
+                              'Are you sure you want to permanently delete ${payroll.payrollCode}?\n\nThis removes all calculated items and cannot be undone.',
+                              style: const TextStyle(fontSize: 14, height: 1.4),
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(ctx, false),
+                                child: const Text('Cancel'),
+                              ),
+                              ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFFB71C1C),
+                                  foregroundColor: Colors.white,
+                                ),
+                                onPressed: () => Navigator.pop(ctx, true),
+                                child: const Text('Delete'),
+                              ),
+                            ],
+                          ),
+                        );
+                        if (confirmed == true && context.mounted) {
+                          try {
+                            final dio = await DioClient.createDio();
+                            await dio.delete('/payroll/${payroll.id}');
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Row(children: [
+                                    Icon(Icons.check_circle_outline, color: Colors.white, size: 18),
+                                    SizedBox(width: 8),
+                                    Text('Payroll deleted successfully'),
+                                  ]),
+                                  backgroundColor: Color(0xFF007A3D),
+                                  behavior: SnackBarBehavior.floating,
+                                ),
+                              );
+                              context.read<PayrollBloc>().add(
+                                RefreshPayrolls(siteId: payroll.siteId),
+                              );
+                            }
+                          } catch (e) {
+                            if (context.mounted) {
+                              String msg = 'Could not delete payroll';
+                              if (e is DioException && e.response?.data != null && e.response?.data is Map) {
+                                msg = e.response?.data['detail'] ?? msg;
+                              }
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Row(children: [
+                                    const Icon(Icons.error_outline, color: Colors.white, size: 18),
+                                    const SizedBox(width: 8),
+                                    Expanded(child: Text(msg)),
+                                  ]),
+                                  backgroundColor: const Color(0xFFB71C1C),
+                                  behavior: SnackBarBehavior.floating,
+                                ),
+                              );
+                            }
+                          }
+                        }
+                      }
+                    },
+                    itemBuilder: (ctx) => [
+                      const PopupMenuItem(
+                        value: 'delete',
+                        child: Row(children: [
+                          Icon(Icons.delete_outline, color: Color(0xFFB71C1C), size: 18),
+                          SizedBox(width: 8),
+                          Text('Delete', style: TextStyle(color: Color(0xFFB71C1C), fontWeight: FontWeight.w600)),
+                        ]),
                       ),
                     ],
                   ),
-                  Text(
-                    currencyFormat.format(payroll.totalGrossAmount),
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF007A3D),
-                    ),
-                  ),
                 ],
               ),
+
+              const SizedBox(height: 8),
+
+              // Payroll Code
+              Text(
+                payroll.payrollCode,
+                style: const TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF111827),
+                ),
+              ),
+
+              const SizedBox(height: 6),
+
+              // Period & Worker Count Row
+              Row(
+                children: [
+                  const Icon(Icons.calendar_today_outlined, size: 14, color: Color(0xFF6B7280)),
+                  const SizedBox(width: 5),
+                  Text(
+                    payroll.formattedPeriod,
+                    style: const TextStyle(
+                      color: Color(0xFF6B7280),
+                      fontSize: 13,
+                    ),
+                  ),
+                  if (payroll.employeeCount > 0) ...[
+                    const SizedBox(width: 12),
+                    const Icon(Icons.people_alt_outlined, size: 14, color: Color(0xFF6B7280)),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${payroll.employeeCount} workers',
+                      style: const TextStyle(
+                        color: Color(0xFF6B7280),
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+
+              const SizedBox(height: 12),
+
+              // Payout Breakdown Box
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF9FAFB),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: const Color(0xFFE5E7EB)),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Net Payout',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Color(0xFF6B7280),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          currencyFormat.format(payroll.totalNetAmount),
+                          style: const TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF007A3D),
+                          ),
+                        ),
+                      ],
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          'Gross: ${currencyFormat.format(payroll.totalGrossAmount)}',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF374151),
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'Ded: -${currencyFormat.format(payroll.totalDeductions)}',
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: Color(0xFFB71C1C),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+              // Quick exports if approved or paid
               if (status == 'approved' || status == 'paid') ...[
-                const Divider(height: 24),
+                const SizedBox(height: 12),
                 Row(
                   children: [
                     Expanded(
                       child: _QuickExportButton(
-                        label: 'CBE',
+                        label: 'CBE Bank',
                         icon: Icons.account_balance,
                         onTap: () => _triggerExport(
                           context,
@@ -915,7 +1157,7 @@ class _PayrollCard extends StatelessWidget {
                     const SizedBox(width: 8),
                     Expanded(
                       child: _QuickExportButton(
-                        label: 'Cash',
+                        label: 'Cash Sheet',
                         icon: Icons.money,
                         onTap: () => _triggerExport(
                           context,

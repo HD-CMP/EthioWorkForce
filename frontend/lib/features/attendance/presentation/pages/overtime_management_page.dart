@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
@@ -11,6 +11,8 @@ import '../../../workers/data/datasources/site_remote_datasource.dart';
 import '../../../workers/data/datasources/work_type_remote_datasource.dart';
 import '../../data/datasources/attendance_remote_datasource.dart';
 import '../../domain/entities/attendance.dart';
+import '../../../../core/widgets/ethiopian_date_picker.dart';
+import '../../../../core/utils/ethiopian_calendar.dart';
 
 class OvertimeManagementPage extends StatefulWidget {
   const OvertimeManagementPage({super.key});
@@ -31,6 +33,7 @@ class _OvertimeManagementPageState extends State<OvertimeManagementPage> {
   List<Attendance> _attendances = [];
   Site? _selectedSite;
   DateTime _selectedDate = DateTime.now();
+  bool _showEthiopianCalendar = true;
   
   final Map<int, TextEditingController> _overtimeControllers = {};
   final Map<int, double> _overtimeValues = {};
@@ -98,13 +101,16 @@ class _OvertimeManagementPageState extends State<OvertimeManagementPage> {
       final workTypes = await _workTypeDatasource.getWorkTypes(isActive: true);
       _workTypesMap = {for (var wt in workTypes) wt.id!: wt};
       
-      // LEAK FIX: Only display workers whose Work Type explicitly allows overtime.
-      // This prevents timekeepers from accidentally recording overtime for executives
-      // or other non-eligible salaried staff.
+      // In construction enterprises, both 14-day workforce and 30-day monthly staff
+      // (engineers, supervisors, foremen) can log and receive approved overtime.
       final eligibleWorkers = workers.where((worker) {
         if (worker.workTypeId == null) return false;
         final wt = _workTypesMap[worker.workTypeId];
-        return wt != null && wt.overtimeEligible == true;
+        if (wt == null) return false;
+        return wt.overtimeEligible == true ||
+            (worker.overtimeRatePerHour != null && worker.overtimeRatePerHour! > 0) ||
+            wt.paymentMode == PaymentMode.monthlySalary ||
+            wt.paymentMode == PaymentMode.dailyRate;
       }).toList();
       
       
@@ -158,11 +164,12 @@ class _OvertimeManagementPageState extends State<OvertimeManagementPage> {
   }
 
   Future<void> _selectDate() async {
-    final picked = await showDatePicker(
+    final picked = await showEthiopianDatePicker(
       context: context,
       initialDate: _selectedDate,
       firstDate: DateTime.now().subtract(const Duration(days: 365)),
       lastDate: DateTime.now().add(const Duration(days: 30)),
+      showEthiopian: _showEthiopianCalendar,
     );
 
     if (picked != null && picked != _selectedDate) {
@@ -262,14 +269,42 @@ class _OvertimeManagementPageState extends State<OvertimeManagementPage> {
   }
 
   double _calculateTotalPay(Worker worker, double overtimeHours) {
-    if (overtimeHours == 0.0 || worker.workTypeId == null) {
-      return 0.0;
+    if (overtimeHours <= 0.0) return 0.0;
+
+    // 1. Individual worker overtime rate override
+    if (worker.overtimeRatePerHour != null && worker.overtimeRatePerHour! > 0) {
+      return overtimeHours * worker.overtimeRatePerHour!;
     }
-    final workType = _workTypesMap[worker.workTypeId];
-    if (workType?.overtimeRatePerHour == null) {
-      return 0.0;
+
+    final workType = worker.workTypeId != null ? _workTypesMap[worker.workTypeId] : null;
+
+    // 2. WorkType configured overtime rate
+    if (workType?.overtimeRatePerHour != null && workType!.overtimeRatePerHour! > 0) {
+      return overtimeHours * workType.overtimeRatePerHour!;
     }
-    return (overtimeHours * workType!.overtimeRatePerHour!).toDouble();
+
+    // 3. Ethiopian statutory rate fallback (1.25x hourly wage)
+    double baseHourlyRate = 0.0;
+    final rate = (worker.baseSalary != null && worker.baseSalary! > 0)
+        ? worker.baseSalary!
+        : (workType?.baseRate ?? 0.0);
+
+    if (rate > 0) {
+      if (workType?.paymentMode == PaymentMode.monthlySalary) {
+        baseHourlyRate = rate / 208.0; // 26 days * 8 hours
+      } else if (workType?.paymentMode == PaymentMode.hourlyRate) {
+        baseHourlyRate = rate;
+      } else {
+        // Daily rate default (e.g. daily labor, 14-day cycle)
+        baseHourlyRate = rate / 8.0;
+      }
+    }
+
+    if (baseHourlyRate > 0) {
+      return overtimeHours * (baseHourlyRate * 1.25);
+    }
+
+    return 0.0;
   }
 
   @override
@@ -278,6 +313,15 @@ class _OvertimeManagementPageState extends State<OvertimeManagementPage> {
       appBar: AppBar(
         title: const Text('Overtime Management'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.calendar_today),
+            onPressed: () {
+              setState(() {
+                _showEthiopianCalendar = !_showEthiopianCalendar;
+              });
+            },
+            tooltip: 'Toggle Calendar Type',
+          ),
           if (_workers.isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(right: 8),
@@ -337,14 +381,16 @@ class _OvertimeManagementPageState extends State<OvertimeManagementPage> {
                         child: InkWell(
                           onTap: _selectDate,
                           child: InputDecorator(
-                            decoration: const InputDecoration(
-                              labelText: 'Date',
-                              border: OutlineInputBorder(),
-                              prefixIcon: Icon(Icons.calendar_today),
+                            decoration: InputDecoration(
+                              labelText: _showEthiopianCalendar ? 'Date (Ethiopian)' : 'Date (Gregorian)',
+                              border: const OutlineInputBorder(),
+                              prefixIcon: const Icon(Icons.calendar_today),
                             ),
                             child: Text(
-                              DateFormat('MMM dd, yyyy').format(_selectedDate),
-                              style: const TextStyle(fontSize: 16),
+                              _showEthiopianCalendar
+                                  ? EthiopianCalendar.formatEthiopian(EthiopianCalendar.fromGregorian(_selectedDate))
+                                  : DateFormat('MMM dd, yyyy').format(_selectedDate),
+                              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
                             ),
                           ),
                         ),

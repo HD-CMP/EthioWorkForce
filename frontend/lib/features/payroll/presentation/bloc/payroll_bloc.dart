@@ -167,8 +167,8 @@ class PayrollBloc extends Bloc<PayrollEvent, PayrollState> {
         pendingCount++;
       }
 
-      if (payroll.periodStart.isAfter(thisMonthStart) &&
-          payroll.periodStart.isBefore(thisMonthEnd)) {
+      if (!payroll.periodStart.isBefore(thisMonthStart) &&
+          !payroll.periodStart.isAfter(thisMonthEnd)) {
         thisMonthTotal += payroll.totalNetAmount;
       }
     }

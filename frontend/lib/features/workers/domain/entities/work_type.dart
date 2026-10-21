@@ -17,8 +17,8 @@ enum PaymentMode {
 }
 
 enum TaxRule {
-  standardEmployee('standard_employee', 'Standard Employee'),
-  dailyCasual('daily_casual', 'Daily Casual');
+  standardEmployee('standard_employee', 'Standard Employee (ERCA Progressive Tax)'),
+  dailyCasual('daily_casual', 'Daily Casual / Tax Exempt (No Tax/Pension)');
 
   final String value;
   final String displayName;

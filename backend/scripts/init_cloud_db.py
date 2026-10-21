@@ -57,6 +57,9 @@ def run_alembic_migrations():
             with engine.connect() as conn:
                 conn.execute(text("ALTER TABLE payrolls ADD COLUMN IF NOT EXISTS work_type_id INTEGER REFERENCES work_types(id);"))
                 conn.execute(text("ALTER TABLE payrolls ADD COLUMN IF NOT EXISTS work_place_id INTEGER REFERENCES work_places(id);"))
+                conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS worker_id INTEGER REFERENCES workers(id) ON DELETE SET NULL;"))
+                conn.execute(text("ALTER TABLE user_registration_requests ADD COLUMN IF NOT EXISTS worker_id INTEGER REFERENCES workers(id) ON DELETE SET NULL;"))
+                conn.execute(text("ALTER TABLE workers ADD COLUMN IF NOT EXISTS id_card_url VARCHAR(500);"))
                 conn.commit()
         except Exception as e:
             logger.debug(f"Direct column addition check notice: {e}")

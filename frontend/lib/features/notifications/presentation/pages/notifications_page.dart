@@ -51,7 +51,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
       
       if (mounted) {
         setState(() {
-          _isSuperAdmin = response.data['role'] == 'SUPER_ADMIN';
+          _isSuperAdmin = response.data['role']?.toString().toLowerCase() == 'super_admin';
         });
       }
     } catch (e) {

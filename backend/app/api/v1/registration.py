@@ -113,6 +113,7 @@ def request_user_registration(
         request_reason=request_data.request_reason,
         site_ids=request_data.site_ids,
         work_place_ids=request_data.work_place_ids,
+        worker_id=request_data.worker_id,
         status=RequestStatus.PENDING
     )
     
@@ -205,6 +206,10 @@ def approve_registration_request(
             if request.phone_number:
                 existing_user.phone_number = request.phone_number
             existing_user.preferred_language = request.preferred_language
+            if request.worker_id:
+                existing_user.worker_id = request.worker_id
+            elif approval_data.worker_id:
+                existing_user.worker_id = approval_data.worker_id
             # Update password if it was changed (not the placeholder)
             if not request.hashed_password.startswith('KEEP_EXISTING_PASSWORD_'):
                 existing_user.hashed_password = request.hashed_password
@@ -262,6 +267,7 @@ def approve_registration_request(
                 hashed_password=request.hashed_password,
                 role=UserRole(request.role),
                 preferred_language=request.preferred_language,
+                worker_id=approval_data.worker_id or request.worker_id,
                 is_active=True,
                 is_verified=True
             )

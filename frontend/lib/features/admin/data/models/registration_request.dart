@@ -9,6 +9,7 @@ class RegistrationRequest {
   final String? requestReason;
   final List<int>? siteIds;
   final List<int>? workPlaceIds;
+  final int? workerId;
 
   RegistrationRequest({
     required this.username,
@@ -21,6 +22,7 @@ class RegistrationRequest {
     this.requestReason,
     this.siteIds,
     this.workPlaceIds,
+    this.workerId,
   });
 
   Map<String, dynamic> toJson() {
@@ -35,6 +37,7 @@ class RegistrationRequest {
       'request_reason': requestReason,
       'site_ids': siteIds,
       'work_place_ids': workPlaceIds,
+      'worker_id': workerId,
     };
   }
 }
@@ -53,6 +56,7 @@ class RegistrationRequestResponse {
   final String? approvalNotes;
   final List<int>? siteIds;
   final List<String>? siteNames;
+  final int? workerId;
 
   RegistrationRequestResponse({
     required this.id,
@@ -68,6 +72,7 @@ class RegistrationRequestResponse {
     this.approvalNotes,
     this.siteIds,
     this.siteNames,
+    this.workerId,
   });
 
   factory RegistrationRequestResponse.fromJson(Map<String, dynamic> json) {
@@ -91,6 +96,7 @@ class RegistrationRequestResponse {
       siteNames: json['site_names'] != null
           ? List<String>.from(json['site_names'] as List)
           : null,
+      workerId: json['worker_id'] as int?,
     );
   }
 
@@ -109,9 +115,11 @@ class RegistrationRequestResponse {
       'approval_notes': approvalNotes,
       'site_ids': siteIds,
       'site_names': siteNames,
+      'worker_id': workerId,
     };
   }
 }
+
 
 class RegistrationApproval {
   final int requestId;
@@ -119,6 +127,7 @@ class RegistrationApproval {
   final String? approvalNotes;
   final List<int>? siteIds;
   final List<int>? workPlaceIds;
+  final int? workerId;
 
   RegistrationApproval({
     required this.requestId,
@@ -126,6 +135,7 @@ class RegistrationApproval {
     this.approvalNotes,
     this.siteIds,
     this.workPlaceIds,
+    this.workerId,
   });
 
   Map<String, dynamic> toJson() {
@@ -135,6 +145,7 @@ class RegistrationApproval {
       'approval_notes': approvalNotes,
       'site_ids': siteIds,
       'work_place_ids': workPlaceIds,
+      'worker_id': workerId,
     };
   }
 }

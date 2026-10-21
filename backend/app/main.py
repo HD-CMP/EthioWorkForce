@@ -68,6 +68,12 @@ def create_application() -> FastAPI:
 
     application.include_router(api_router, prefix="/api/v1")
 
+    import os
+    from fastapi.staticfiles import StaticFiles
+    os.makedirs("uploads/id_cards", exist_ok=True)
+    os.makedirs("uploads/avatars", exist_ok=True)
+    application.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+
     @application.get("/")
     async def root():
         return {

@@ -87,8 +87,8 @@ def create_overtime(
     if not worker:
         raise HTTPException(status_code=404, detail="Worker not found")
         
-    if not worker.work_type or not worker.work_type.overtime_eligible:
-        raise HTTPException(status_code=400, detail=f"Worker {worker.full_name} is not eligible for overtime")
+    if not worker.work_type:
+        raise HTTPException(status_code=400, detail=f"Worker {worker.full_name} has no assigned work type")
     
     
     existing = db.query(Overtime).filter(
@@ -158,8 +158,8 @@ def create_bulk_overtime(
                 errors.append(f"Worker ID {entry.worker_id} not found")
                 continue
                 
-            if not worker.work_type or not worker.work_type.overtime_eligible:
-                errors.append(f"Worker {worker.full_name} is not eligible for overtime")
+            if not worker.work_type:
+                errors.append(f"Worker {worker.full_name} has no assigned work type")
                 continue
             
             
@@ -228,8 +228,8 @@ def create_multi_day_overtime(
     if not worker:
         raise HTTPException(status_code=404, detail="Worker not found")
         
-    if not worker.work_type or not worker.work_type.overtime_eligible:
-        raise HTTPException(status_code=400, detail=f"Worker {worker.full_name} is not eligible for overtime")
+    if not worker.work_type:
+        raise HTTPException(status_code=400, detail=f"Worker {worker.full_name} has no assigned work type")
     
     created_count = 0
     updated_count = 0
@@ -308,8 +308,8 @@ def update_overtime(
         raise HTTPException(status_code=403, detail="You don't have access to this site")
         
     worker = db.query(Worker).filter(Worker.id == overtime.worker_id).first()
-    if worker and (not worker.work_type or not worker.work_type.overtime_eligible):
-        raise HTTPException(status_code=400, detail="This worker is not eligible for overtime")
+    if worker and not worker.work_type:
+        raise HTTPException(status_code=400, detail="This worker has no assigned work type")
     
     
     if overtime.is_locked:

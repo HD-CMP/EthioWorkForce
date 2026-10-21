@@ -24,8 +24,6 @@ import 'bulk_verify_page.dart';
 import '../widgets/hierarchical_attendance_list.dart';
 import '../widgets/hierarchical_workers_list.dart';
 
-import '../widgets/multi_day_attendance_selector.dart';
-
 class AttendancePageNew extends StatefulWidget {
   final int? siteId;
 
@@ -59,6 +57,15 @@ class _AttendancePageNewState extends State<AttendancePageNew> {
   bool _isSuperAdmin = false;
   bool _hasWorkplaceAssignment = true;
   bool _checkingWorkplaceAssignment = true;
+
+  bool get _canVerifyAttendance {
+    final role = _userRole?.toLowerCase() ?? '';
+    return role == 'super_admin' ||
+        role == 'admin' ||
+        role == 'site_admin' ||
+        role == 'site_manager' ||
+        role == 'site_engineer';
+  }
   
   List<Attendance> _attendances = [];
   Map<String, dynamic>? _statistics;
@@ -82,14 +89,15 @@ class _AttendancePageNewState extends State<AttendancePageNew> {
 
   Future<void> _loadUserRole() async {
     final role = await _storageService.getUserRole();
-    setState(() {
-      _userRole = role;
-      _isSuperAdmin = role == 'super_admin';
-      // Set default tab to Workers for non-super admins
-      if (!_isSuperAdmin) {
-        _currentTabIndex = 1;
-      }
-    });
+    if (mounted) {
+      setState(() {
+        _userRole = role;
+        _isSuperAdmin = role == 'super_admin';
+        // Site Engineer / Site Manager / Admins start on Attendance tab (0)
+        // Others (Foremen, Timekeepers) start on Workers roster tab (1)
+        _currentTabIndex = _canVerifyAttendance ? 0 : 1;
+      });
+    }
   }
 
   Future<void> _checkCurrentUserWorkplaceAssignment() async {
@@ -99,11 +107,21 @@ class _AttendancePageNewState extends State<AttendancePageNew> {
       final currentUser = response.data;
       final role = currentUser['role'] as String?;
       final workplaceAssignments = currentUser['work_place_assignments'] as List<dynamic>? ?? [];
+      final siteAssignments = currentUser['site_assignments'] as List<dynamic>? ?? [];
       
+      final roleLower = (role ?? '').toLowerCase();
+      final isSuper = roleLower == 'super_admin';
+      final isPrivileged = isSuper ||
+          roleLower == 'admin' ||
+          roleLower == 'site_admin' ||
+          roleLower == 'site_manager' ||
+          roleLower == 'site_engineer';
+
       if (mounted) {
         setState(() {
-          _isSuperAdmin = role == 'super_admin';
-          _hasWorkplaceAssignment = workplaceAssignments.isNotEmpty;
+          _isSuperAdmin = isSuper;
+          _userRole = roleLower;
+          _hasWorkplaceAssignment = workplaceAssignments.isNotEmpty || siteAssignments.isNotEmpty || isPrivileged;
           _checkingWorkplaceAssignment = false;
           
           _allowedWorkplaceIds = workplaceAssignments
@@ -112,10 +130,17 @@ class _AttendancePageNewState extends State<AttendancePageNew> {
               .toList();
         });
         
-        if (!_isSuperAdmin && workplaceAssignments.isNotEmpty) {
+        if (!isSuper && workplaceAssignments.isNotEmpty) {
           final firstWorkplace = workplaceAssignments[0] as Map<String, dynamic>;
           final siteId = firstWorkplace['work_place']?['site_id'] as int?;
-          if (siteId != null) {
+          if (siteId != null && _currentSiteId == null) {
+            _currentSiteId = siteId;
+            await _storageService.setSelectedSiteId(siteId);
+          }
+        } else if (!isSuper && siteAssignments.isNotEmpty) {
+          final firstSite = siteAssignments[0] as Map<String, dynamic>;
+          final siteId = firstSite['site']?['id'] as int? ?? firstSite['site_id'] as int?;
+          if (siteId != null && _currentSiteId == null) {
             _currentSiteId = siteId;
             await _storageService.setSelectedSiteId(siteId);
           }
@@ -399,14 +424,14 @@ class _AttendancePageNewState extends State<AttendancePageNew> {
       );
       
       if (mounted) {
-        // Filter workers if the user is a normal admin and has specific workplace assignments
+        // Filter workers if the user has specific workplace assignments
         List<Worker> allowedWorkers = workers;
         if (!_isSuperAdmin && _allowedWorkplaceIds.isNotEmpty) {
           allowedWorkers = workers.where((w) {
             return w.workPlaceId != null && _allowedWorkplaceIds.contains(w.workPlaceId);
           }).toList();
-        } else if (!_isSuperAdmin) {
-          // If they are not super admin and have NO workplace assignments, they see NO workers
+        } else if (!_isSuperAdmin && !_canVerifyAttendance && !_hasWorkplaceAssignment) {
+          // If not super admin, not site engineer/manager, and has no assignments, show empty
           allowedWorkers = [];
         }
 
@@ -540,6 +565,15 @@ class _AttendancePageNewState extends State<AttendancePageNew> {
   }
 
   Future<void> _verifySelected() async {
+    if (!_canVerifyAttendance) {
+      VisualFeedbackOverlay.showFlashFeedback(
+        context,
+        type: FeedbackType.warning,
+        message: 'Verification authority is restricted to Site Engineers, Site Managers, and Admins',
+      );
+      return;
+    }
+
     if (_selectedAttendanceIds.isEmpty) {
       VisualFeedbackOverlay.showFlashFeedback(
         context,
@@ -549,20 +583,46 @@ class _AttendancePageNewState extends State<AttendancePageNew> {
       return;
     }
 
+    // Exclude any records that are locked by payroll
+    final lockedRecords = _allAttendances.where((a) => _selectedAttendanceIds.contains(a.id) && a.isLocked).toList();
+    if (lockedRecords.isNotEmpty) {
+      setState(() {
+        _selectedAttendanceIds.removeWhere((id) => lockedRecords.any((lr) => lr.id == id));
+      });
+      VisualFeedbackOverlay.showFlashFeedback(
+        context,
+        type: FeedbackType.warning,
+        message: '${lockedRecords.length} record(s) are sealed for payroll and cannot be verified',
+      );
+      if (_selectedAttendanceIds.isEmpty) return;
+    }
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Verify Attendance'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: const [
+            Icon(Icons.verified, color: Color(0xFF007A3D)),
+            SizedBox(width: 8),
+            Text('Verify Attendance'),
+          ],
+        ),
         content: Text(
           'Are you sure you want to verify ${_selectedAttendanceIds.length} attendance record(s)?'
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: const Text('Cancel', style: TextStyle(color: Color(0xFF6B7280))),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF007A3D),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
             child: const Text('Verify'),
           ),
         ],
@@ -744,7 +804,7 @@ class _AttendancePageNewState extends State<AttendancePageNew> {
           ],
         ),
         actions: [
-          if (_isSuperAdmin && _sites.length > 1)
+          if (_sites.length > 1)
             IconButton(
               icon: const Icon(Icons.location_on, color: Colors.white),
               onPressed: _showSiteSelectorDialog,
@@ -792,12 +852,12 @@ class _AttendancePageNewState extends State<AttendancePageNew> {
           slivers: [
             SliverToBoxAdapter(child: _buildHeader(dateFormat)),
             SliverToBoxAdapter(child: _buildTabBar()),
-            if (_isSuperAdmin && _currentTabIndex == 0)
+            if (_currentTabIndex == 0)
               SliverToBoxAdapter(child: _buildStatistics()),
             SliverToBoxAdapter(child: _buildFilterBar()),
-            if (_isSuperAdmin && _currentTabIndex == 0)
+            if (_currentTabIndex == 0 && _canVerifyAttendance)
               SliverToBoxAdapter(child: _buildSelectionBar()),
-            (_isSuperAdmin && _currentTabIndex == 0)
+            _currentTabIndex == 0
                 ? _buildAttendanceSliverList()
                 : _buildWorkersSliverList(),
           ],
@@ -857,7 +917,7 @@ class _AttendancePageNewState extends State<AttendancePageNew> {
                   Text(
                     '$_calendarType Calendar',
                     style: const TextStyle(
-                      color: const Color(0xB3FFFFFF),
+                      color: Color(0xB3FFFFFF),
                       fontSize: 12,
                     ),
                   ),
@@ -886,46 +946,168 @@ class _AttendancePageNewState extends State<AttendancePageNew> {
       }
       
       final sites = List<Site>.from(_sites);
-      showDialog(
+      showModalBottomSheet(
         context: context,
+        backgroundColor: Colors.transparent,
+        isScrollControlled: true,
         builder: (context) {
-          return AlertDialog(
-            title: const Text('Select Site'),
-            content: SizedBox(
-              width: double.maxFinite,
-              child: ListView.builder(
-                shrinkWrap: true,
-                itemCount: sites.length,
-                itemBuilder: (context, index) {
-                  final site = sites[index];
-                  final isSelected = _currentSiteId == site.id;
-                  return ListTile(
-                    leading: Icon(
-                      isSelected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
-                      color: isSelected ? const Color(0xFF007A3D) : const Color(0xFF9CA3AF),
-                    ),
-                    title: Text(site.name),
-                    subtitle: Text(site.code),
-                    onTap: () async {
-                      Navigator.pop(context);
-                      if (site.id != null) {
-                        await _storageService.setSelectedSiteId(site.id!);
-                        setState(() {
-                          _currentSiteId = site.id;
-                        });
-                        _loadData();
-                      }
-                    },
-                  );
-                },
-              ),
+          return Container(
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Cancel'),
-              ),
-            ],
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(context).size.height * 0.7,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    margin: const EdgeInsets.only(bottom: 16),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFD1D5DB),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFE8F5EE),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(Icons.location_city, color: Color(0xFF007A3D), size: 22),
+                    ),
+                    const SizedBox(width: 12),
+                    const Expanded(
+                      child: Text(
+                        'Select Construction Site',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF0A192F),
+                        ),
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFE8EDF4),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        '${sites.length} sites',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF1E3A5F),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Flexible(
+                  child: ListView.separated(
+                    shrinkWrap: true,
+                    itemCount: sites.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 8),
+                    itemBuilder: (context, index) {
+                      final site = sites[index];
+                      final isSelected = _currentSiteId == site.id;
+                      return InkWell(
+                        onTap: () async {
+                          Navigator.pop(context);
+                          if (!isSelected && site.id != null) {
+                            setState(() {
+                              _currentSiteId = site.id;
+                              _selectedAttendanceIds.clear();
+                              _selectedWorkerIds.clear();
+                            });
+                            await _storageService.setSelectedSiteId(site.id!);
+                            _loadData();
+                          }
+                        },
+                        borderRadius: BorderRadius.circular(14),
+                        child: Container(
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: isSelected ? const Color(0xFFE8F5EE) : const Color(0xFFF9FAFB),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: isSelected ? const Color(0xFF007A3D) : const Color(0xFFE5E7EB),
+                              width: isSelected ? 1.5 : 1,
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  color: isSelected ? const Color(0xFF007A3D) : const Color(0xFFE5E7EB),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    site.code.isNotEmpty
+                                        ? site.code.substring(0, site.code.length > 3 ? 3 : site.code.length)
+                                        : 'STE',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                      color: isSelected ? Colors.white : const Color(0xFF4B5563),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      site.name,
+                                      style: TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                                        color: const Color(0xFF0A192F),
+                                      ),
+                                    ),
+                                    if (site.locationAddress != null && site.locationAddress!.isNotEmpty) ...[
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        site.locationAddress!,
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          color: Color(0xFF6B7280),
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                              if (isSelected)
+                                const Icon(Icons.check_circle, color: Color(0xFF007A3D), size: 22)
+                              else
+                                const Icon(Icons.chevron_right, color: Color(0xFF9CA3AF), size: 20),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(height: 12),
+              ],
+            ),
           );
         },
       );
@@ -935,43 +1117,36 @@ class _AttendancePageNewState extends State<AttendancePageNew> {
   }
 
   Widget _buildTabBar() {
-    // For non-super admins, only show Workers tab
-    if (!_isSuperAdmin) {
+    // For Foremen and Timekeepers (roles below Site Engineer), only show Workers roster
+    // where they mark and alter daily attendance.
+    if (!_canVerifyAttendance) {
       return Container(
         color: Colors.white,
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          decoration: BoxDecoration(
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          decoration: const BoxDecoration(
             border: Border(
-              bottom: BorderSide(
-                color: const Color(0xFF007A3D),
-                width: 3,
-              ),
+              bottom: BorderSide(color: Color(0xFF007A3D), width: 3),
             ),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                Icons.people_outline,
-                size: 20,
-                color: const Color(0xFF007A3D),
-              ),
+              const Icon(Icons.people_outline, size: 20, color: Color(0xFF007A3D)),
               const SizedBox(width: 8),
               Text(
                 'Workers (${_workers.length})',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: const Color(0xFF007A3D),
-                ),
+                style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF007A3D), fontSize: 14),
               ),
             ],
           ),
         ),
       );
     }
-    
-    // For super admins, show both tabs
+
+    // For Site Engineers, Site Managers, and Admins: show BOTH tabs:
+    // Tab 0: Attendance (to review, filter, audit and verify entries)
+    // Tab 1: Workers (roster)
     return Container(
       color: Colors.white,
       child: Row(
@@ -980,7 +1155,7 @@ class _AttendancePageNewState extends State<AttendancePageNew> {
             child: InkWell(
               onTap: () => setState(() => _currentTabIndex = 0),
               child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 12),
+                padding: const EdgeInsets.symmetric(vertical: 14),
                 decoration: BoxDecoration(
                   border: Border(
                     bottom: BorderSide(
@@ -993,7 +1168,7 @@ class _AttendancePageNewState extends State<AttendancePageNew> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(
-                      Icons.check_circle_outline,
+                      Icons.fact_check_outlined,
                       size: 20,
                       color: _currentTabIndex == 0 ? const Color(0xFF007A3D) : const Color(0xFF9CA3AF),
                     ),
@@ -1001,8 +1176,9 @@ class _AttendancePageNewState extends State<AttendancePageNew> {
                     Text(
                       'Attendance ($_uniqueWorkersWithAttendance)',
                       style: TextStyle(
-                        fontWeight: _currentTabIndex == 0 ? FontWeight.bold : FontWeight.normal,
-                        color: _currentTabIndex == 0 ? const Color(0xFF007A3D) : const Color(0xFF9CA3AF),
+                        fontWeight: _currentTabIndex == 0 ? FontWeight.bold : FontWeight.w500,
+                        color: _currentTabIndex == 0 ? const Color(0xFF007A3D) : const Color(0xFF6B7280),
+                        fontSize: 14,
                       ),
                     ),
                   ],
@@ -1014,7 +1190,7 @@ class _AttendancePageNewState extends State<AttendancePageNew> {
             child: InkWell(
               onTap: () => setState(() => _currentTabIndex = 1),
               child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 12),
+                padding: const EdgeInsets.symmetric(vertical: 14),
                 decoration: BoxDecoration(
                   border: Border(
                     bottom: BorderSide(
@@ -1035,8 +1211,9 @@ class _AttendancePageNewState extends State<AttendancePageNew> {
                     Text(
                       'Workers (${_workers.length})',
                       style: TextStyle(
-                        fontWeight: _currentTabIndex == 1 ? FontWeight.bold : FontWeight.normal,
-                        color: _currentTabIndex == 1 ? const Color(0xFF007A3D) : const Color(0xFF9CA3AF),
+                        fontWeight: _currentTabIndex == 1 ? FontWeight.bold : FontWeight.w500,
+                        color: _currentTabIndex == 1 ? const Color(0xFF007A3D) : const Color(0xFF6B7280),
+                        fontSize: 14,
                       ),
                     ),
                   ],
@@ -1092,8 +1269,8 @@ class _AttendancePageNewState extends State<AttendancePageNew> {
   }
 
   Widget _buildFilterBar() {
-    // Show status filters only on Attendance tab (super admin)
-    final showStatusFilters = _isSuperAdmin && _currentTabIndex == 0;
+    // Show status filters on Attendance tab
+    final showStatusFilters = _currentTabIndex == 0;
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -1232,25 +1409,49 @@ class _AttendancePageNewState extends State<AttendancePageNew> {
     
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      color: const Color(0x1A007A3D),
+      decoration: const BoxDecoration(
+        color: Color(0xFFE8F5EE),
+        border: Border(
+          bottom: BorderSide(color: Color(0xFFC8E6D3), width: 1),
+        ),
+      ),
       child: Row(
         children: [
-          Text(
-            '${_selectedAttendanceIds.length} selected',
-            style: const TextStyle(fontWeight: FontWeight.bold),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: const Color(0xFF007A3D),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              '${_selectedAttendanceIds.length}',
+              style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 12),
+            ),
+          ),
+          const SizedBox(width: 8),
+          const Text(
+            'records selected',
+            style: TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF0A192F), fontSize: 14),
           ),
           const Spacer(),
           TextButton.icon(
             onPressed: () => setState(() => _selectedAttendanceIds.clear()),
-            icon: const Icon(Icons.clear),
-            label: const Text('Clear'),
+            icon: const Icon(Icons.clear, size: 16, color: Color(0xFF6B7280)),
+            label: const Text('Clear', style: TextStyle(color: Color(0xFF6B7280))),
           ),
-          const SizedBox(width: 8),
-          ElevatedButton.icon(
-            onPressed: _verifySelected,
-            icon: const Icon(Icons.verified),
-            label: const Text('Verify'),
-          ),
+          if (_canVerifyAttendance) ...[
+            const SizedBox(width: 8),
+            ElevatedButton.icon(
+              onPressed: _verifySelected,
+              icon: const Icon(Icons.verified, size: 18),
+              label: const Text('Verify Selected'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF007A3D),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -1352,7 +1553,7 @@ class _AttendancePageNewState extends State<AttendancePageNew> {
               );
             }
           },
-          onVerifyMultiDayAttendance: (worker, dates) async {
+          onVerifyMultiDayAttendance: _canVerifyAttendance ? (worker, dates) async {
             if (worker.id == null || _currentSiteId == null) {
           VisualFeedbackOverlay.showFlashFeedback(
             context,
@@ -1389,7 +1590,7 @@ class _AttendancePageNewState extends State<AttendancePageNew> {
             message: 'Error: ${e.toString()}',
           );
         }
-      },
+      } : null,
       onAttendanceSelected: (attendanceId, selected) {
         setState(() {
           if (selected) {
@@ -1432,7 +1633,7 @@ class _AttendancePageNewState extends State<AttendancePageNew> {
       );
     }
 
-    if (!_checkingWorkplaceAssignment && !_isSuperAdmin && !_hasWorkplaceAssignment) {
+    if (!_checkingWorkplaceAssignment && !_isSuperAdmin && !_canVerifyAttendance && !_hasWorkplaceAssignment) {
       return SliverFillRemaining(child: _buildNoWorkplaceAssignmentWarning());
     }
 
@@ -1479,7 +1680,10 @@ class _AttendancePageNewState extends State<AttendancePageNew> {
                 setState(() => _isLoading = true);
                 
                 final existingAttendance = _allAttendances.firstWhere(
-                  (a) => a.workerId == worker.id,
+                  (a) => a.workerId == worker.id &&
+                         a.attendanceDate.year == _selectedDate.year &&
+                         a.attendanceDate.month == _selectedDate.month &&
+                         a.attendanceDate.day == _selectedDate.day,
                   orElse: () => Attendance(
                     workerId: worker.id!,
                     siteId: _currentSiteId!,
@@ -1490,6 +1694,24 @@ class _AttendancePageNewState extends State<AttendancePageNew> {
                 );
                 
                 if (existingAttendance.id != null) {
+                  if (existingAttendance.isLocked) {
+                    setState(() => _isLoading = false);
+                    VisualFeedbackOverlay.showFlashFeedback(
+                      context,
+                      type: FeedbackType.warning,
+                      message: 'This record is sealed for payroll and cannot be altered',
+                    );
+                    return;
+                  }
+                  if (existingAttendance.isVerified && !_canVerifyAttendance) {
+                    setState(() => _isLoading = false);
+                    VisualFeedbackOverlay.showFlashFeedback(
+                      context,
+                      type: FeedbackType.warning,
+                      message: 'This record has been verified by the Site Engineer and cannot be altered by a Foreman or Timekeeper',
+                    );
+                    return;
+                  }
                   await _dataSource.updateAttendance(
                     id: existingAttendance.id!,
                     status: status,
@@ -1859,20 +2081,26 @@ class _AttendancePageNewState extends State<AttendancePageNew> {
   }
 
   Widget _buildFAB() {
+    final showVerify = _canVerifyAttendance && _currentTabIndex == 0;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         FloatingActionButton(
           heroTag: 'qr_scan',
+          backgroundColor: const Color(0xFF0A192F),
+          foregroundColor: Colors.white,
           onPressed: _openQRScanner,
+          tooltip: 'Scan QR Code',
           child: const Icon(Icons.qr_code_scanner),
         ),
         const SizedBox(height: 12),
         FloatingActionButton.extended(
           heroTag: 'manual_mark',
-          onPressed: (_isSuperAdmin && _currentTabIndex == 0) ? _openBulkVerify : _openBulkAttendance,
-          icon: Icon((_isSuperAdmin && _currentTabIndex == 0) ? Icons.verified : Icons.people),
-          label: Text((_isSuperAdmin && _currentTabIndex == 0) ? 'Bulk Verify' : 'Bulk Mark'),
+          backgroundColor: const Color(0xFF007A3D),
+          foregroundColor: Colors.white,
+          onPressed: showVerify ? _openBulkVerify : _openBulkAttendance,
+          icon: Icon(showVerify ? Icons.verified : Icons.people),
+          label: Text(showVerify ? 'Bulk Verify' : 'Bulk Mark'),
         ),
       ],
     );

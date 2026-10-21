@@ -342,12 +342,12 @@ class _WorkTypeManagementPageState extends State<WorkTypeManagementPage> with Si
   Widget _buildWorkTypeCard(WorkType workType) {
     String getHierarchyLabel(int level) {
       switch (level) {
-        case 1: return 'Executive';
-        case 2: return 'Senior Mgmt';
-        case 3: return 'Middle Mgmt';
-        case 4: return 'Supervisory';
-        case 5: return 'Operational';
-        case 6: return 'Trainee';
+        case 1: return 'Level 1: Executive';
+        case 2: return 'Level 2: Senior Mgmt';
+        case 3: return 'Level 3: Site Mgmt';
+        case 4: return 'Level 4: Supervisory';
+        case 5: return 'Level 5: Operational';
+        case 6: return 'Level 6: Trainee';
         default: return 'Level $level';
       }
     }
@@ -474,15 +474,67 @@ class _WorkTypeManagementPageState extends State<WorkTypeManagementPage> with Si
                   Expanded(
                     child: Text(
                       getHierarchyLabel(workType.hierarchyLevel),
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 11,
-                        color: const Color(0xFF374151),
+                        color: Color(0xFF374151),
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ],
               ),
+              if (workType.hierarchyLevel <= 4) ...[
+                const SizedBox(height: 6),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: workType.hierarchyLevel == 3
+                        ? const Color(0xFFE8F5EE)
+                        : workType.hierarchyLevel <= 2
+                            ? const Color(0xFFE8EDF4)
+                            : const Color(0xFFFFF3E0),
+                    borderRadius: BorderRadius.circular(4),
+                    border: Border.all(
+                      color: workType.hierarchyLevel == 3
+                          ? const Color(0xFF81C784)
+                          : workType.hierarchyLevel <= 2
+                              ? const Color(0xFF90CAF9)
+                              : const Color(0xFFFFB74D),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        workType.hierarchyLevel == 3 ? Icons.domain_verification : Icons.security,
+                        size: 11,
+                        color: workType.hierarchyLevel == 3
+                            ? const Color(0xFF007A3D)
+                            : workType.hierarchyLevel <= 2
+                                ? const Color(0xFF0A192F)
+                                : const Color(0xFFE65100),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        workType.hierarchyLevel == 3
+                            ? 'Site Admin Access'
+                            : workType.hierarchyLevel <= 2
+                                ? 'Admin Access'
+                                : 'Supervisor Access',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: workType.hierarchyLevel == 3
+                              ? const Color(0xFF007A3D)
+                              : workType.hierarchyLevel <= 2
+                                  ? const Color(0xFF0A192F)
+                                  : const Color(0xFFE65100),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ],
           ),
         ),
@@ -902,11 +954,11 @@ class _WorkTypeFormDialogState extends State<WorkTypeFormDialog> {
                           prefixIcon: Icon(Icons.stairs),
                         ),
                         items: const [
-                          DropdownMenuItem(value: 1, child: Text('1 - Executive (CEO, Director)')),
-                          DropdownMenuItem(value: 2, child: Text('2 - Senior Management')),
-                          DropdownMenuItem(value: 3, child: Text('3 - Middle Management')),
-                          DropdownMenuItem(value: 4, child: Text('4 - Supervisory (Team Leads)')),
-                          DropdownMenuItem(value: 5, child: Text('5 - Operational (Workers)')),
+                          DropdownMenuItem(value: 1, child: Text('1 - Executive (CEO, Managing Director)')),
+                          DropdownMenuItem(value: 2, child: Text('2 - Senior Management (Director)')),
+                          DropdownMenuItem(value: 3, child: Text('3 - Middle Management (Site Manager, Engineer)')),
+                          DropdownMenuItem(value: 4, child: Text('4 - Supervisory (Foreman, Shift Lead)')),
+                          DropdownMenuItem(value: 5, child: Text('5 - Operational (Skilled & Unskilled Workers)')),
                           DropdownMenuItem(value: 6, child: Text('6 - Trainee / Apprentice')),
                         ],
                         onChanged: (value) {
@@ -914,6 +966,98 @@ class _WorkTypeFormDialogState extends State<WorkTypeFormDialog> {
                             setState(() => _hierarchyLevel = value);
                           }
                         },
+                      ),
+                      const SizedBox(height: 12),
+
+                      // ── Enterprise RBAC System Mapping Badge ──
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: _hierarchyLevel == 3
+                              ? const Color(0xFFE8F5EE)
+                              : _hierarchyLevel <= 2
+                                  ? const Color(0xFFE8EDF4)
+                                  : _hierarchyLevel == 4
+                                      ? const Color(0xFFFFF3E0)
+                                      : const Color(0xFFF3F4F6),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: _hierarchyLevel == 3
+                                ? const Color(0xFF81C784)
+                                : _hierarchyLevel <= 2
+                                    ? const Color(0xFF90CAF9)
+                                    : _hierarchyLevel == 4
+                                        ? const Color(0xFFFFB74D)
+                                        : const Color(0xFFD1D5DB),
+                          ),
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Icon(
+                              _hierarchyLevel == 3
+                                  ? Icons.domain_verification_rounded
+                                  : _hierarchyLevel <= 2
+                                      ? Icons.admin_panel_settings_rounded
+                                      : _hierarchyLevel == 4
+                                          ? Icons.badge_outlined
+                                          : Icons.group_outlined,
+                              size: 20,
+                              color: _hierarchyLevel == 3
+                                  ? const Color(0xFF007A3D)
+                                  : _hierarchyLevel <= 2
+                                      ? const Color(0xFF0A192F)
+                                      : _hierarchyLevel == 4
+                                          ? const Color(0xFFE65100)
+                                          : const Color(0xFF4B5563),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    _hierarchyLevel == 3
+                                        ? 'Linked System Access: Site Administrator (site_admin)'
+                                        : _hierarchyLevel <= 2
+                                            ? 'Linked System Access: System Administrator (admin)'
+                                            : _hierarchyLevel == 4
+                                                ? 'Linked System Access: Field Supervisor (supervisor)'
+                                                : 'Workforce Profile: Standard Workforce (No Admin Account)',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.bold,
+                                      color: _hierarchyLevel == 3
+                                          ? const Color(0xFF007A3D)
+                                          : _hierarchyLevel <= 2
+                                              ? const Color(0xFF0A192F)
+                                              : _hierarchyLevel == 4
+                                                  ? const Color(0xFFE65100)
+                                                  : const Color(0xFF374151),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    _hierarchyLevel == 3
+                                        ? 'When accounts are created for workers with this Work Type (e.g. Site Manager, Project Engineer), they will automatically receive full access to ALL 8 modules, strictly scoped to their assigned site.'
+                                        : _hierarchyLevel <= 2
+                                            ? 'Executive roles map to multi-site administrator access with organization-wide approvals and permissions.'
+                                            : _hierarchyLevel == 4
+                                                ? 'Supervisor roles are granted field access for roster verification, QR attendance scanning, and overtime management.'
+                                                : 'Operational and apprentice workers are managed via field rosters without software administrator accounts.',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: _hierarchyLevel == 3
+                                          ? const Color(0xFF005C2E)
+                                          : const Color(0xFF4B5563),
+                                      height: 1.35,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                       const SizedBox(height: 16),
 
@@ -1148,6 +1292,7 @@ class _WorkTypeFormDialogState extends State<WorkTypeFormDialog> {
                         value: _taxRule,
                         decoration: const InputDecoration(
                           labelText: 'Tax Rule *',
+                          helperText: 'Select "Daily Casual / Tax Exempt" if this role does not pay tax or pension',
                           border: OutlineInputBorder(),
                         ),
                         items: TaxRule.values.map((rule) {
@@ -1177,7 +1322,7 @@ class _WorkTypeFormDialogState extends State<WorkTypeFormDialog> {
                             labelText: 'Overtime Rate Per Hour',
                             border: OutlineInputBorder(),
                             prefixText: 'ETB ',
-                            helperText: 'Hourly rate for overtime work',
+                            helperText: 'Manual hourly rate (e.g. 100, 200 ETB). If left empty, auto-calculates 1.25x base hourly rate',
                           ),
                           keyboardType: TextInputType.number,
                         ),

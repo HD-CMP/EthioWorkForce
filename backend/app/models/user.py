@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, Enum as SQLEnum
+from sqlalchemy import Column, Integer, String, Boolean, Enum as SQLEnum, ForeignKey
 from sqlalchemy.orm import relationship
 import enum
 
@@ -29,6 +29,10 @@ class User(BaseModel):
     profile_photo = Column(String(500), nullable=True)
     preferred_language = Column(String(5), default="en", nullable=False)
     
+    # Unified Identity: Links software login user to physical employee/worker record
+    worker_id = Column(Integer, ForeignKey("workers.id", ondelete="SET NULL"), nullable=True, unique=True, index=True)
+    
     audit_logs = relationship("AuditLog", back_populates="user")
     site_assignments = relationship("UserSiteAssignment", back_populates="user", cascade="all, delete-orphan")
     work_place_assignments = relationship("UserWorkPlaceAssignment", back_populates="user", cascade="all, delete-orphan")
+    worker = relationship("Worker", back_populates="user_account", foreign_keys=[worker_id])
