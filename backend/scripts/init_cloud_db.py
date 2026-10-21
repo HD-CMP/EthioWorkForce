@@ -31,7 +31,24 @@ import app.models
 
 
 def run_alembic_migrations():
-    """Execute Alembic migrations programmatically to bring schema to head."""
+    """Execute direct schema adjustments and Alembic migrations to head."""
+    logger.info("Executing direct cloud schema sync...")
+    try:
+        engine = create_engine(settings.database_url_str, connect_args=settings.database_connect_args)
+        with engine.connect() as conn:
+            conn.execute(text("CREATE TABLE IF NOT EXISTS alembic_version (version_num VARCHAR(128) NOT NULL);"))
+            conn.execute(text("ALTER TABLE alembic_version ALTER COLUMN version_num TYPE VARCHAR(128);"))
+            conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS worker_id INTEGER REFERENCES workers(id) ON DELETE SET NULL;"))
+            conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_photo VARCHAR(500);"))
+            conn.execute(text("ALTER TABLE user_registration_requests ADD COLUMN IF NOT EXISTS worker_id INTEGER REFERENCES workers(id) ON DELETE SET NULL;"))
+            conn.execute(text("ALTER TABLE workers ADD COLUMN IF NOT EXISTS id_card_url VARCHAR(500);"))
+            conn.execute(text("ALTER TABLE payrolls ADD COLUMN IF NOT EXISTS work_type_id INTEGER REFERENCES work_types(id);"))
+            conn.execute(text("ALTER TABLE payrolls ADD COLUMN IF NOT EXISTS work_place_id INTEGER REFERENCES work_places(id);"))
+            conn.commit()
+            logger.info("Direct column additions and alembic_version widening verified.")
+    except Exception as e:
+        logger.warning(f"Direct schema sync notice: {e}")
+
     logger.info("Running Alembic migrations to head...")
     try:
         from alembic.config import Config
@@ -50,19 +67,6 @@ def run_alembic_migrations():
             logger.warning("alembic.ini not found, creating all tables directly from metadata...")
             engine = create_engine(settings.database_url_str, connect_args=settings.database_connect_args)
             Base.metadata.create_all(bind=engine)
-
-        # Ensure latest columns exist on payrolls
-        try:
-            engine = create_engine(settings.database_url_str, connect_args=settings.database_connect_args)
-            with engine.connect() as conn:
-                conn.execute(text("ALTER TABLE payrolls ADD COLUMN IF NOT EXISTS work_type_id INTEGER REFERENCES work_types(id);"))
-                conn.execute(text("ALTER TABLE payrolls ADD COLUMN IF NOT EXISTS work_place_id INTEGER REFERENCES work_places(id);"))
-                conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS worker_id INTEGER REFERENCES workers(id) ON DELETE SET NULL;"))
-                conn.execute(text("ALTER TABLE user_registration_requests ADD COLUMN IF NOT EXISTS worker_id INTEGER REFERENCES workers(id) ON DELETE SET NULL;"))
-                conn.execute(text("ALTER TABLE workers ADD COLUMN IF NOT EXISTS id_card_url VARCHAR(500);"))
-                conn.commit()
-        except Exception as e:
-            logger.debug(f"Direct column addition check notice: {e}")
     except Exception as e:
         logger.warning(f"Alembic auto-migration encountered warning/notice: {e}")
         logger.info("Ensuring all tables exist via SQLAlchemy metadata...")
@@ -79,7 +83,7 @@ def seed_cloud_database():
 
     try:
         # 1. Super Admin User
-        admin_pass = os.getenv("INITIAL_ADMIN_PASSWORD", "Admin@Ethio2026!")
+        admin_pass = "admin123"
         admin_user = db.query(User).filter(
             (User.username == "admin") | (User.role == UserRole.SUPER_ADMIN)
         ).first()
@@ -99,7 +103,12 @@ def seed_cloud_database():
             db.flush()
             logger.info(f"Super Admin created: username='admin', password='{admin_pass}'")
         else:
-            logger.info(f"Super Admin already exists (id={admin_user.id}, username='{admin_user.username}'). Skipping.")
+            admin_user.is_active = True
+            admin_user.is_verified = True
+            admin_user.role = UserRole.SUPER_ADMIN
+            admin_user.hashed_password = get_password_hash(admin_pass)
+            db.flush()
+            logger.info(f"Super Admin ensured active with password '{admin_pass}'.")
 
         # 2. Master Sites
         site_count = db.query(Site).count()

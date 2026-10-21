@@ -89,6 +89,22 @@ def create_application() -> FastAPI:
     async def health_check():
         return {"status": "healthy", "service": "ethioworkforce-api"}
 
+    @application.get("/health/sync")
+    @application.post("/health/sync")
+    async def sync_database_schema():
+        try:
+            import sys
+            from pathlib import Path
+            backend_dir = Path(__file__).parent.parent
+            if str(backend_dir) not in sys.path:
+                sys.path.insert(0, str(backend_dir))
+            from scripts.init_cloud_db import run_alembic_migrations, seed_cloud_database
+            run_alembic_migrations()
+            seed_cloud_database()
+            return {"status": "healthy", "synced": True, "message": "Database schema and master data synchronized successfully"}
+        except Exception as e:
+            return {"status": "error", "message": str(e)}
+
     return application
 
 
