@@ -14,10 +14,12 @@ class DioClient {
   
   // Versioned cache key — bump this when you change the default URL
   // so that stale cached URLs from previous environments are invalidated.
-  static const String _backendUrlKey = 'backend_url_v2';
+  // v3: Release builds now reject http/LAN URLs automatically.
+  static const String _backendUrlKey = 'backend_url_v3';
   static const String _isOfflineModeKey = 'offline_mode';
-  // Legacy keys to clean up
+  // Legacy keys to clean up on first run
   static const String _legacyBackendUrlKey = 'backend_url';
+  static const String _legacyBackendUrlKeyV2 = 'backend_url_v2';
   
   static String? _customBaseUrl;
   static bool _isOfflineMode = false;
@@ -35,28 +37,42 @@ class DioClient {
     if (_customBaseUrl != null) {
       return _customBaseUrl!;
     }
-    
+
     final prefs = await SharedPreferences.getInstance();
-    
+
     // One-time cleanup: remove stale legacy cached URL (old WSL IPs etc.)
     if (!_hasCleanedLegacy) {
       _hasCleanedLegacy = true;
       if (prefs.containsKey(_legacyBackendUrlKey)) {
         await prefs.remove(_legacyBackendUrlKey);
       }
+      if (prefs.containsKey(_legacyBackendUrlKeyV2)) {
+        await prefs.remove(_legacyBackendUrlKeyV2);
+      }
     }
-    
+
+    // In release builds: NEVER use a cached local/dev URL.
+    // A stale localhost/10.0.2.2/192.168.x.x URL from a dev session would
+    // cause "invalid credentials" on real devices even though the password is correct.
+    const isRelease = bool.fromEnvironment('dart.vm.product');
+    if (isRelease) {
+      final savedUrl = prefs.getString(_backendUrlKey);
+      // Only honour a saved URL if it points to a real HTTPS server (not localhost/LAN)
+      if (savedUrl != null &&
+          savedUrl.isNotEmpty &&
+          savedUrl.startsWith('https://')) {
+        _customBaseUrl = savedUrl;
+        return savedUrl;
+      }
+      // Otherwise always fall back to the production cloud URL
+      return defaultProductionUrl;
+    }
+
+    // Debug / development build: honour any saved URL as-is
     final savedUrl = prefs.getString(_backendUrlKey);
-    
     if (savedUrl != null && savedUrl.isNotEmpty) {
       _customBaseUrl = savedUrl;
       return savedUrl;
-    }
-    
-    // Default to production URL in release mode (both Web and Mobile), development URL otherwise
-    const isRelease = bool.fromEnvironment('dart.vm.product');
-    if (isRelease) {
-      return defaultProductionUrl;
     }
     return defaultDevelopmentUrl;
   }
