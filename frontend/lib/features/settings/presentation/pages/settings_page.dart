@@ -845,7 +845,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                 borderRadius: BorderRadius.circular(16),
                                 border: Border.all(color: const Color(0x40FFFFFF)),
                               ),
-                              child: const Text('v1.4.3 (Build 143)', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600)),
+                              child: const Text('v1.5.0 (Build 150)', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600)),
                             ),
                           ],
                         ),
@@ -1181,7 +1181,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 const ListTile(
                   leading: Icon(Icons.business_center_rounded, color: Color(0xFF0A192F)),
                   title: Text('Platform Edition', style: TextStyle(fontWeight: FontWeight.w600)),
-                  subtitle: Text('EthioWorkforce Enterprise v1.4.3 (Offline-First)'),
+                  subtitle: Text('EthioWorkforce Enterprise v1.5.0 (Offline-First)'),
                 ),
                 const ListTile(
                   leading: Icon(Icons.verified_outlined, color: Color(0xFF007A3D)),
