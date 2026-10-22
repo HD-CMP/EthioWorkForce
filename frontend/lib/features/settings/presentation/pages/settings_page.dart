@@ -845,7 +845,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                 borderRadius: BorderRadius.circular(16),
                                 border: Border.all(color: const Color(0x40FFFFFF)),
                               ),
-                              child: const Text('v1.5.3 (Build 153)', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600)),
+                              child: const Text('v1.5.4 (Build 154)', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600)),
                             ),
                           ],
                         ),
