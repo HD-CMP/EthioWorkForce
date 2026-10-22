@@ -37,17 +37,34 @@ class _PayrollListView extends StatefulWidget {
   State<_PayrollListView> createState() => _PayrollListViewState();
 }
 
-class _PayrollListViewState extends State<_PayrollListView> {
+class _PayrollListViewState extends State<_PayrollListView> with SingleTickerProviderStateMixin {
   final SiteRemoteDataSource _siteDataSource = SiteRemoteDataSource();
   final StorageService _storageService = StorageService();
   List<Site> _sites = [];
   Site? _selectedSite;
   bool _isLoadingSites = false;
+  late TabController _tabController;
+  int _currentTabIndex = 0;
 
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+    _tabController.addListener(() {
+      if (_tabController.index != _currentTabIndex && mounted) {
+        setState(() => _currentTabIndex = _tabController.index);
+        if (_tabController.index == 0 && _selectedSite != null) {
+          context.read<PayrollBloc>().add(RefreshPayrolls(siteId: _selectedSite!.id));
+        }
+      }
+    });
     _initializeSite();
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
   }
 
   Future<void> _initializeSite() async {
@@ -286,8 +303,31 @@ class _PayrollListViewState extends State<_PayrollListView> {
                 : null,
           ),
         ],
+        bottom: TabBar(
+          controller: _tabController,
+          labelColor: Colors.white,
+          unselectedLabelColor: const Color(0xB3FFFFFF),
+          indicatorColor: const Color(0xFF007A3D),
+          indicatorWeight: 3,
+          labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+          unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.normal, fontSize: 13),
+          tabs: const [
+            Tab(
+              icon: Icon(Icons.receipt_long_rounded),
+              text: 'Payroll Records',
+            ),
+            Tab(
+              icon: Icon(Icons.calculate_rounded),
+              text: 'Calculate Payroll',
+            ),
+          ],
+        ),
       ),
-      body: RefreshIndicator(
+      body: TabBarView(
+        controller: _tabController,
+        children: [
+          // Tab 0: Payroll Records History
+          RefreshIndicator(
               color: const Color(0xFF007A3D),
               onRefresh: () async {
                 if (_selectedSite != null) {
@@ -360,18 +400,47 @@ class _PayrollListViewState extends State<_PayrollListView> {
                 },
               ),
             ),
-      floatingActionButton: _selectedSite != null
+          // Tab 1: Calculate Payroll Engine
+          _selectedSite != null
+              ? PayrollCalculationPage(
+                  key: ValueKey('calc_' + _selectedSite!.id.toString()),
+                  site: _selectedSite!,
+                  embedded: true,
+                )
+              : Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        width: 72, height: 72,
+                        decoration: const BoxDecoration(color: Color(0xFFE8EDF4), shape: BoxShape.circle),
+                        child: const Icon(Icons.calculate_outlined, size: 36, color: Color(0xFF0A192F)),
+                      ),
+                      const SizedBox(height: 16),
+                      const Text(
+                        'Select a site to calculate payroll',
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Color(0xFF1A1A1A)),
+                      ),
+                      const SizedBox(height: 12),
+                      ElevatedButton.icon(
+                        onPressed: _showSiteSelector,
+                        icon: const Icon(Icons.location_on_rounded, size: 18),
+                        label: const Text('Choose Site'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF007A3D),
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+        ],
+      ),
+      floatingActionButton: (_selectedSite != null && _currentTabIndex == 0)
           ? FloatingActionButton.extended(
               onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => PayrollCalculationPage(site: _selectedSite!),
-                  ),
-                ).then((_) {
-                  context.read<PayrollBloc>().add(
-                        RefreshPayrolls(siteId: _selectedSite!.id),
-                      );
-                });
+                _tabController.animateTo(1);
               },
               backgroundColor: const Color(0xFF007A3D),
               foregroundColor: Colors.white,

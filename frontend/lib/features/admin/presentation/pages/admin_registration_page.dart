@@ -216,10 +216,14 @@ class _AdminRegistrationPageContentState
         ],
         bottom: TabBar(
           controller: _tabController,
+          isScrollable: true,
+          tabAlignment: TabAlignment.start,
           labelColor: Colors.white,
           unselectedLabelColor: const Color(0xB3FFFFFF),
           indicatorColor: Colors.white,
           indicatorWeight: 3,
+          labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+          unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.normal, fontSize: 13),
           tabs: const [
             Tab(icon: Icon(Icons.person_add), text: 'Register New'),
             Tab(icon: Icon(Icons.info_outline), text: 'Details'),
@@ -2300,31 +2304,41 @@ class _AdminDetailsTabState extends State<_AdminDetailsTab> {
                     const SizedBox(height: 4),
                     Row(
                       children: [
-                        Icon(Icons.person, size: 14, color: const Color(0xFF6B7280)),
+                        const Icon(Icons.person_outline_rounded, size: 14, color: Color(0xFF6B7280)),
                         const SizedBox(width: 4),
                         Flexible(
                           child: Text(
                             '@${admin['username'] as String? ?? 'N/A'}',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: const Color(0xFF374151),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Color(0xFF4B5563),
+                              fontWeight: FontWeight.w500,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        const SizedBox(width: 16),
-                        Icon(Icons.admin_panel_settings, size: 14, color: const Color(0xFF6B7280)),
-                        const SizedBox(width: 4),
-                        Expanded(
-                          child: Text(
-                            role.toUpperCase().replaceAll('_', ' '),
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: const Color(0xFF374151),
-                              fontWeight: FontWeight.w600,
-                            ),
-                            overflow: TextOverflow.ellipsis,
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFE8EDF4),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.shield_outlined, size: 11, color: Color(0xFF0A192F)),
+                              const SizedBox(width: 4),
+                              Text(
+                                role.toUpperCase().replaceAll('_', ' '),
+                                style: const TextStyle(
+                                  fontSize: 10,
+                                  color: Color(0xFF0A192F),
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],

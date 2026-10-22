@@ -34,10 +34,12 @@ enum DisbursementFilter {
 
 class PayrollCalculationPage extends StatefulWidget {
   final Site site;
+  final bool embedded;
 
   const PayrollCalculationPage({
     super.key,
     required this.site,
+    this.embedded = false,
   });
 
   @override
@@ -614,60 +616,66 @@ class _PayrollCalculationPageState extends State<PayrollCalculationPage> {
 
           return Scaffold(
             backgroundColor: const Color(0xFFF4F7F4),
-            appBar: AppBar(
-              backgroundColor: const Color(0xFF007A3D),
-              foregroundColor: Colors.white,
-              title: const Text('Calculate Payroll', style: TextStyle(fontWeight: FontWeight.bold)),
-              elevation: 0,
-            ),
-            body: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // ─── Branded Banner ──────────────────────────────────────────
-                  _buildHeaderBanner(),
+            appBar: widget.embedded
+                ? null
+                : AppBar(
+                    backgroundColor: const Color(0xFF007A3D),
+                    foregroundColor: Colors.white,
+                    title: const Text('Calculate Payroll', style: TextStyle(fontWeight: FontWeight.bold)),
+                    elevation: 0,
+                  ),
+            body: SafeArea(
+              bottom: true,
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // ─── Branded Banner ──────────────────────────────────────────
+                    _buildHeaderBanner(),
 
-                  // ─── Workplaces Filter Strip ─────────────────────────────────
-                  if (_isLoadingWorkers)
-                    const LinearProgressIndicator(color: Color(0xFF007A3D))
-                  else if (_workPlaces.isNotEmpty)
-                    _buildWorkPlacesFilter(),
+                    // ─── Workplaces Filter Strip ─────────────────────────────────
+                    if (_isLoadingWorkers)
+                      const LinearProgressIndicator(color: Color(0xFF007A3D))
+                    else if (_workPlaces.isNotEmpty)
+                      _buildWorkPlacesFilter(),
 
-                  Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Form(
-                      key: _formKey,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // ─── Card 1: Target Category Selector ───────────────
-                          _buildTargetCategorySection(isCalculating),
-                          const SizedBox(height: 16),
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // ─── Card 1: Target Category Selector ───────────────
+                            _buildTargetCategorySection(isCalculating),
+                            const SizedBox(height: 16),
 
-                          // ─── Card 2: Period & Calendar Configuration ─────────
-                          _buildPeriodConfigurationCard(context, dateFormat, isCalculating),
-                          const SizedBox(height: 16),
+                            // ─── Card 2: Period & Calendar Configuration ─────────
+                            _buildPeriodConfigurationCard(context, dateFormat, isCalculating),
+                            const SizedBox(height: 16),
 
-                          // ─── Card 3: Disbursement Preference Filter ───────────
-                          _buildDisbursementFilterCard(isCalculating),
-                          const SizedBox(height: 16),
+                            // ─── Card 3: Disbursement Preference Filter ───────────
+                            _buildDisbursementFilterCard(isCalculating),
+                            const SizedBox(height: 16),
 
-                          // ─── Card 4: Live Pre-Calculation Workforce Audit ─────
-                          _buildLiveAuditCard(),
-                          const SizedBox(height: 24),
+                            // ─── Card 4: Live Pre-Calculation Workforce Audit ─────
+                            _buildLiveAuditCard(),
+                            const SizedBox(height: 24),
 
-                          // ─── Submit Button ───────────────────────────────────
-                          if (isCalculating)
-                            _buildCalculatingCard()
-                          else
-                            _buildSubmitButton(context),
+                            // ─── Submit Button ───────────────────────────────────
+                            if (isCalculating)
+                              _buildCalculatingCard()
+                            else
+                              _buildSubmitButton(context),
 
-                          const SizedBox(height: 24),
-                        ],
+                            const SizedBox(height: 48),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           );
@@ -1546,19 +1554,28 @@ class _PayrollCalculationPageState extends State<PayrollCalculationPage> {
   }
 
   Widget _buildSubmitButton(BuildContext context) {
-    return SizedBox(
+    return Container(
       width: double.infinity,
-      height: 52,
+      constraints: const BoxConstraints(minHeight: 54),
       child: ElevatedButton.icon(
         onPressed: () => _onCalculatePressed(context.read<PayrollBloc>()),
-        icon: const Icon(Icons.flash_on_rounded, size: 20),
-        label: Text(
-          'Calculate & Generate Payroll ($_matchingCount Workers)',
-          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+        icon: const Icon(Icons.flash_on_rounded, size: 22),
+        label: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          child: Text(
+            'Calculate & Generate Payroll ($_matchingCount Workers)',
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.bold,
+              height: 1.25,
+            ),
+          ),
         ),
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFF007A3D),
           foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
           elevation: 3,
         ),

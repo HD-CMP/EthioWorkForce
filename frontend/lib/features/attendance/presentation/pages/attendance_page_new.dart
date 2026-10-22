@@ -1346,8 +1346,9 @@ class _AttendancePageNewState extends State<AttendancePageNew> {
                 ),
               ),
             ],
-          // Workplace filter chips — always visible for all users
-          _buildWorkTypeFilterChips(),
+          // Workplace filter chips — visible when workplaces exist
+          if (_workPlaces.isNotEmpty)
+            _buildWorkTypeFilterChips(),
         ],
       ),
     );

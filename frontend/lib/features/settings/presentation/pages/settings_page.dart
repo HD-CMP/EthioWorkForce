@@ -12,6 +12,7 @@ import '../../../../core/network/dio_client.dart';
 import '../../../../core/utils/file_saver.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/services/session_manager.dart';
+import '../../../../core/services/font_settings_service.dart';
 import '../../../auth/data/datasources/auth_local_datasource.dart';
 import '../../../profile/presentation/pages/profile_page.dart';
 
@@ -23,6 +24,8 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
+  // Typography & Font Scale Controller
+  double _fontScale = FontSettingsService.scaleStandard;
   // Localization & Region
   String _selectedLanguage = 'en'; // 'en' or 'am'
   String _selectedCalendar = 'ethiopian'; // 'ethiopian' or 'gregorian'
@@ -52,9 +55,25 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   void initState() {
     super.initState();
+    _fontScale = FontSettingsService.fontScaleNotifier.value;
+    FontSettingsService.fontScaleNotifier.addListener(_onFontScaleChanged);
     _loadAllSettings();
     _loadUserIdentity();
     _calculateCacheSize();
+  }
+
+  @override
+  void dispose() {
+    FontSettingsService.fontScaleNotifier.removeListener(_onFontScaleChanged);
+    super.dispose();
+  }
+
+  void _onFontScaleChanged() {
+    if (mounted) {
+      setState(() {
+        _fontScale = FontSettingsService.fontScaleNotifier.value;
+      });
+    }
   }
 
   Future<void> _loadAllSettings() async {
@@ -69,6 +88,7 @@ class _SettingsPageState extends State<SettingsPage> {
         _backendUrl = url;
         _offlineMode = isOffline;
         _autoLogoutMinutes = timeoutMins;
+        _fontScale = FontSettingsService.fontScaleNotifier.value;
         _selectedLanguage = prefs.getString('app_language') ?? 'en';
         _selectedCalendar = prefs.getString('calendar_type') ?? 'ethiopian';
         _audioFeedback = prefs.getBool('audio_feedback') ?? true;
@@ -845,7 +865,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                 borderRadius: BorderRadius.circular(16),
                                 border: Border.all(color: const Color(0x40FFFFFF)),
                               ),
-                              child: const Text('v1.5.4 (Build 154)', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600)),
+                              child: const Text('v1.5.5 (Build 155)', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600)),
                             ),
                           ],
                         ),
@@ -1105,6 +1125,9 @@ class _SettingsPageState extends State<SettingsPage> {
               ],
             ),
 
+            // ── Section: Typography & Display Controller ─────────────────
+            _buildTypographySection(),
+
             // ── Section 6: Sensory Feedback & Field Accessibility ───────────
             _Section(
               title: 'Field Sensory & Accessibility',
@@ -1214,6 +1237,280 @@ class _SettingsPageState extends State<SettingsPage> {
       ),
     );
   }
+
+  Widget _buildTypographySection() {
+    final scalePercent = (_fontScale * 100).round();
+    final scaleLabel = FontSettingsService.getScaleLabel(_fontScale);
+
+    return _Section(
+      title: 'Typography & Font Size Controller',
+      icon: Icons.format_size_rounded,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: const [
+                    Text(
+                      'App Font Scaling',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Color(0xFF1A1A1A)),
+                    ),
+                    SizedBox(height: 2),
+                    Text(
+                      'Scales text, cards & tables dynamically across all pages',
+                      style: TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE8F5EE),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFF007A3D)),
+                ),
+                child: Text(
+                  '$scalePercent% • $scaleLabel',
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF007A3D),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // 4 Quick Preset Selector Chips
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Row(
+            children: [
+              _buildPresetChip('Compact', 0.85, '85%'),
+              const SizedBox(width: 6),
+              _buildPresetChip('Standard', 1.00, '100%'),
+              const SizedBox(width: 6),
+              _buildPresetChip('Comfortable', 1.15, '115%'),
+              const SizedBox(width: 6),
+              _buildPresetChip('Large', 1.30, '130%'),
+            ],
+          ),
+        ),
+
+        // Smooth Slider
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: Row(
+            children: [
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 8),
+                child: Text('A', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF6B7280))),
+              ),
+              Expanded(
+                child: SliderTheme(
+                  data: SliderTheme.of(context).copyWith(
+                    activeTrackColor: const Color(0xFF007A3D),
+                    inactiveTrackColor: const Color(0xFFE5E7EB),
+                    thumbColor: const Color(0xFF007A3D),
+                    overlayColor: const Color(0x26007A3D),
+                    trackHeight: 4,
+                  ),
+                  child: Slider(
+                    value: _fontScale,
+                    min: 0.80,
+                    max: 1.35,
+                    divisions: 11,
+                    onChanged: (val) {
+                      final rounded = (val * 20).round() / 20;
+                      FontSettingsService.setFontScale(rounded);
+                      setState(() => _fontScale = rounded);
+                    },
+                  ),
+                ),
+              ),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 8),
+                child: Text('A', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF007A3D))),
+              ),
+            ],
+          ),
+        ),
+
+        // Live Enterprise Preview Card
+        Container(
+          margin: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF9FAFB),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: const Color(0xFFE5E7EB)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'LIVE DISPLAY PREVIEW',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFF6B7280),
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                  if (_fontScale != 1.0)
+                    InkWell(
+                      onTap: () {
+                        HapticFeedback.lightImpact();
+                        FontSettingsService.setFontScale(1.0);
+                        setState(() => _fontScale = 1.0);
+                      },
+                      child: const Text(
+                        'Reset to 100%',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF007A3D),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: const Color(0xFFE5E7EB)),
+                  boxShadow: const [
+                    BoxShadow(color: Color(0x0A000000), blurRadius: 4, offset: Offset(0, 2)),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFF007A3D),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Center(
+                        child: Text(
+                          'AK',
+                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Flexible(
+                                child: Text(
+                                  'Abebe Kebede',
+                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF1A1A1A)),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFE8F5EE),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: const Text(
+                                  'ACTIVE',
+                                  style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Color(0xFF007A3D)),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 3),
+                          const Text(
+                            'Senior Site Supervisor • WT-SUPERVISOR',
+                            style: TextStyle(fontSize: 11, color: Color(0xFF6B7280)),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 4),
+                          const Text(
+                            'Monthly Salary • ETB 28,000.00',
+                            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF007A3D)),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPresetChip(String label, double scale, String pct) {
+    final isSelected = (_fontScale - scale).abs() < 0.04;
+    return Expanded(
+      child: InkWell(
+        onTap: () {
+          HapticFeedback.selectionClick();
+          FontSettingsService.setFontScale(scale);
+          setState(() => _fontScale = scale);
+        },
+        borderRadius: BorderRadius.circular(10),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          decoration: BoxDecoration(
+            color: isSelected ? const Color(0xFF007A3D) : const Color(0xFFF3F4F6),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: isSelected ? const Color(0xFF007A3D) : const Color(0xFFE5E7EB),
+            ),
+          ),
+          child: Column(
+            children: [
+              Text(
+                pct,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: isSelected ? Colors.white : const Color(0xFF1A1A1A),
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w500,
+                  color: isSelected ? const Color(0xE6FFFFFF) : const Color(0xFF6B7280),
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
 }
 
 class _Section extends StatelessWidget {

@@ -203,91 +203,151 @@ class _WorkTypeManagementPageState extends State<WorkTypeManagementPage> with Si
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.only(bottom: 80, top: 8),
+      padding: const EdgeInsets.only(bottom: 110, top: 12),
       itemCount: _workTypes.length,
       itemBuilder: (context, index) {
         final workType = _workTypes[index];
         return Card(
-          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
           elevation: 2,
-          child: ListTile(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            leading: CircleAvatar(
-              backgroundColor: workType.isActive
-                  ? const Color(0xFF007A3D)
-                  : const Color(0xFF9CA3AF),
-              child: const Icon(Icons.work, color: Colors.white),
-            ),
-            title: Text(
-              workType.name,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-              ),
-            ),
-            subtitle: Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Code: ${workType.code}',
-                    style: TextStyle(
-                      color: const Color(0xFF6B7280),
-                      fontSize: 13,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    workType.hierarchyLevel >= 5
-                        ? '${workType.paymentMode.displayName} • ETB ${workType.baseRate.toStringAsFixed(2)}'
-                        : '${workType.paymentMode.displayName} • ⭐ Per Worker',
-                    style: TextStyle(
-                      color: workType.hierarchyLevel >= 5 ? const Color(0xFF374151) : const Color(0xFFE65100),
-                      fontWeight: FontWeight.w500,
-                      fontSize: 13,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: const BorderSide(color: Color(0xFFE5E7EB), width: 1),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: workType.isActive 
-                        ? const Color(0xFFE8F5EE) 
-                        : const Color(0xFFE5E7EB),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: workType.isActive 
-                          ? const Color(0xFF66B28A) 
-                          : const Color(0xFF9CA3AF),
+                // Top Row: Icon + Title + Status Pill
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: 42,
+                      height: 42,
+                      decoration: BoxDecoration(
+                        color: workType.isActive ? const Color(0xFFE8F5EE) : const Color(0xFFF3F4F6),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(
+                        Icons.work_rounded,
+                        color: workType.isActive ? const Color(0xFF007A3D) : const Color(0xFF9CA3AF),
+                        size: 22,
+                      ),
                     ),
-                  ),
-                  child: Text(
-                    workType.isActive ? 'Active' : 'Inactive',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: workType.isActive 
-                          ? const Color(0xFF003D1F) 
-                          : const Color(0xFF374151),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            workType.name,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF1A1A1A),
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFF3F4F6),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  'Code: ${workType.code}',
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    color: Color(0xFF4B5563),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: workType.isActive ? const Color(0xFFE8F5EE) : const Color(0xFFF3F4F6),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: workType.isActive ? const Color(0xFF007A3D) : const Color(0xFF9CA3AF),
+                                    width: 1,
+                                  ),
+                                ),
+                                child: Text(
+                                  workType.isActive ? 'Active' : 'Inactive',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    color: workType.isActive ? const Color(0xFF007A3D) : const Color(0xFF6B7280),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
+                  ],
                 ),
-                const SizedBox(width: 4),
-                IconButton(
-                  icon: const Icon(Icons.edit_outlined, size: 20),
-                  onPressed: () => _showWorkTypeDialog(workType),
-                  tooltip: 'Edit',
-                ),
-                IconButton(
-                  icon: const Icon(Icons.delete_outline, color: const Color(0xFFB71C1C), size: 20),
-                  onPressed: () => _deleteWorkType(workType),
-                  tooltip: 'Delete',
+
+                const SizedBox(height: 12),
+                const Divider(height: 1, color: Color(0xFFF3F4F6)),
+                const SizedBox(height: 10),
+
+                // Bottom Row: Rate Badge & Action Buttons
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFE8F5EE),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.payments_outlined, size: 14, color: Color(0xFF007A3D)),
+                          const SizedBox(width: 6),
+                          Text(
+                            workType.hierarchyLevel >= 5
+                                ? '${workType.paymentMode.displayName} • ETB ${workType.baseRate.toStringAsFixed(2)}'
+                                : '${workType.paymentMode.displayName} • ⭐ Per Worker',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: workType.hierarchyLevel >= 5 ? const Color(0xFF007A3D) : const Color(0xFFE65100),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.edit_outlined, size: 20, color: Color(0xFF007A3D)),
+                          onPressed: () => _showWorkTypeDialog(workType),
+                          tooltip: 'Edit',
+                          constraints: const BoxConstraints(),
+                          padding: const EdgeInsets.all(8),
+                        ),
+                        const SizedBox(width: 8),
+                        IconButton(
+                          icon: const Icon(Icons.delete_outline_rounded, size: 20, color: Color(0xFFB71C1C)),
+                          onPressed: () => _deleteWorkType(workType),
+                          tooltip: 'Delete',
+                          constraints: const BoxConstraints(),
+                          padding: const EdgeInsets.all(8),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ],
             ),
