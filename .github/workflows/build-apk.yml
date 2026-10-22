@@ -46,7 +46,28 @@ jobs:
           mkdir -p assets/icons
           mkdir -p assets/sounds
           mkdir -p assets/i18n
-      
+
+      # ── Keystore Setup ──────────────────────────────────────────────────────
+      # Decode the base64-encoded keystore stored in GitHub Secrets and write
+      # the key.properties file so Gradle can sign the release APK properly.
+      - name: Decode release keystore
+        if: env.KEYSTORE_BASE64 != ''
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEY_STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+        run: |
+          echo "$KEYSTORE_BASE64" | base64 --decode > frontend/android/app/upload-keystore.jks
+          cat > frontend/android/key.properties <<EOF
+          storePassword=$KEY_STORE_PASSWORD
+          keyPassword=$KEY_PASSWORD
+          keyAlias=$KEY_ALIAS
+          storeFile=app/upload-keystore.jks
+          EOF
+          echo "Keystore decoded and key.properties written."
+      # ────────────────────────────────────────────────────────────────────────
+
       - name: Install dependencies
         working-directory: ./frontend
         run: flutter pub get
@@ -64,7 +85,7 @@ jobs:
             exit 1
           }
           flutter build apk --release --split-per-abi --no-tree-shake-icons
-
+          cp build/app/outputs/flutter-apk/app-release.apk build/app/outputs/flutter-apk/EthioWorkforce-Universal.apk
 
       - name: Upload Build Log
         if: always()

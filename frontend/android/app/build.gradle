@@ -49,9 +49,16 @@ android {
         buildConfig = true
     }
 
+    packaging {
+        resources {
+            excludes += '/META-INF/{AL2.0,LGPL2.1}'
+            excludes += '/META-INF/*.version'
+        }
+    }
+
     defaultConfig {
         applicationId "com.ethioworkforce.app"
-        minSdk 24
+        minSdkVersion flutter.minSdkVersion
         targetSdk 35
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
@@ -63,7 +70,15 @@ android {
             if (keystorePropertiesFile.exists()) {
                 keyAlias keystoreProperties['keyAlias']
                 keyPassword keystoreProperties['keyPassword']
-                storeFile file(keystoreProperties['storeFile'])
+                def storeFilePath = keystoreProperties['storeFile'] ?: 'upload-keystore.jks'
+                def resolvedStoreFile = rootProject.file(storeFilePath)
+                if (!resolvedStoreFile.exists()) {
+                    resolvedStoreFile = file(storeFilePath)
+                }
+                if (!resolvedStoreFile.exists()) {
+                    resolvedStoreFile = rootProject.file("app/${storeFilePath}")
+                }
+                storeFile resolvedStoreFile
                 storePassword keystoreProperties['storePassword']
                 v1SigningEnabled true
                 v2SigningEnabled true
