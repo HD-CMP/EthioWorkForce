@@ -305,20 +305,35 @@ class _PayrollListViewState extends State<_PayrollListView> with SingleTickerPro
         ],
         bottom: TabBar(
           controller: _tabController,
+          isScrollable: false,
+          labelPadding: const EdgeInsets.symmetric(horizontal: 6),
           labelColor: Colors.white,
           unselectedLabelColor: const Color(0xB3FFFFFF),
           indicatorColor: const Color(0xFF007A3D),
           indicatorWeight: 3,
-          labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-          unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.normal, fontSize: 13),
+          indicatorSize: TabBarIndicatorSize.tab,
           tabs: const [
             Tab(
-              icon: Icon(Icons.receipt_long_rounded),
-              text: 'Payroll Records',
+              icon: Icon(Icons.receipt_long_rounded, size: 22),
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  'Payroll Records',
+                  maxLines: 1,
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                ),
+              ),
             ),
             Tab(
-              icon: Icon(Icons.calculate_rounded),
-              text: 'Calculate Payroll',
+              icon: Icon(Icons.calculate_rounded, size: 22),
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  'Calculate Payroll',
+                  maxLines: 1,
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                ),
+              ),
             ),
           ],
         ),

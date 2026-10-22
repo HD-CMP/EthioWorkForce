@@ -160,18 +160,27 @@ class _WorkTypeManagementPageState extends State<WorkTypeManagementPage> with Si
         elevation: 0,
         bottom: TabBar(
           controller: _tabController,
+          isScrollable: false,
+          labelPadding: const EdgeInsets.symmetric(horizontal: 6),
           labelColor: Colors.white,
           unselectedLabelColor: const Color(0xB3FFFFFF),
           indicatorColor: Colors.white,
           indicatorWeight: 3,
+          indicatorSize: TabBarIndicatorSize.tab,
           tabs: const [
             Tab(
-              icon: Icon(Icons.manage_accounts),
-              text: 'Manage',
+              icon: Icon(Icons.manage_accounts, size: 22),
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text('Manage', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+              ),
             ),
             Tab(
-              icon: Icon(Icons.view_list),
-              text: 'View All',
+              icon: Icon(Icons.view_list, size: 22),
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text('View All', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+              ),
             ),
           ],
         ),

@@ -216,18 +216,47 @@ class _AdminRegistrationPageContentState
         ],
         bottom: TabBar(
           controller: _tabController,
-          isScrollable: true,
-          tabAlignment: TabAlignment.start,
+          isScrollable: false,
+          labelPadding: const EdgeInsets.symmetric(horizontal: 4),
           labelColor: Colors.white,
           unselectedLabelColor: const Color(0xB3FFFFFF),
           indicatorColor: Colors.white,
           indicatorWeight: 3,
-          labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-          unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.normal, fontSize: 13),
+          indicatorSize: TabBarIndicatorSize.tab,
           tabs: const [
-            Tab(icon: Icon(Icons.person_add), text: 'Register New'),
-            Tab(icon: Icon(Icons.info_outline), text: 'Details'),
-            Tab(icon: Icon(Icons.pending_actions), text: 'Pending Requests'),
+            Tab(
+              icon: Icon(Icons.person_add_rounded, size: 22),
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  'Register New',
+                  maxLines: 1,
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                ),
+              ),
+            ),
+            Tab(
+              icon: Icon(Icons.info_outline_rounded, size: 22),
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  'Details',
+                  maxLines: 1,
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                ),
+              ),
+            ),
+            Tab(
+              icon: Icon(Icons.pending_actions_rounded, size: 22),
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  'Pending Requests',
+                  maxLines: 1,
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                ),
+              ),
+            ),
           ],
         ),
       ),
