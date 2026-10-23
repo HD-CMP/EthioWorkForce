@@ -1,0 +1,40 @@
+EthioWorkforce Source-Available Demonstration License
+Copyright (c) 2026 HD-CMP / EthioWorkforce. All rights reserved.
+
+==============================================================================
+PREAMBLE
+==============================================================================
+This software and associated documentation files (the "Software") are made 
+publicly accessible on GitHub for technical portfolio evaluation, educational 
+review, and professional recruitment demonstration.
+
+==============================================================================
+TERMS AND CONDITIONS
+==============================================================================
+
+1. PERMITTED USES
+   - You may view, clone, and build the Software locally solely for the purpose
+     of technical evaluation, recruitment assessment, code quality inspection,
+     and non-commercial educational review.
+
+2. RESTRICTIONS
+   - Commercial Exploitation: You may NOT deploy, host, run, or distribute the 
+     Software or any derivative works for commercial gain, business operations,
+     production payroll processing, SaaS offerings, or paid client services 
+     without prior express written permission from the copyright holder.
+   - Sublicensing & Redistribution: You may NOT sublicense, sell, rent, lease, 
+     or republish the Software, in whole or in part, under any different license.
+   - Proprietary Notices: You may not remove, obfuscate, or alter any copyright 
+     notices, trademarks, or proprietary marks present in the Software.
+
+3. DISCLAIMER OF WARRANTY
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
+   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
+   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
+   DEALINGS IN THE SOFTWARE.
+
+For licensing inquiries, commercial partnerships, or custom enterprise deployment 
+authorizations, please contact the repository maintainers.

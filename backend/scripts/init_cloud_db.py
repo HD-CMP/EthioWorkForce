@@ -83,32 +83,35 @@ def seed_cloud_database():
 
     try:
         # 1. Super Admin User
-        admin_pass = "admin123"
+        admin_initial_pass = os.environ.get("ADMIN_INITIAL_PASSWORD", "Admin@Ethio2026!")
         admin_user = db.query(User).filter(
             (User.username == "admin") | (User.role == UserRole.SUPER_ADMIN)
         ).first()
 
         if not admin_user:
-            logger.info("Creating default Super Admin user...")
+            logger.info("Creating initial Super Admin user...")
             admin_user = User(
                 username="admin",
                 email="admin@ethioworkforce.com",
                 full_name="System Administrator",
-                hashed_password=get_password_hash(admin_pass),
+                hashed_password=get_password_hash(admin_initial_pass),
                 role=UserRole.SUPER_ADMIN,
                 is_active=True,
                 is_verified=True,
             )
             db.add(admin_user)
             db.flush()
-            logger.info(f"Super Admin created: username='admin', password='{admin_pass}'")
+            logger.info("Super Admin account created successfully.")
         else:
             admin_user.is_active = True
             admin_user.is_verified = True
             admin_user.role = UserRole.SUPER_ADMIN
-            admin_user.hashed_password = get_password_hash(admin_pass)
+            # Do NOT reset existing password on restarts unless explicitly flagged
+            if os.environ.get("ADMIN_RESET_PASSWORD", "").lower() in ("true", "1"):
+                admin_user.hashed_password = get_password_hash(admin_initial_pass)
+                logger.warning("ADMIN_RESET_PASSWORD detected: Super Admin password reset.")
             db.flush()
-            logger.info(f"Super Admin ensured active with password '{admin_pass}'.")
+            logger.info("Existing Super Admin account verified and active.")
 
         # 2. Master Sites
         site_count = db.query(Site).count()
@@ -224,7 +227,7 @@ def seed_cloud_database():
         print("\n" + "=" * 60)
         print("[SUCCESS] EthioWorkforce Cloud Database Ready!")
         print(f"[*] Admin Username: admin")
-        print(f"[*] Admin Password: {admin_pass}")
+        print("[*] Admin Password: [CONFIGURED / PROTECTED]")
         print("=" * 60 + "\n")
 
     except Exception as e:

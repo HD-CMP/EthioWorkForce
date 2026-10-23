@@ -4,7 +4,7 @@
 [![Python](https://img.shields.io/badge/Python-3.11%2B-blue.svg?logo=python)](https://python.org)
 [![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B.svg?logo=flutter)](https://flutter.dev)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791.svg?logo=postgresql)](https://postgresql.org)
-[![License](https://img.shields.io/badge/License-Proprietary-red.svg)]()
+[![License](https://img.shields.io/badge/License-Source--Available%20%7C%20Proprietary-0A192F.svg)](LICENSE)
 [![Ethiopian Labor](https://img.shields.io/badge/ERCA%20%26%20POESSA-Compliant-success.svg)]()
 
 > **Enterprise-grade, offline-first workforce management, attendance tracking, and automated payroll system built specifically for Ethiopian labor regulations, operating sites, and financial institutions.**
@@ -110,9 +110,11 @@ This repository contains a pre-configured `render.yaml`. When you link this repo
 2. It executes `python scripts/init_cloud_db.py` to run database migrations and create the default admin.
 3. It exposes your live API with free SSL (`https://ethioworkforce-api.onrender.com`).
 
-### Default Admin Credentials
-- **Username**: `admin`
-- **Password**: `Admin@Ethio2026!`
+### Initial Administrator Provisioning
+Initial administrative credentials are configured during database bootstrap:
+- Set ADMIN_INITIAL_PASSWORD in your deployment environment variables (e.g. Render Dashboard, Docker env, or .env).
+- For local testing and development, refer to .env.example to supply custom administrator secrets.
+- **Security Notice**: Always update your administrative password immediately upon first login via **Settings → Account Security** or the /api/v1/auth/change-password endpoint.
 
 ### Live API Documentation
 Once deployed, open Swagger UI at:
@@ -155,4 +157,6 @@ All detailed setup, architecture, and deployment manuals are organized under [`d
 ## 📄 License & Attribution
 
 Copyright © 2026 HD-CMP / EthioWorkforce. All rights reserved.
-Developed for Ethiopian enterprise workforce operations.
+
+**Source-Available Demonstration License**:
+This repository is publicly viewable for technical evaluation, portfolio demonstration, and recruitment review. Unauthorized commercial redistribution, deployment, or sublicensing without explicit written authorization is strictly prohibited. See [LICENSE](LICENSE) for full details.

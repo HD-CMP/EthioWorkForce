@@ -48,9 +48,7 @@ cd backend
 
 This will:
 - Run all 25+ Alembic schema migrations.
-- Create the default Super Admin:
-  - **Username**: `admin`
-  - **Password**: `Admin@Ethio2026!`
+- Provision the initial Super Admin account (configured via $env:ADMIN_INITIAL_PASSWORD).
 - Seed initial sites (`Bole Construction Site`, `Adama Industrial Facility`, `Headquarters`).
 - Seed standard Ethiopian work types (Daily Casuals, Masons, Supervisors, Security).
 
@@ -151,7 +149,7 @@ Render's free tier spins down after 15 minutes of inactivity. To keep your API r
 
 ### Option 1: Live in App Settings
 1. Open the app on your phone or browser.
-2. Log in with `admin` / `Admin@Ethio2026!`.
+2. Log in with your configured Super Admin credentials.
 3. Go to **Settings** → **Backend Configuration** → **Backend API URL**.
 4. Enter:
    ```text
